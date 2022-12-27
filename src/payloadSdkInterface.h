@@ -69,6 +69,16 @@ public:
 	 **/
 	void setPayloadCameraCaptureImage();
 
+	/**
+	 * set payload's camera start record video
+	 **/
+	void setPayloadCameraRecordVideoStart();
+
+	/**
+	 * set payload's camera stop record video
+	 **/
+	void setPayloadCameraRecordVideoStop();
+
 
 private:
 	Autopilot_Interface* payload_interface;

@@ -255,3 +255,53 @@ setPayloadCameraCaptureImage(){
 	// do the write
 	payload_interface->push_message_to_queue(message);
 }
+
+void 
+PayloadSdkInterface::
+setPayloadCameraRecordVideoStart(){
+	mavlink_command_long_t msg = {0};
+
+	msg.target_system = 1;
+	msg.target_component = MAV_COMP_ID_CAMERA5;
+	msg.command = MAV_CMD_VIDEO_START_CAPTURE;
+	msg.confirmation = 1;
+
+	// --------------------------------------------------------------------------
+	//   ENCODE
+	// --------------------------------------------------------------------------
+	mavlink_message_t message;
+
+	mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+	// --------------------------------------------------------------------------
+	//   WRITE
+	// --------------------------------------------------------------------------
+
+	// do the write
+	payload_interface->push_message_to_queue(message);
+}
+
+void
+PayloadSdkInterface::
+setPayloadCameraRecordVideoStop(){
+	mavlink_command_long_t msg = {0};
+
+	msg.target_system = 1;
+	msg.target_component = MAV_COMP_ID_CAMERA5;
+	msg.command = MAV_CMD_VIDEO_STOP_CAPTURE;
+	msg.confirmation = 1;
+
+	// --------------------------------------------------------------------------
+	//   ENCODE
+	// --------------------------------------------------------------------------
+	mavlink_message_t message;
+
+	mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+	// --------------------------------------------------------------------------
+	//   WRITE
+	// --------------------------------------------------------------------------
+
+	// do the write
+	payload_interface->push_message_to_queue(message);
+}

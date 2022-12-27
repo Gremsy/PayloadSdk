@@ -129,3 +129,129 @@ getPayloadCameraSettingList(){
 	// do the write
 	payload_interface->push_message_to_queue(message);
 }
+
+void 
+PayloadSdkInterface::
+getPayloadStorage(){
+	mavlink_command_long_t msg = {0};
+
+	msg.target_system = 1;
+	msg.target_component = MAV_COMP_ID_CAMERA5;
+	msg.command = MAV_CMD_REQUEST_STORAGE_INFORMATION;
+	msg.confirmation = 1;
+
+	// --------------------------------------------------------------------------
+	//   ENCODE
+	// --------------------------------------------------------------------------
+	mavlink_message_t message;
+
+	mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+	// --------------------------------------------------------------------------
+	//   WRITE
+	// --------------------------------------------------------------------------
+
+	// do the write
+	payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+getPayloadCaptureStatus(){
+	mavlink_command_long_t msg = {0};
+
+	msg.target_system = 1;
+	msg.target_component = MAV_COMP_ID_CAMERA5;
+	msg.command = MAV_CMD_REQUEST_CAMERA_CAPTURE_STATUS;
+	msg.confirmation = 1;
+
+	// --------------------------------------------------------------------------
+	//   ENCODE
+	// --------------------------------------------------------------------------
+	mavlink_message_t message;
+
+	mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+	// --------------------------------------------------------------------------
+	//   WRITE
+	// --------------------------------------------------------------------------
+
+	// do the write
+	payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+getPayloadCameraMode(){
+	mavlink_command_long_t msg = {0};
+
+	msg.target_system = 1;
+	msg.target_component = MAV_COMP_ID_CAMERA5;
+	msg.command = MAV_CMD_REQUEST_CAMERA_SETTINGS;
+	msg.confirmation = 1;
+
+	// --------------------------------------------------------------------------
+	//   ENCODE
+	// --------------------------------------------------------------------------
+	mavlink_message_t message;
+
+	mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+	// --------------------------------------------------------------------------
+	//   WRITE
+	// --------------------------------------------------------------------------
+
+	// do the write
+	payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+setPayloadCameraMode(CAMERA_MODE mode){
+	mavlink_command_long_t msg = {0};
+
+	msg.target_system = 1;
+	msg.target_component = MAV_COMP_ID_CAMERA5;
+	msg.command = MAV_CMD_SET_CAMERA_MODE;
+	msg.param2 = (uint32_t)mode;
+	msg.confirmation = 1;
+
+	// --------------------------------------------------------------------------
+	//   ENCODE
+	// --------------------------------------------------------------------------
+	mavlink_message_t message;
+
+	mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+	// --------------------------------------------------------------------------
+	//   WRITE
+	// --------------------------------------------------------------------------
+
+	// do the write
+	payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+setPayloadCameraCaptureImage(){
+	mavlink_command_long_t msg = {0};
+
+	msg.target_system = 1;
+	msg.target_component = MAV_COMP_ID_CAMERA5;
+	msg.command = MAV_CMD_IMAGE_START_CAPTURE;
+	msg.confirmation = 1;
+
+	// --------------------------------------------------------------------------
+	//   ENCODE
+	// --------------------------------------------------------------------------
+	mavlink_message_t message;
+
+	mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+	// --------------------------------------------------------------------------
+	//   WRITE
+	// --------------------------------------------------------------------------
+
+	// do the write
+	payload_interface->push_message_to_queue(message);
+}

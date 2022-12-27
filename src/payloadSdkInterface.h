@@ -44,6 +44,32 @@ public:
 	 **/
 	void getPayloadCameraSettingList();
 
+	/**
+	 * get payload's storage volume
+	 **/
+	void getPayloadStorage();
+
+	/**
+	 * get payload's capture status
+	 **/
+	void getPayloadCaptureStatus();
+
+	/**
+	 * get payload's camera mode
+	 **/
+	void getPayloadCameraMode();
+
+	/**
+	 * set payload's camera mode
+	 **/
+	void setPayloadCameraMode(CAMERA_MODE mode);
+
+	/**
+	 * set payload's camera capture image
+	 **/
+	void setPayloadCameraCaptureImage();
+
+
 private:
 	Autopilot_Interface* payload_interface;
 	Generic_Port *port;

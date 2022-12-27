@@ -54,3 +54,4 @@ set(SOURCES
 add_subdirectory(examples/1._Connect_to_Payload)
 add_subdirectory(examples/2._Load_Payload_Settings)
 add_subdirectory(examples/3._Set_Payload_Settings)
+add_subdirectory(examples/4._Capture_Image)

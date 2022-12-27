@@ -12,12 +12,10 @@ bool
 PayloadSdkInterface::
 sdkInitConnection(){
 	/* Port for connect with payload */
-    Generic_Port *port;
     port = new Serial_Port(payload_uart_port, payload_uart_baud);
     
     /* Instantiate an gimbal interface object */
-    int _system_id = 1;
-    payload_interface = new Autopilot_Interface(port, _system_id, MAV_COMP_ID_ONBOARD_COMPUTER, 2, MAVLINK_COMM_0);
+    payload_interface = new Autopilot_Interface(port, SYS_ID, COMP_ID, 2, MAVLINK_COMM_0);
 
 
     // quit port will close at terminator event
@@ -44,4 +42,90 @@ getNewMewssage(mavlink_message_t& new_msg){
 		return payload_interface->get_nxt_message(new_msg);
 	}
 	return 0;
+}
+
+void 
+PayloadSdkInterface::
+moveGimbal(float pitch_spd, float yaw_spd){
+	// send Do_MOUNT_CONTROL message
+
+	mavlink_command_long_t msg ={0};
+
+
+	msg.command = MAV_CMD_DO_MOUNT_CONTROL;
+	msg.param1 = pitch_spd;
+	msg.param2 = 0;
+	msg.param3 = yaw_spd;
+	msg.target_system = 1;
+	msg.target_component = MAV_COMP_ID_CAMERA5;
+	msg.confirmation = 0;
+
+	// --------------------------------------------------------------------------
+	//   ENCODE
+	// --------------------------------------------------------------------------
+	mavlink_message_t message;
+
+	mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+	// --------------------------------------------------------------------------
+	//   WRITE
+	// --------------------------------------------------------------------------
+
+	// do the write
+	payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+setPayloadCameraParam(char param_id[], uint32_t param_value, uint8_t param_type){
+	mavlink_param_ext_set_t msg={0};
+
+	strcpy((char *)msg.param_id, param_id);
+
+	cam_param_union_t u;
+    u.param_uint32 = param_value;
+    std::string str(reinterpret_cast<char const *>(u.bytes), CAM_PARAM_VALUE_LEN);
+	strcpy(msg.param_value, str.c_str());
+
+	msg.param_type = param_type;
+	msg.target_system = 1;
+	msg.target_component = MAV_COMP_ID_CAMERA5;
+
+	// --------------------------------------------------------------------------
+	//   ENCODE
+	// --------------------------------------------------------------------------
+	mavlink_message_t message;
+
+	mavlink_msg_param_ext_set_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+	// --------------------------------------------------------------------------
+	//   WRITE
+	// --------------------------------------------------------------------------
+
+	// do the write
+	payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+getPayloadCameraSettingList(){
+	mavlink_param_ext_request_list_t msg= {0};
+
+	msg.target_system = 1;
+	msg.target_component = MAV_COMP_ID_CAMERA5;
+	msg.trimmed = 0;
+
+	// --------------------------------------------------------------------------
+	//   ENCODE
+	// --------------------------------------------------------------------------
+	mavlink_message_t message;
+
+	mavlink_msg_param_ext_request_list_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+	// --------------------------------------------------------------------------
+	//   WRITE
+	// --------------------------------------------------------------------------
+
+	// do the write
+	payload_interface->push_message_to_queue(message);
 }

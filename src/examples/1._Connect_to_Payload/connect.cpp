@@ -9,12 +9,24 @@ void quit_handler(int sig);
 int main(int argc, char *argv[]){
 	printf("Starting ConnectPayload example...\n");
 	signal(SIGINT,quit_handler);
-	
+
 	// creat payloadsdk object
 	my_payload = new PayloadSdkInterface();
 
 	// init payload
 	my_payload->sdkInitConnection();
+	printf("Waiting for payload signal! \n");
+
+	// check connection
+	while(!time_to_exit){
+		mavlink_message_t msg;
+		uint8_t msg_cnt = my_payload->getNewMewssage(msg);
+
+		if(msg_cnt && msg.sysid == 1 && msg.compid == MAV_COMP_ID_CAMERA5){
+			printf("Payload connected! \n");
+			break;
+		}
+	}
 
 	// check payload messages
 	while(!time_to_exit){

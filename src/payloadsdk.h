@@ -6,6 +6,11 @@
 #include <signal.h>
 #include "autopilot_interface.h"
 #include "serial_port.h"
+#include "udp_port.h"
+
+#define CONTROL_UART    0
+#define CONTROL_UDP    1
+#define CONTROL_METHOD  CONTROL_UDP
 
 #define CAM_PARAM_ID_LEN 16
 #define CAM_PARAM_VALUE_LEN 128

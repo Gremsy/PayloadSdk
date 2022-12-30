@@ -106,14 +106,23 @@ public:
 	UDP_Port(const char *target_ip_, int udp_port_);
 	virtual ~UDP_Port();
 
+    #if 0
 	int read_message(mavlink_message_t &message);
-	int write_message(const mavlink_message_t &message);
+	#else
+    int read_message(std::queue<mavlink_message_t> &message);
+    #endif
+    int write_message(const mavlink_message_t &message);
 
 	bool is_running(){
 		return is_open;
 	}
 	void start();
 	void stop();
+
+    void set_mav_channel(int _ch);
+    int get_mav_channel();
+    void set_mav_version(int _ver);
+    int get_mav_version();
 
 private:
 
@@ -135,6 +144,9 @@ private:
 
 	int  _read_port(uint8_t &cp);
 	int _write_port(char *buf, unsigned len);
+
+    int mav_channel;
+    int mav_ver;
 
 };
 

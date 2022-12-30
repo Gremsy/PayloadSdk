@@ -22,7 +22,7 @@ int main(int argc, char *argv[]){
 		mavlink_message_t msg;
 		uint8_t msg_cnt = my_payload->getNewMewssage(msg);
 
-		if(msg_cnt && msg.sysid == 1 && msg.compid == MAV_COMP_ID_CAMERA5){
+		if(msg_cnt && msg.sysid == 1 && msg.compid == MAV_COMP_ID_CAMERA6){
 			printf("Payload connected! \n");
 			break;
 		}
@@ -37,9 +37,11 @@ int main(int argc, char *argv[]){
 			printf("   --> message %d from system_id: %d with component_id: %d \n", msg.msgid, msg.sysid, msg.compid);
 		}else{
 			printf("No message received. \n");
+			// if no message come, sleep for 500ms
+			usleep(500000);
 		}
 
-		usleep(1000000);
+		usleep(1000);
 	}
 
     

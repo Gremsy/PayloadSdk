@@ -35,7 +35,7 @@ void _handle_msg_camera_capture_status(mavlink_message_t* msg);
 void _handle_msg_camera_settings(mavlink_message_t* msg);
 
 int main(int argc, char *argv[]){
-	printf("Starting CaptureImage example...\n");
+	printf("Starting RecordVideo example...\n");
 	signal(SIGINT,quit_handler);
 
 	// init thread to check receive message from payload
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]){
 		mavlink_message_t msg;
 		uint8_t msg_cnt = my_payload->getNewMewssage(msg);
 
-		if(msg_cnt && msg.sysid == 1 && msg.compid == MAV_COMP_ID_CAMERA5){
+		if(msg_cnt && msg.sysid == 1 && msg.compid == MAV_COMP_ID_CAMERA6){
 			printf("Payload connected! \n");
 			break;
 		}

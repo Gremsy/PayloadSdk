@@ -111,6 +111,7 @@ initialize_defaults()
 // ------------------------------------------------------------------------------
 //   Read from UDP
 // ------------------------------------------------------------------------------
+#if 0
 int
 UDP_Port::
 read_message(mavlink_message_t &message)
@@ -187,7 +188,56 @@ read_message(mavlink_message_t &message)
 	// Done!
 	return msgReceived;
 }
+#else
+int
+UDP_Port::
+read_message(std::queue<mavlink_message_t> &message)
+{
+	uint8_t          cp;
+	mavlink_status_t status;
+	uint8_t          msgReceived = false;
 
+	// --------------------------------------------------------------------------
+	//   READ FROM PORT
+	// --------------------------------------------------------------------------
+
+	// this function locks the port during read
+	int result = _read_port(cp);
+
+	// --------------------------------------------------------------------------
+	//   PARSE MESSAGE
+	// --------------------------------------------------------------------------
+	mavlink_message_t buf_message;
+	if (result > 0){
+		
+		for(int i=0; i<result; i++)
+		{
+			// the parsing
+			// msgReceived = mavlink_parse_char(mav_channel, cp, &buf_message, &status);
+			msgReceived = mavlink_parse_char(mav_channel, buff[i], &buf_message, &status);
+
+			if(msgReceived){
+				message.push(buf_message);
+				msgReceived = false;
+				// printf("%s got msg id: %d\n", __func__, buf_message.msgid);
+			}
+
+		}
+	}
+	// Couldn't read from port
+	else
+	{
+		fprintf(stderr, "ERROR: Could not read, res = %d, errno = %d : %m\n", result, errno);
+	}
+
+	// Done!
+	
+	if(message.empty()) msgReceived = false;
+	else msgReceived = true;
+
+	return msgReceived;
+}
+#endif
 // ------------------------------------------------------------------------------
 //   Write to UDP
 // ------------------------------------------------------------------------------
@@ -236,7 +286,11 @@ start()
 	struct sockaddr_in addr;
 	memset(&addr, 0, sizeof(addr));
 	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = inet_addr(target_ip);;
+
+	// addr.sin_addr.s_addr = inet_addr(target_ip);
+	// addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	addr.sin_addr.s_addr = (INADDR_ANY);
+	
 	addr.sin_port = htons(rx_port);
 
 	if (bind(sock, (struct sockaddr *) &addr, sizeof(struct sockaddr)))
@@ -292,6 +346,20 @@ stop()
 
 }
 
+void UDP_Port::set_mav_channel(int _ch){
+	mav_channel = _ch;
+}
+int UDP_Port::get_mav_channel(){
+	return mav_channel;
+}
+void UDP_Port::set_mav_version(int _ver){
+	mav_ver = _ver;
+	mavlink_set_proto_version(mav_channel, mav_ver);
+}
+int UDP_Port::get_mav_version(){
+	return mav_ver;
+}
+
 // ------------------------------------------------------------------------------
 //   Read Port with Lock
 // ------------------------------------------------------------------------------
@@ -306,14 +374,17 @@ _read_port(uint8_t &cp)
 	pthread_mutex_lock(&lock);
 
 	int result = -1;
-	if(buff_ptr < buff_len){
-		cp=buff[buff_ptr];
-		buff_ptr++;
-		result=1;
-	}else{
+	// if(buff_ptr < buff_len){
+	// 	cp=buff[buff_ptr];
+	// 	buff_ptr++;
+	// 	result=1;
+	// }else{
 		struct sockaddr_in addr;
 		len = sizeof(struct sockaddr_in);
 		result = recvfrom(sock, &buff, BUFF_LEN, 0, (struct sockaddr *)&addr, &len);
+		
+		// printf("%s %d \n", __func__, result);
+
 		if(tx_port < 0){
 			if(strcmp(inet_ntoa(addr.sin_addr), target_ip) == 0){
 				tx_port = ntohs(addr.sin_port);
@@ -322,14 +393,14 @@ _read_port(uint8_t &cp)
 				printf("ERROR: Got packet from %s:%i but listening on %s\n", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), target_ip);
 			}
 		}
-		if(result > 0){
-			buff_len=result;
-			buff_ptr=0;
-			cp=buff[buff_ptr];
-			buff_ptr++;
-			//printf("recvfrom: %i %i\n", result, cp);
-		}
-	}
+		// if(result > 0){
+		// 	buff_len=result;
+		// 	buff_ptr=0;
+		// 	cp=buff[buff_ptr];
+		// 	buff_ptr++;
+		// 	//printf("recvfrom: %i %i\n", result, cp);
+		// }
+	// }
 
 	// Unlock
 	pthread_mutex_unlock(&lock);
@@ -347,7 +418,7 @@ _write_port(char *buf, unsigned len)
 {
 
 	// Lock
-	pthread_mutex_lock(&lock);
+	// pthread_mutex_lock(&lock);
 
 	// Write packet via UDP link
 	int bytesWritten = 0;
@@ -365,7 +436,7 @@ _write_port(char *buf, unsigned len)
 	}
 
 	// Unlock
-	pthread_mutex_unlock(&lock);
+	// pthread_mutex_unlock(&lock);
 
 
 	return bytesWritten;

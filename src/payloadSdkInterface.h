@@ -60,6 +60,16 @@ public:
 	void getPayloadCameraMode();
 
 	/**
+	 * get payload's camera information
+	 **/
+	void getPayloadCameraInformation();
+
+	/**
+	 * get payload's camera streaming information
+	 **/
+	void getPayloadCameraStreamingInformation();
+
+	/**
 	 * set payload's camera mode
 	 **/
 	void setPayloadCameraMode(CAMERA_MODE mode);
@@ -86,6 +96,8 @@ private:
 	Generic_Port *port_quit = nullptr;
 	char *payload_uart_port = (char*)"/dev/ttyUSB0";
 	int payload_uart_baud = 115200;
+	const char *udp_ip_target = (char*)"192.168.12.200";
+    int udp_port = 14565;
 
 	uint8_t SYS_ID = 1;
 	uint8_t COMP_ID = MAV_COMP_ID_ONBOARD_COMPUTER;

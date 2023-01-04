@@ -19,9 +19,6 @@ int main(int argc, char *argv[]){
 	printf("Starting LoadPayloadSettings example...\n");
 	signal(SIGINT,quit_handler);
 
-	// init thread to check receive message from payload
-	all_threads_init();
-
 	// create payloadsdk object
 	my_payload = new PayloadSdkInterface();
 
@@ -40,6 +37,9 @@ int main(int argc, char *argv[]){
 		}
 	}
 
+	// init thread to check receive message from payload
+	all_threads_init();
+	
 	// request to read all settings of payload
 	my_payload->getPayloadCameraSettingList();
 

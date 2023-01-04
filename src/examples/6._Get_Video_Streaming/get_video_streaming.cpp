@@ -51,9 +51,6 @@ int main(int argc, char *argv[]){
 	printf("Starting GetStreaming example...\n");
 	signal(SIGINT,quit_handler);
 
-	// init thread to check receive message from payload
-	all_threads_init();
-
 	// create payloadsdk object
 	my_payload = new PayloadSdkInterface();
 
@@ -70,11 +67,16 @@ int main(int argc, char *argv[]){
 			printf("Payload connected! \n");
 			break;
 		}
+		usleep(10000);
 	}
 
+	// init thread to check receive message from payload
+	all_threads_init();
+	
 	// change setting of VIDEO_OUT to BOTH_HDMI_UDP
 	printf("Change VideoOutput to both HDMI and Ethernet \n");
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_OUTPUT, PAYLOAD_CAMERA_VIDEO_OUTPUT_UDP, PARAM_TYPE_UINT32);
+	usleep(500000);
 
 	my_job = check_camera_info;
 	while(!time_to_exit){
@@ -145,32 +147,44 @@ void *payload_recv_handle(void *threadid)
 {
 	// check payload messages
 	while(!time_to_exit){
-		if(my_payload != nullptr){
-			mavlink_message_t msg;
-			uint8_t msg_cnt = my_payload->getNewMewssage(msg);
-			if(msg_cnt){
-				printf("Got %d message in queue \n", msg_cnt);
-				printf("   --> message %d from system_id: %d with component_id: %d \n", msg.msgid, msg.sysid, msg.compid);
-				switch(msg.msgid){
-				case MAVLINK_MSG_ID_COMMAND_ACK:{
-					_handle_msg_command_ack(&msg);
-					break;
-				} 
-				case MAVLINK_MSG_ID_CAMERA_INFORMATION:{
-					_handle_msg_camera_information(&msg);
-					break;
-				} 
-				case MAVLINK_MSG_ID_VIDEO_STREAM_INFORMATION:{
-					_handle_msg_camera_stream_information(&msg);
+	#if 1
+		try{
+			if(my_payload != nullptr){
+				mavlink_message_t msg;
+				uint8_t msg_cnt = my_payload->getNewMewssage(msg);
+				// printf("message cnt: %d \n", msg_cnt);
+
+				if(msg_cnt){
+					// printf("Got %d message in queue \n", msg_cnt);
+					// printf("   --> message %d from system_id: %d with component_id: %d \n", msg.msgid, msg.sysid, msg.compid);
+					switch(msg.msgid){
+					case MAVLINK_MSG_ID_COMMAND_ACK:{
+						_handle_msg_command_ack(&msg);
+						break;
+					} 
+					case MAVLINK_MSG_ID_CAMERA_INFORMATION:{
+						_handle_msg_camera_information(&msg);
+						break;
+					} 
+					case MAVLINK_MSG_ID_VIDEO_STREAM_INFORMATION:{
+						_handle_msg_camera_stream_information(&msg);
+						break;
+					}
+					default: break;
+					}
+				}else{
+					// printf("Recieved message queue empty. \n");
 				}
-				default: break;
-				}
+
+				usleep(10000);
 			}else{
-
+				printf("My_payload nullptr \n");
 			}
-
-			usleep(10000);
-		}
+		}catch ( ... ) {};
+	#else
+		printf("thread running \n");
+		usleep(1000000);
+	#endif
 	}
 	pthread_exit(NULL);
 }
@@ -205,6 +219,8 @@ void _handle_msg_camera_stream_information(mavlink_message_t* msg){
 
 	printf("   ---> Got streaming information: \n");
 	printf("   ---> Streaming type: %d \n", stream_info.type);
+	printf("   ---> Streaming resolution_v: %d \n", stream_info.resolution_v);
+	printf("   ---> Streaming resolution_h: %d \n", stream_info.resolution_h);
 	printf("   ---> Streaming name: %s \n", stream_info.name);
 	printf("   ---> Streaming uri: %s \n", stream_info.uri);
 
@@ -236,7 +252,7 @@ void *start_loop_thread(void *threadid)
 
     string descr;
     if(!_is_rtsp_stream){
-	    descr = "udpsrc port=" + _stream_uri + " ! application/x-rtp,encoding-name=H264,payload=96 ! rtph264depay ! h264parse ! queue ! avdec_h264 ! nvvidconv ! nvoverlaysink"
+	    descr = "udpsrc port=" + _stream_uri + " ! application/x-rtp,encoding-name=H264,payload=96 ! rtph264depay ! h264parse ! queue ! avdec_h264 ! nvvidconv ! nvoverlaysink sync=false async=false"
 	                    ;
     }else{
     	descr = "rtspsrc location=" + _stream_uri + " latency=0 ! rtph264depay ! h264parse ! nvv4l2decoder ! nvoverlaysink sync=false async=false";

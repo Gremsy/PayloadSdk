@@ -56,7 +56,9 @@
 
 #include "udp_port.h"
 
-
+#define UDP_SERVER	0
+#define UDP_CLIENT  1
+#define UDP_MODE    UDP_SERVER
 // ----------------------------------------------------------------------------------
 //   UDP Port Manager Class
 // ----------------------------------------------------------------------------------
@@ -70,6 +72,9 @@ UDP_Port(const char *target_ip_, int udp_port_)
 	initialize_defaults();
 	target_ip = target_ip_;
 	rx_port  = udp_port_;
+#if (UDP_MODE == UDP_CLIENT)
+	tx_port = rx_port;
+#endif
 	is_open = false;
 }
 
@@ -93,7 +98,9 @@ initialize_defaults()
 	// Initialize attributes
 	target_ip = "127.0.0.1";
 	rx_port  = 14550;
+	
 	tx_port  = -1;
+
 	is_open = false;
 	debug = false;
 	sock = -1;
@@ -111,84 +118,6 @@ initialize_defaults()
 // ------------------------------------------------------------------------------
 //   Read from UDP
 // ------------------------------------------------------------------------------
-#if 0
-int
-UDP_Port::
-read_message(mavlink_message_t &message)
-{
-	uint8_t          cp;
-	mavlink_status_t status;
-	uint8_t          msgReceived = false;
-
-	// --------------------------------------------------------------------------
-	//   READ FROM PORT
-	// --------------------------------------------------------------------------
-
-	// this function locks the port during read
-	int result = _read_port(cp);
-
-
-	// --------------------------------------------------------------------------
-	//   PARSE MESSAGE
-	// --------------------------------------------------------------------------
-	if (result > 0)
-	{
-		// the parsing
-		msgReceived = mavlink_parse_char(MAVLINK_COMM_1, cp, &message, &status);
-
-		// check for dropped packets
-		if ( (lastStatus.packet_rx_drop_count != status.packet_rx_drop_count) && debug )
-		{
-			printf("ERROR: DROPPED %d PACKETS\n", status.packet_rx_drop_count);
-			unsigned char v=cp;
-			fprintf(stderr,"%02x ", v);
-		}
-		lastStatus = status;
-	}
-
-	// Couldn't read from port
-	else
-	{
-		fprintf(stderr, "ERROR: Could not read, res = %d, errno = %d : %m\n", result, errno);
-	}
-
-	// --------------------------------------------------------------------------
-	//   DEBUGGING REPORTS
-	// --------------------------------------------------------------------------
-	if(msgReceived && debug)
-	{
-		// Report info
-		printf("Received message from UDP with ID #%d (sys:%d|comp:%d):\n", message.msgid, message.sysid, message.compid);
-
-		fprintf(stderr,"Received UDP data: ");
-		unsigned int i;
-		uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
-
-		// check message is write length
-		unsigned int messageLength = mavlink_msg_to_send_buffer(buffer, &message);
-
-		// message length error
-		if (messageLength > MAVLINK_MAX_PACKET_LEN)
-		{
-			fprintf(stderr, "\nFATAL ERROR: MESSAGE LENGTH IS LARGER THAN BUFFER SIZE\n");
-		}
-
-		// print out the buffer
-		else
-		{
-			for (i=0; i<messageLength; i++)
-			{
-				unsigned char v=buffer[i];
-				fprintf(stderr,"%02x ", v);
-			}
-			fprintf(stderr,"\n");
-		}
-	}
-
-	// Done!
-	return msgReceived;
-}
-#else
 int
 UDP_Port::
 read_message(std::queue<mavlink_message_t> &message)
@@ -237,7 +166,6 @@ read_message(std::queue<mavlink_message_t> &message)
 
 	return msgReceived;
 }
-#endif
 // ------------------------------------------------------------------------------
 //   Write to UDP
 // ------------------------------------------------------------------------------
@@ -282,6 +210,8 @@ start()
 		throw EXIT_FAILURE;
 	}
 
+#if (UDP_MODE == UDP_SERVER)
+	printf("\x1b[32m %s : %d \t Set UDP_Port as UDP_SERVER\r\n\x1b[0m",__func__,__LINE__);
 	/* Bind the socket to rx_port - necessary to receive packets */
 	struct sockaddr_in addr;
 	memset(&addr, 0, sizeof(addr));
@@ -300,19 +230,14 @@ start()
 		sock = -1;
 		throw EXIT_FAILURE;
 	}
-	/*if (fcntl(sock, F_SETFL, O_NONBLOCK | O_ASYNC) < 0)
-	{
-		fprintf(stderr, "error setting nonblocking: %s\n", strerror(errno));
-		close(sock);
-		sock = -1;
-		throw EXIT_FAILURE;
-	}*/
-
 	// --------------------------------------------------------------------------
 	//   CONNECTED!
 	// --------------------------------------------------------------------------
-	printf("Listening to %s:%i\n", target_ip, rx_port);
+	// printf("Listening to %s:%i\n", target_ip, rx_port);
 	lastStatus.packet_rx_drop_count = 0;
+#else
+	printf("\x1b[32m %s : %d \t Set UDP_Port as UDP_CLIENT\r\n\x1b[0m",__func__,__LINE__);
+#endif
 
 	is_open = true;
 
@@ -372,19 +297,13 @@ _read_port(uint8_t &cp)
 
 	// Lock
 	pthread_mutex_lock(&lock);
-
-	int result = -1;
-	// if(buff_ptr < buff_len){
-	// 	cp=buff[buff_ptr];
-	// 	buff_ptr++;
-	// 	result=1;
-	// }else{
+		int result = -1;
 		struct sockaddr_in addr;
 		len = sizeof(struct sockaddr_in);
 		result = recvfrom(sock, &buff, BUFF_LEN, 0, (struct sockaddr *)&addr, &len);
 		
 		// printf("%s %d \n", __func__, result);
-
+	#if (UDP_MODE == UDP_SERVER)
 		if(tx_port < 0){
 			if(strcmp(inet_ntoa(addr.sin_addr), target_ip) == 0){
 				tx_port = ntohs(addr.sin_port);
@@ -393,14 +312,7 @@ _read_port(uint8_t &cp)
 				printf("ERROR: Got packet from %s:%i but listening on %s\n", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port), target_ip);
 			}
 		}
-		// if(result > 0){
-		// 	buff_len=result;
-		// 	buff_ptr=0;
-		// 	cp=buff[buff_ptr];
-		// 	buff_ptr++;
-		// 	//printf("recvfrom: %i %i\n", result, cp);
-		// }
-	// }
+	#endif
 
 	// Unlock
 	pthread_mutex_unlock(&lock);
@@ -416,10 +328,6 @@ int
 UDP_Port::
 _write_port(char *buf, unsigned len)
 {
-
-	// Lock
-	// pthread_mutex_lock(&lock);
-
 	// Write packet via UDP link
 	int bytesWritten = 0;
 	if(tx_port > 0){
@@ -429,16 +337,11 @@ _write_port(char *buf, unsigned len)
 		addr.sin_addr.s_addr = inet_addr(target_ip);
 		addr.sin_port = htons(tx_port);
 		bytesWritten = sendto(sock, buf, len, 0, (struct sockaddr*)&addr, sizeof(struct sockaddr_in));
-		//printf("sendto: %i\n", bytesWritten);
+		// printf("sendto: %s \t %i\n",target_ip,tx_port);
 	}else{
 		printf("ERROR: Sending before first packet received!\n");
 		bytesWritten = -1;
 	}
-
-	// Unlock
-	// pthread_mutex_unlock(&lock);
-
-
 	return bytesWritten;
 }
 

@@ -19,9 +19,6 @@ int main(int argc, char *argv[]){
 	printf("Starting SetPayloadSettings example...\n");
 	signal(SIGINT,quit_handler);
 
-	// init thread to check receive message from payload
-	all_threads_init();
-
 	// create payloadsdk object
 	my_payload = new PayloadSdkInterface();
 
@@ -40,12 +37,15 @@ int main(int argc, char *argv[]){
 		}
 	}
 
+	// init thread to check receive message from payload
+	all_threads_init();
+	
 	// change setting of RC_MODE to DUAL
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_RC_MODE, PAYLOAD_CAMERA_RC_MODE_DUAL, PARAM_TYPE_UINT32);
 
 	// change setting of OSD_MODE to STATUS to view Zoom factor
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_OSD_MODE, PAYLOAD_CAMERA_VIDEO_OSD_MODE_STATUS, PARAM_TYPE_UINT32);
-
+	
 	// request to read all settings of payload, then check the RC_MODE setting
 	my_payload->getPayloadCameraSettingList();
 
@@ -53,15 +53,15 @@ int main(int argc, char *argv[]){
 	while(!time_to_exit){
 		// main loop, do some zooming commands
 		if(is_zoom_in){
-			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_VALUE, 10000, PARAM_TYPE_UINT32);
-			printf("Zoom in to 10000 \n");
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_VALUE, 21846, PARAM_TYPE_UINT32);
+			printf("Zoom in to 21846 \n");
 		}else{
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_VALUE, 00000, PARAM_TYPE_UINT32);
 			printf("Zoom out to 00000 \n");
 		}
 		is_zoom_in = !is_zoom_in;
 
-		usleep(3000000); // sleep 3s
+		usleep(5000000); // sleep 5s
 	}
 
     

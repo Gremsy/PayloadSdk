@@ -229,6 +229,9 @@ getPayloadCameraInformation(){
 
 	mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
 
+	message.sysid = SYS_ID;
+	message.compid = COMP_ID;
+	
 	// --------------------------------------------------------------------------
 	//   WRITE
 	// --------------------------------------------------------------------------

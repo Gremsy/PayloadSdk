@@ -63,7 +63,7 @@ int main(int argc, char *argv[]){
 		mavlink_message_t msg;
 		uint8_t msg_cnt = my_payload->getNewMewssage(msg);
 
-		if(msg_cnt && msg.sysid == 1 && msg.compid == MAV_COMP_ID_CAMERA6){
+		if(msg_cnt && msg.sysid == PAYLOAD_SYSTEM_ID && msg.compid == PAYLOAD_COMPONENT_ID){
 			printf("Payload connected! \n");
 			break;
 		}
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]){
 	
 	// change setting of VIDEO_OUT to BOTH_HDMI_UDP
 	printf("Change VideoOutput to both HDMI and Ethernet \n");
-	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_OUTPUT, PAYLOAD_CAMERA_VIDEO_OUTPUT_UDP, PARAM_TYPE_UINT32);
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_OUTPUT, PAYLOAD_CAMERA_VIDEO_OUTPUT_BOTH, PARAM_TYPE_UINT32);
 	usleep(500000);
 
 	my_job = check_camera_info;
@@ -208,6 +208,9 @@ void _handle_msg_camera_information(mavlink_message_t* msg){
 		my_job = check_streaming_uri;
 	}else{
 		printf("   ---> Payload has no streaming video \n");
+		printf("It looks like your payload was setting to output video only to HDMI \n");
+		printf("I changed this payload settings: both HDMI and Ethernet.\n");
+		printf("Please reboot your payload to apply this setting. Then try again.\n");
 		my_job = idle;
 	}
 }

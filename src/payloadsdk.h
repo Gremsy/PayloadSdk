@@ -8,9 +8,12 @@
 #include "serial_port.h"
 #include "udp_port.h"
 
+#define PAYLOAD_SYSTEM_ID 1
+#define PAYLOAD_COMPONENT_ID MAV_COMP_ID_CAMERA5
+
 #define CONTROL_UART    0
 #define CONTROL_UDP    1
-#define CONTROL_METHOD  CONTROL_UDP
+#define CONTROL_METHOD  CONTROL_UART
 
 #define CAM_PARAM_ID_LEN 16
 #define CAM_PARAM_VALUE_LEN 128

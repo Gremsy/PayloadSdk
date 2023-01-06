@@ -1,7 +1,7 @@
 #include "payloadSdkInterface.h"
 
 PayloadSdkInterface::PayloadSdkInterface(){
-
+	printf("Starting Gremsy PayloadSdk %s\n", SDK_VERSION);
 }
 
 PayloadSdkInterface::~PayloadSdkInterface(){
@@ -64,7 +64,7 @@ moveGimbal(float pitch_spd, float yaw_spd){
 	msg.param2 = 0;
 	msg.param3 = yaw_spd;
 	msg.target_system = 1;
-	msg.target_component = MAV_COMP_ID_CAMERA6;
+	msg.target_component = PAYLOAD_COMPONENT_ID;
 	msg.confirmation = 0;
 
 	// --------------------------------------------------------------------------
@@ -95,8 +95,8 @@ setPayloadCameraParam(char param_id[], uint32_t param_value, uint8_t param_type)
 	strcpy(msg.param_value, str.c_str());
 
 	msg.param_type = param_type;
-	msg.target_system = 1;
-	msg.target_component = MAV_COMP_ID_CAMERA6;
+	msg.target_system = PAYLOAD_SYSTEM_ID;
+	msg.target_component = PAYLOAD_COMPONENT_ID;
 
 	// --------------------------------------------------------------------------
 	//   ENCODE
@@ -118,8 +118,8 @@ PayloadSdkInterface::
 getPayloadCameraSettingList(){
 	mavlink_param_ext_request_list_t msg= {0};
 
-	msg.target_system = 1;
-	msg.target_component = MAV_COMP_ID_CAMERA6;
+	msg.target_system = PAYLOAD_SYSTEM_ID;
+	msg.target_component = PAYLOAD_COMPONENT_ID;
 	msg.trimmed = 0;
 
 	// --------------------------------------------------------------------------
@@ -142,8 +142,8 @@ PayloadSdkInterface::
 getPayloadStorage(){
 	mavlink_command_long_t msg = {0};
 
-	msg.target_system = 1;
-	msg.target_component = MAV_COMP_ID_CAMERA6;
+	msg.target_system = PAYLOAD_SYSTEM_ID;
+	msg.target_component = PAYLOAD_COMPONENT_ID;
 	msg.command = MAV_CMD_REQUEST_STORAGE_INFORMATION;
 	msg.confirmation = 1;
 
@@ -167,8 +167,8 @@ PayloadSdkInterface::
 getPayloadCaptureStatus(){
 	mavlink_command_long_t msg = {0};
 
-	msg.target_system = 1;
-	msg.target_component = MAV_COMP_ID_CAMERA6;
+	msg.target_system = PAYLOAD_SYSTEM_ID;
+	msg.target_component = PAYLOAD_COMPONENT_ID;
 	msg.command = MAV_CMD_REQUEST_CAMERA_CAPTURE_STATUS;
 	msg.confirmation = 1;
 
@@ -192,8 +192,8 @@ PayloadSdkInterface::
 getPayloadCameraMode(){
 	mavlink_command_long_t msg = {0};
 
-	msg.target_system = 1;
-	msg.target_component = MAV_COMP_ID_CAMERA6;
+	msg.target_system = PAYLOAD_SYSTEM_ID;
+	msg.target_component = PAYLOAD_COMPONENT_ID;
 	msg.command = MAV_CMD_REQUEST_CAMERA_SETTINGS;
 	msg.confirmation = 1;
 
@@ -217,8 +217,8 @@ PayloadSdkInterface::
 getPayloadCameraInformation(){
 	mavlink_command_long_t msg = {0};
 
-	msg.target_system = 1;
-	msg.target_component = MAV_COMP_ID_CAMERA6;
+	msg.target_system = PAYLOAD_SYSTEM_ID;
+	msg.target_component = PAYLOAD_COMPONENT_ID;
 	msg.command = MAV_CMD_REQUEST_CAMERA_INFORMATION;
 	msg.confirmation = 1;
 
@@ -245,8 +245,8 @@ PayloadSdkInterface::
 getPayloadCameraStreamingInformation(){
 	mavlink_command_long_t msg = {0};
 
-	msg.target_system = 1;
-	msg.target_component = MAV_COMP_ID_CAMERA6;
+	msg.target_system = PAYLOAD_SYSTEM_ID;
+	msg.target_component = PAYLOAD_COMPONENT_ID;
 	msg.command = MAV_CMD_REQUEST_VIDEO_STREAM_INFORMATION;
 	msg.confirmation = 1;
 
@@ -270,8 +270,8 @@ PayloadSdkInterface::
 setPayloadCameraMode(CAMERA_MODE mode){
 	mavlink_command_long_t msg = {0};
 
-	msg.target_system = 1;
-	msg.target_component = MAV_COMP_ID_CAMERA6;
+	msg.target_system = PAYLOAD_SYSTEM_ID;
+	msg.target_component = PAYLOAD_COMPONENT_ID;
 	msg.command = MAV_CMD_SET_CAMERA_MODE;
 	msg.param2 = (uint32_t)mode;
 	msg.confirmation = 1;
@@ -296,8 +296,8 @@ PayloadSdkInterface::
 setPayloadCameraCaptureImage(){
 	mavlink_command_long_t msg = {0};
 
-	msg.target_system = 1;
-	msg.target_component = MAV_COMP_ID_CAMERA6;
+	msg.target_system = PAYLOAD_SYSTEM_ID;
+	msg.target_component = PAYLOAD_COMPONENT_ID;
 	msg.command = MAV_CMD_IMAGE_START_CAPTURE;
 	msg.confirmation = 1;
 
@@ -321,8 +321,8 @@ PayloadSdkInterface::
 setPayloadCameraRecordVideoStart(){
 	mavlink_command_long_t msg = {0};
 
-	msg.target_system = 1;
-	msg.target_component = MAV_COMP_ID_CAMERA6;
+	msg.target_system = PAYLOAD_SYSTEM_ID;
+	msg.target_component = PAYLOAD_COMPONENT_ID;
 	msg.command = MAV_CMD_VIDEO_START_CAPTURE;
 	msg.confirmation = 1;
 
@@ -346,8 +346,8 @@ PayloadSdkInterface::
 setPayloadCameraRecordVideoStop(){
 	mavlink_command_long_t msg = {0};
 
-	msg.target_system = 1;
-	msg.target_component = MAV_COMP_ID_CAMERA6;
+	msg.target_system = PAYLOAD_SYSTEM_ID;
+	msg.target_component = PAYLOAD_COMPONENT_ID;
 	msg.command = MAV_CMD_VIDEO_STOP_CAPTURE;
 	msg.confirmation = 1;
 

@@ -4,6 +4,8 @@
 #include <iostream>
 #include "payloadsdk.h"
 
+#define SDK_VERSION "1.0.0_build.06Jan2023"
+
 class PayloadSdkInterface
 {
 

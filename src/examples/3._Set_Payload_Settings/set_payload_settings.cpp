@@ -35,6 +35,7 @@ int main(int argc, char *argv[]){
 			printf("Payload connected! \n");
 			break;
 		}
+		else usleep(1000); // sleep 1ms
 	}
 
 	// init thread to check receive message from payload
@@ -48,6 +49,9 @@ int main(int argc, char *argv[]){
 	
 	// request to read all settings of payload, then check the RC_MODE setting
 	my_payload->getPayloadCameraSettingList();
+
+	// change Zio zoom mode to SuperResolution
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_MODE, PAYLOAD_CAMERA_VIDEO_ZOOM_MODE_SUPER_RESOLUTION, PARAM_TYPE_UINT32);
 
 	bool is_zoom_in = false;
 	while(!time_to_exit){

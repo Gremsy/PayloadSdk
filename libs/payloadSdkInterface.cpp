@@ -32,6 +32,8 @@ sdkInitConnection(){
     /* Start the port and payload_interface */
     port->start();
     payload_interface->start();
+
+    initGimbal((Serial_Port*)port);
 }
 
 void 
@@ -364,4 +366,25 @@ setPayloadCameraRecordVideoStop(){
 
 	// do the write
 	payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+initGimbal(Serial_Port* port){
+	_system_id.sysid = SYS_ID;
+	_system_id.compid = COMP_ID;
+	myGimbalPort = port;
+	myGimbal = new Gimbal_Protocol_V2(myGimbalPort, _system_id);
+
+	_gimbal_id.sysid = 1;
+	_gimbal_id.compid = MAV_COMP_ID_GIMBAL;
+	myGimbal->initialize(_gimbal_id);
+}
+
+void 
+PayloadSdkInterface::
+setGimbalSpeed(float spd_pitch, float spd_roll, float spd_yaw, Gimbal_Protocol::input_mode_t mode){
+	if(myGimbal != nullptr){
+		myGimbal->set_gimbal_move_sync(spd_pitch, spd_roll, spd_yaw, mode);
+	}
 }

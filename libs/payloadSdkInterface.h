@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "payloadsdk.h"
+#include "gimbal_protocol_v2.h"
 
 #define SDK_VERSION "1.0.0_build.06Jan2023"
 
@@ -103,5 +104,17 @@ private:
 
 	uint8_t SYS_ID = 1;
 	uint8_t COMP_ID = MAV_COMP_ID_ONBOARD_COMPUTER;
+
+
+public:
+	/* for proceed gSDK to communicate with gimbal */
+	Gimbal_Protocol_V2* myGimbal = nullptr;
+	Serial_Port* myGimbalPort = nullptr;
+	mavlink_system_t _system_id;
+	mavlink_system_t _gimbal_id;
+
+	void initGimbal(Serial_Port* port);
+	void setGimbalSpeed(float spd_pitch, float spd_roll, float spd_yaw, Gimbal_Protocol::input_mode_t mode);
+
 };
 #endif

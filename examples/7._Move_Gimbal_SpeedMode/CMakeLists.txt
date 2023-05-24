@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.5)
 
 set(APP_SOURCES 
-        gimbal_set_mode.cpp
+        move_gimbal_speed_mode.cpp
         ${SOURCES})
 
-add_executable(GimbalSetMode
+add_executable(MoveGimbalSpeedMode
                ${APP_SOURCES}
                )
 
 find_package( Threads )
-target_link_libraries(GimbalSetMode
+target_link_libraries(MoveGimbalSpeedMode
                      PayloadSDK
                      ${CMAKE_THREAD_LIBS_INIT}
                      ${GST_LIBRARIES} 

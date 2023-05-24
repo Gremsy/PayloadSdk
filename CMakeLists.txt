@@ -25,3 +25,4 @@ add_subdirectory(examples/6._Get_Video_Streaming)
 
 # gimbal control examples
 add_subdirectory(examples/7._Move_Gimbal_SpeedMode)
+add_subdirectory(examples/8._Move_Gimbal_AngleMode)

@@ -5,7 +5,7 @@
 #include "payloadsdk.h"
 #include "gimbal_protocol_v2.h"
 
-#define SDK_VERSION "1.0.0_build.06Jan2023"
+#define SDK_VERSION "1.0.1_build.25052023"
 
 class PayloadSdkInterface
 {

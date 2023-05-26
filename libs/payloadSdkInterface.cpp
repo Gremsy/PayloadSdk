@@ -4,6 +4,19 @@ PayloadSdkInterface::PayloadSdkInterface(){
 	printf("Starting Gremsy PayloadSdk %s\n", SDK_VERSION);
 }
 
+PayloadSdkInterface::PayloadSdkInterface(T_ConnInfo data){
+	printf("Starting Gremsy PayloadSdk %s\n", SDK_VERSION);
+	payload_ctrl_type = data.type;
+	if(payload_ctrl_type == CONTROL_UART){
+		payload_uart_port = (char*)data.device.uart.name;
+		payload_uart_baud = data.device.uart.baudrate;
+	}else if(payload_ctrl_type == CONTROL_UDP){
+		udp_ip_target = (char*)data.device.udp.ip;
+		udp_port = data.device.udp.port;
+	}
+	
+}
+
 PayloadSdkInterface::~PayloadSdkInterface(){
 
 }
@@ -12,15 +25,14 @@ bool
 PayloadSdkInterface::
 sdkInitConnection(){
 	/* Port for connect with payload */
-#if(CONTROL_METHOD == CONTROL_UART)
-    port = new Serial_Port(payload_uart_port, payload_uart_baud);
-#elif(CONTROL_METHOD == CONTROL_UDP)
-    port = new UDP_Port(udp_ip_target, udp_port);
-#else
-    printf("Please define your control method first. See payloadsdk.h\n");
-    exit(0);
-#endif
-    
+	if(payload_ctrl_type == CONTROL_UART){
+    	port = new Serial_Port(payload_uart_port, payload_uart_baud);
+	}else if(payload_ctrl_type == CONTROL_UDP)
+	    port = new UDP_Port(udp_ip_target, udp_port);
+	else{
+    	printf("Please define your control method first. See payloadsdk.h\n");
+    	exit(0);
+	}
     /* Instantiate an gimbal interface object */
     payload_interface = new Autopilot_Interface(port, SYS_ID, COMP_ID, 2, MAVLINK_COMM_0);
 
@@ -35,6 +47,7 @@ sdkInitConnection(){
 
     initGimbal((Serial_Port*)port);
 }
+
 
 void 
 PayloadSdkInterface::

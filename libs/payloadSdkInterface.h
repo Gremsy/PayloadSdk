@@ -13,13 +13,12 @@ class PayloadSdkInterface
 public:
 
 	PayloadSdkInterface();
+	PayloadSdkInterface(T_ConnInfo data);
 	~PayloadSdkInterface();
-
 	/**
 	 * Init connection to payload
 	 **/
 	bool sdkInitConnection();
-
 	/**
 	 * Interface terminator
 	 **/
@@ -95,6 +94,7 @@ public:
 
 private:
 	Autopilot_Interface* payload_interface;
+	uint8_t payload_ctrl_type = CONTROL_UART;
 	Generic_Port *port;
 	Generic_Port *port_quit = nullptr;
 	char *payload_uart_port = (char*)"/dev/ttyUSB0";

@@ -114,7 +114,28 @@ public:
 	mavlink_system_t _gimbal_id;
 
 	void initGimbal(Serial_Port* port);
+	/*!<@brief: used to rotate gimbal for each axis depend on angular rate or angle mode
+	 * @para1,2,3 : value for each axis
+	 * @para4 : Angular rate or angle mode
+	 * */
 	void setGimbalSpeed(float spd_pitch, float spd_roll, float spd_yaw, Gimbal_Protocol::input_mode_t mode);
+	/**
+	 * set gimbal mode
+	 * (LOCK , FOLLOW , OFF)
+	 * */
+	void setGimbalMode(Gimbal_Protocol::control_mode_t mode);
 
+	/**
+	 * set gimbal reset mode
+	 * */
+	void setGimbalResetMode(Gimbal_Protocol::gimbal_reset_mode_t reset_mode);
+	/**
+	 * turn gimbal power on 
+	 * */
+	void setGimbalPowerOn();
+	/**
+	 * turn gimbal power off
+	 * */
+	void setGimbalPowerOff();
 };
 #endif

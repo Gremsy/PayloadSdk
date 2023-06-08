@@ -11,7 +11,12 @@ T_psdk_process_state s_proc;
 
 /*!< Private prototype */
 static void usage(){
-	std::cout << "THIS IS MESSAGE SHOW YOU HOW TO USE PAYLOAD SDK" << std::endl;
+	std::cout << "Usage : If Onboard computer connect with Payload by Serial Port :" << std::endl;
+	std::cout <<" ./demo_project --device | -d <serial_port> --baud | -b <baudrate> " << std::endl;
+	std::cout << "If Onboard computer connect with Payload by UDP :" << std::endl;
+	std::cout << "./demo_project --udp | -u <payload_ip> --port | -p <connect_port> " << std::endl;
+	std::cout << "E.g: ./demo_project --device /dev/ttyUSB0 --baud 115200" << std::endl;
+	std::cout << "Thank you!! \r\n";
 }
 /*!<@brief: 
  * 
@@ -302,7 +307,11 @@ int main(int argc,char** argv){
 	time_to_exit = false;
 	/*!Init payload interface class pointer*/
 	my_payload = new PayloadSdkInterface(s_conn);
-	my_payload->sdkInitConnection();
+
+	if(my_payload->sdkInitConnection() == false){
+		PRINT_ERR("Payload Interface Init failed,close the program!!!!");
+		exit(1);
+	}
 	
 	while(!time_to_exit){
 

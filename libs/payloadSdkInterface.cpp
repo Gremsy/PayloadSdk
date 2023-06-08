@@ -31,7 +31,7 @@ sdkInitConnection(){
 	    port = new UDP_Port(udp_ip_target, udp_port);
 	else{
     	printf("Please define your control method first. See payloadsdk.h\n");
-    	exit(0);
+    	return false;
 	}
     /* Instantiate an gimbal interface object */
     payload_interface = new Autopilot_Interface(port, SYS_ID, COMP_ID, 2, MAVLINK_COMM_1);
@@ -42,8 +42,14 @@ sdkInitConnection(){
 
 
     /* Start the port and payload_interface */
-    port->start();
-    payload_interface->start();
+    try{
+	    port->start();
+        payload_interface->start();
+    }catch(...){
+    	printf("Open Serial Port Error\r\n");
+    	return false;
+    }
+
 
     initGimbal((Serial_Port*)port);
 }

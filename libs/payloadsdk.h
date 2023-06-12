@@ -15,6 +15,27 @@
 #define CONTROL_UDP    1
 #define CONTROL_METHOD  CONTROL_UART
 
+/**/
+/**/
+typedef struct{
+    char* name;
+    int baudrate;
+} T_ConnInfo_Uart;
+
+typedef struct{
+    char* ip;
+    int port;
+} T_ConnInfo_UDP;
+
+typedef struct {
+    uint8_t type;
+    union {
+        T_ConnInfo_Uart uart;
+        T_ConnInfo_UDP  udp;
+    } device;
+} T_ConnInfo;
+/**/
+
 #define CAM_PARAM_ID_LEN 16
 #define CAM_PARAM_VALUE_LEN 128
 typedef struct {

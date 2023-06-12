@@ -4,6 +4,19 @@ PayloadSdkInterface::PayloadSdkInterface(){
 	printf("Starting Gremsy PayloadSdk %s\n", SDK_VERSION);
 }
 
+PayloadSdkInterface::PayloadSdkInterface(T_ConnInfo data){
+	printf("Starting Gremsy PayloadSdk %s\n", SDK_VERSION);
+	payload_ctrl_type = data.type;
+	if(payload_ctrl_type == CONTROL_UART){
+		payload_uart_port = (char*)data.device.uart.name;
+		payload_uart_baud = data.device.uart.baudrate;
+	}else if(payload_ctrl_type == CONTROL_UDP){
+		udp_ip_target = (char*)data.device.udp.ip;
+		udp_port = data.device.udp.port;
+	}
+	
+}
+
 PayloadSdkInterface::~PayloadSdkInterface(){
 
 }
@@ -12,17 +25,16 @@ bool
 PayloadSdkInterface::
 sdkInitConnection(){
 	/* Port for connect with payload */
-#if(CONTROL_METHOD == CONTROL_UART)
-    port = new Serial_Port(payload_uart_port, payload_uart_baud);
-#elif(CONTROL_METHOD == CONTROL_UDP)
-    port = new UDP_Port(udp_ip_target, udp_port);
-#else
-    printf("Please define your control method first. See payloadsdk.h\n");
-    exit(0);
-#endif
-    
+	if(payload_ctrl_type == CONTROL_UART){
+    	port = new Serial_Port(payload_uart_port, payload_uart_baud);
+	}else if(payload_ctrl_type == CONTROL_UDP)
+	    port = new UDP_Port(udp_ip_target, udp_port);
+	else{
+    	printf("Please define your control method first. See payloadsdk.h\n");
+    	return false;
+	}
     /* Instantiate an gimbal interface object */
-    payload_interface = new Autopilot_Interface(port, SYS_ID, COMP_ID, 2, MAVLINK_COMM_0);
+    payload_interface = new Autopilot_Interface(port, SYS_ID, COMP_ID, 2, MAVLINK_COMM_1);
 
 
     // quit port will close at terminator event
@@ -30,11 +42,18 @@ sdkInitConnection(){
 
 
     /* Start the port and payload_interface */
-    port->start();
-    payload_interface->start();
+    try{
+	    port->start();
+        payload_interface->start();
+    }catch(...){
+    	printf("Open Serial Port Error\r\n");
+    	return false;
+    }
+
 
     initGimbal((Serial_Port*)port);
 }
+
 
 void 
 PayloadSdkInterface::
@@ -387,4 +406,71 @@ setGimbalSpeed(float spd_pitch, float spd_roll, float spd_yaw, Gimbal_Protocol::
 	if(myGimbal != nullptr){
 		myGimbal->set_gimbal_move_sync(spd_pitch, spd_roll, spd_yaw, mode);
 	}
+}
+
+void 
+PayloadSdkInterface::
+setGimbalMode(Gimbal_Protocol::control_mode_t mode){
+	if(myGimbal == nullptr){
+		printf("%s | %d | myGimbal is nullptr\r\n",__func__,__LINE__);
+		return;
+	}
+	myGimbal->set_gimbal_mode_sync(mode);
+}
+
+void 
+PayloadSdkInterface::
+setGimbalResetMode(Gimbal_Protocol::gimbal_reset_mode_t reset_mode){
+	if(myGimbal == nullptr){
+		printf("%s | %d | myGimbal is nullptr\r\n",__func__,__LINE__);
+		return;
+	}
+	auto ret = myGimbal->set_gimbal_reset_mode(reset_mode);
+}
+
+
+void 
+PayloadSdkInterface::
+setGimbalPowerOn()
+{
+	if(myGimbal == nullptr){
+		printf("%s | %d | myGimbal is nullptr\r\n",__func__,__LINE__);
+		return;
+	}
+
+	const float para[7] = {
+		0,									//para 1																							
+		0,									//para 2
+		0,									//para 3
+		0,									//para 4
+		0,									//para 5
+		0,									//para 6
+		1.0f								//para 7
+	};
+
+	auto ret = myGimbal->send_command_long(MAV_CMD_USER_1,para);
+	printf("%s | return : [%s]\r\n",__func__,(ret == Gimbal_Protocol::SUCCESS) ? "SUCCESS" : "ERROR");
+}
+
+
+void 
+PayloadSdkInterface::
+setGimbalPowerOff()
+{
+	if(myGimbal == nullptr){
+		printf("%s | %d | myGimbal is nullptr\r\n",__func__,__LINE__);
+		return;
+	}
+
+	const float para[7] = {
+		0,									//para 1																							
+		0,									//para 2
+		0,									//para 3
+		0,									//para 4
+		0,									//para 5
+		0,									//para 6
+		0									//para 7
+	};
+	auto ret = myGimbal->send_command_long(MAV_CMD_USER_1,para);
+	printf("%s | return : [%s]\r\n",__func__,(ret == Gimbal_Protocol::SUCCESS) ? "SUCCESS" : "ERROR");
 }

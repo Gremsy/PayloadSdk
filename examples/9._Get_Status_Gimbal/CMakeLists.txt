@@ -1,21 +1,15 @@
 cmake_minimum_required(VERSION 3.5)
-# cmake_path(GET CMAKE_CURRENT_SOURCE_DIR FILENAME ProjectName)  
-project(demo_project LANGUAGES CXX)
 
+set(APP_SOURCES 
+        get_status_gimbal.cpp
+        ${SOURCES})
 
-###source for project
-set(APP_SOURCES
-	main.cpp
-	${SOURCES}
-	)
-#include 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-# 
-add_executable(${PROJECT_NAME}
+add_executable(GetStatusGimbal
                ${APP_SOURCES}
                )
+
 find_package( Threads )
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(GetStatusGimbal
                      PayloadSDK
                      ${CMAKE_THREAD_LIBS_INIT}
                      ${GST_LIBRARIES} 
@@ -24,4 +18,3 @@ target_link_libraries(${PROJECT_NAME}
                      stdc++fs
 #                      config++ 
                      )
-

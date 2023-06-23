@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-# cmake_path(GET CMAKE_CURRENT_SOURCE_DIR FILENAME ProjectName)  
+
 project(demo_project LANGUAGES CXX)
 
 
@@ -8,6 +8,7 @@ set(APP_SOURCES
 	main.cpp
 	${SOURCES}
 	)
+
 #include 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 # 

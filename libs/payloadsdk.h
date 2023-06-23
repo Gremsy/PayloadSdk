@@ -181,5 +181,9 @@ enum _zoom_combine_factor{
 #define PAYLOAD_CAMERA_GIMBAL_MODE_FOLLOW           1
 #define PAYLOAD_CAMERA_GIMBAL_MODE_LOCK             2
 
+// Option for control gimbal combine with zoom factor
+#define PAYLOAD_CAMERA_GIMBAL_COMBINE_ZOOM      "GB_FT_ZOOM"
+#define PAYLOAD_CAMERA_GIMBAL_COMBINE_ZOOM_DISABLE  0
+#define PAYLOAD_CAMERA_GIMBAL_COMBINE_ZOOM_ENABLE   1
 
 #endif

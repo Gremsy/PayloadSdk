@@ -137,5 +137,15 @@ public:
 	 * turn gimbal power off
 	 * */
 	void setGimbalPowerOff();
+	/**
+	 * set camera zoom ZOOM_TYPE_CONTINUOUS
+	 * (ZOOM_OUT, ZOOM_STOP, ZOOM_IN)
+	 * */
+	void setCameraZoom(float zoomType,float zoomValue);
+	/**
+	 * set camera focus
+	 * (FOCUS_OUT, FOCUS_STOP, FOCUS_IN)
+	 * */
+	void setCameraFocus(float focusType, float focusValue=0);
 };
 #endif

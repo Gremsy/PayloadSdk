@@ -13,19 +13,19 @@ pkg_check_modules(GST REQUIRED
                     gstreamer-app-1.0
                     )
 
-# add_subdirectory(libs)
+add_subdirectory(libs)
 
-# # camera examples
-# add_subdirectory(examples/1._Connect_to_Payload)
-# add_subdirectory(examples/2._Load_Payload_Settings)
-# add_subdirectory(examples/3._Set_Payload_Settings)
-# add_subdirectory(examples/4._Capture_Image)
-# add_subdirectory(examples/5._Record_Video)
-# add_subdirectory(examples/6._Get_Video_Streaming)
+# camera examples
+add_subdirectory(examples/1._Connect_to_Payload)
+add_subdirectory(examples/2._Load_Payload_Settings)
+add_subdirectory(examples/3._Set_Payload_Settings)
+add_subdirectory(examples/4._Capture_Image)
+add_subdirectory(examples/5._Record_Video)
+add_subdirectory(examples/6._Get_Video_Streaming)
 
-# # gimbal control examples
-# add_subdirectory(examples/7._Move_Gimbal_SpeedMode)
-# add_subdirectory(examples/8._Move_Gimbal_AngleMode)
+# gimbal control examples
+add_subdirectory(examples/7._Move_Gimbal_SpeedMode)
+add_subdirectory(examples/8._Move_Gimbal_AngleMode)
 
 # meida file interact example
 add_subdirectory(examples/9._Download_Payload_Meida)

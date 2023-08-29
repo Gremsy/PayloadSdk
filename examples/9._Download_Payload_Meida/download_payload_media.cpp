@@ -34,15 +34,7 @@ int main(int argc, char* argv[]) {
     std::string event = argv[1];
     if (event=="list") {
         std::string ip = argv[2];
-        std::string tree = argv[3];
         std::string url = "http://" + ip + "/list_files";  // Replace with the actual URL
-
-        Json::Value postData;
-        postData["directory_path"] = tree;
-
-        // Serialize the dictionary to JSON
-        Json::StreamWriterBuilder writer;
-        std::string postDataJson = Json::writeString(writer, postData);
 
         curl_global_init(CURL_GLOBAL_DEFAULT);
         curl = curl_easy_init();
@@ -52,7 +44,7 @@ int main(int argc, char* argv[]) {
             // Set the URL
             curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
             // Set the POST data
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, postDataJson.c_str());
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
             // Set the callback function to write the downloaded data to the file
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
@@ -60,12 +52,11 @@ int main(int argc, char* argv[]) {
             res = curl_easy_perform(curl);
 
             // Check for errors
-            if (res != CURLE_OK) {
+            if (res != CURLE_OK)
                 std::cerr << "Request failed: " << curl_easy_strerror(res) << std::endl;
-            } else {
+            else 
                 // Process the response
-                std::cout << "Response: " << response << std::endl;
-            }
+                std::cout << "Listing /sdcard: " << response << std::endl;
             // Cleanup
             curl_easy_cleanup(curl);
         }
@@ -73,27 +64,31 @@ int main(int argc, char* argv[]) {
     else if (event=="download") {
         std::string ip = argv[2];
         std::string tree = argv[3];
-        std::string input = tree;
-        std::string result = GetStringAfterSlash(input);
-        if (argv[4]!=NULL) {
-            std::string directory = argv[4];
-            char lastChar = directory.back();
-            if (lastChar!='/') {
-                directory = directory + "/";
-            }
-            std::string result = directory + GetStringAfterSlash(input);
-        }
-        std::string url = "http://" + ip + "/download_file";
         char outfilename[FILENAME_MAX];
-        strcpy(outfilename, result.c_str());
+        strcpy(outfilename, tree.c_str());
+        if (tree[0]=='/') {
+            std::string result = GetStringAfterSlash(tree);
+            strcpy(outfilename, result.c_str());
+        }
 
         Json::Value postData;
-        postData["file_path"] = tree;
-        std::cout << "postData: " << postData << std::endl;
-
+        std::string data = outfilename;
+        postData["file_path"] = data;
         // Serialize the dictionary to JSON
         Json::StreamWriterBuilder writer;
         std::string postDataJson = Json::writeString(writer, postData);
+
+        if (argv[4]!=NULL) {
+            std::string directory = argv[4];
+            char lastChar = directory.back();
+            if (lastChar!='/') 
+                directory = directory + "/" + outfilename;
+            else 
+                directory = directory + outfilename;
+            strcpy(outfilename, directory.c_str());
+
+        }
+        std::string url = "http://" + ip + "/download_file";
 
         curl = curl_easy_init();
         if (curl)
@@ -110,12 +105,11 @@ int main(int argc, char* argv[]) {
             // Perform the request
             res = curl_easy_perform(curl);
             // Check for errors
-            if (res != CURLE_OK) {
+            if (res != CURLE_OK) 
                 std::cerr << "Request failed: " << curl_easy_strerror(res) << std::endl;
-            } else {
+            else 
                 // Process the response
                 std::cout << "Response: " << fp << std::endl;
-            }
             // Cleanup
             curl_easy_cleanup(curl);
             fclose(fp);

@@ -29,5 +29,8 @@ add_subdirectory(examples/8._Move_Gimbal_AngleMode)
 add_subdirectory(examples/9._Get_Status_Gimbal)
 add_subdirectory(examples/10._Set_Camera_Zoom_Focus)
 
+# media example
+add_subdirectory(examples/11._Download_Payload_Meida)
+
 # Project subdirectory
 add_subdirectory(sample_project/demo_project)

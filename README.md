@@ -11,7 +11,7 @@ git clone -b develop --recurse-submodules git@github.com:Gremsy/PayloadSdk.git
 ```
 ## How to build
 ```
-cd PayloadSdk/src  
+cd PayloadSdk 
 mkdir build && cd build  
 cmake ..  
 make -j6  

@@ -54,6 +54,11 @@ int main(int argc, char *argv[]){
 	 * mode: speed control
 	 */
 
+	/*
+	 * change gimbal control combine with zoom option
+	 */
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_COMBINE_ZOOM, PAYLOAD_CAMERA_GIMBAL_COMBINE_ZOOM_DISABLE, PARAM_TYPE_UINT32);
+	
 	
 	while(!time_to_exit){
 		printf("Move gimbal yaw to the right 20 deg/s, zoom in to 20x, delay in 5secs \n");

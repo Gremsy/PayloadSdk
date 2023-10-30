@@ -13,13 +13,12 @@ class PayloadSdkInterface
 public:
 
 	PayloadSdkInterface();
+	PayloadSdkInterface(T_ConnInfo data);
 	~PayloadSdkInterface();
-
 	/**
 	 * Init connection to payload
 	 **/
 	bool sdkInitConnection();
-
 	/**
 	 * Interface terminator
 	 **/
@@ -95,6 +94,7 @@ public:
 
 private:
 	Autopilot_Interface* payload_interface;
+	uint8_t payload_ctrl_type = CONTROL_UART;
 	Generic_Port *port;
 	Generic_Port *port_quit = nullptr;
 	char *payload_uart_port = (char*)"/dev/ttyUSB0";
@@ -114,7 +114,38 @@ public:
 	mavlink_system_t _gimbal_id;
 
 	void initGimbal(Serial_Port* port);
+	/*!<@brief: used to rotate gimbal for each axis depend on angular rate or angle mode
+	 * @para1,2,3 : value for each axis
+	 * @para4 : Angular rate or angle mode
+	 * */
 	void setGimbalSpeed(float spd_pitch, float spd_roll, float spd_yaw, Gimbal_Protocol::input_mode_t mode);
+	/**
+	 * set gimbal mode
+	 * (LOCK , FOLLOW , OFF)
+	 * */
+	void setGimbalMode(Gimbal_Protocol::control_mode_t mode);
 
+	/**
+	 * set gimbal reset mode
+	 * */
+	void setGimbalResetMode(Gimbal_Protocol::gimbal_reset_mode_t reset_mode);
+	/**
+	 * turn gimbal power on 
+	 * */
+	void setGimbalPowerOn();
+	/**
+	 * turn gimbal power off
+	 * */
+	void setGimbalPowerOff();
+	/**
+	 * set camera zoom ZOOM_TYPE_CONTINUOUS
+	 * (ZOOM_OUT, ZOOM_STOP, ZOOM_IN)
+	 * */
+	void setCameraZoom(float zoomType,float zoomValue);
+	/**
+	 * set camera focus
+	 * (FOCUS_OUT, FOCUS_STOP, FOCUS_IN)
+	 * */
+	void setCameraFocus(float focusType, float focusValue=0);
 };
 #endif

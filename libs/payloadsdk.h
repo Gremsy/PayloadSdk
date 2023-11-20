@@ -12,7 +12,7 @@
 #define PAYLOAD_COMPONENT_ID MAV_COMP_ID_CAMERA2
 
 #define CONTROL_UART    0
-#define CONTROL_UDP    1
+#define CONTROL_UDP     1
 #define CONTROL_METHOD  CONTROL_UART
 
 /**/

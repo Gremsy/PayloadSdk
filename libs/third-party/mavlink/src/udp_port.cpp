@@ -58,7 +58,7 @@
 
 #define UDP_SERVER	0
 #define UDP_CLIENT  1
-#define UDP_MODE    UDP_SERVER
+#define UDP_MODE    UDP_CLIENT
 // ----------------------------------------------------------------------------------
 //   UDP Port Manager Class
 // ----------------------------------------------------------------------------------

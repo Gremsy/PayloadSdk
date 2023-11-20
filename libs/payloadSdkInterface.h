@@ -94,13 +94,13 @@ public:
 
 private:
 	Autopilot_Interface* payload_interface;
-	uint8_t payload_ctrl_type = CONTROL_UART;
+	uint8_t payload_ctrl_type = CONTROL_METHOD;
 	Generic_Port *port;
 	Generic_Port *port_quit = nullptr;
 	char *payload_uart_port = (char*)"/dev/ttyUSB0";
 	int payload_uart_baud = 115200;
-	const char *udp_ip_target = (char*)"192.168.12.200";
-    int udp_port = 14565;
+	const char *udp_ip_target = (char*)"192.168.12.250";	// This is an ip address of the payload
+    int udp_port = 14566;									// Do not change
 
 	uint8_t SYS_ID = 1;
 	uint8_t COMP_ID = MAV_COMP_ID_ONBOARD_COMPUTER;

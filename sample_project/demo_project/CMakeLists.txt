@@ -20,8 +20,6 @@ target_link_libraries(${PROJECT_NAME}
                      PayloadSDK
                      ${CMAKE_THREAD_LIBS_INIT}
                      ${GST_LIBRARIES} 
-                     ${OpenCV_LIBS}
-                     ${CAIRO_LIBRARIES}
                      stdc++fs
 #                      config++ 
                      )

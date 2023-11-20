@@ -258,9 +258,7 @@ void *start_loop_thread(void *threadid)
 	    descr = "udpsrc port=" + _stream_uri + " ! application/x-rtp,encoding-name=H264,payload=96 ! rtph264depay ! h264parse ! queue ! avdec_h264 ! nvvidconv ! nvoverlaysink sync=false async=false"
 	                    ;
     }else{
-    	descr = "rtspsrc location=" + _stream_uri + " latency=0 ! rtph264depay ! h264parse ! nvv4l2decoder ! nvoverlaysink sync=false async=false";
-    	printf("Does not support RTSP stream with this version \n");
-    	exit(0);
+    	descr = "rtspsrc location=" + _stream_uri + " latency=0 ! rtph264depay ! h264parse ! avdec_h264 ! autovideosink sync=false async=false";
     }
 
     printf("%s %s \n", __func__, descr.c_str());

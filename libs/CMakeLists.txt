@@ -11,9 +11,6 @@ add_subdirectory(${GSDK_DIR} ${CMAKE_CURRENT_BINARY_DIR}/${GSDK_NAME})
 #Include header files
 include_directories(
             ${GST_INCLUDE_DIRS}
-            ${CAIRO_INCLUDE_DIRS}
-            ${OPENTLD_INCLUDES}
-            ${OpenCV_INCLUDE_DIRS}
             ${CF_HEADER_DIRS}
             ${CMAKE_CURRENT_SOURCE_DIR}/
             ${CMAKE_CURRENT_SOURCE_DIR}/third-party/mavlink/include
@@ -34,9 +31,6 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC 
             ${CMAKE_CURRENT_SOURCE_DIR}
             ${GST_INCLUDE_DIRS}
-            ${CAIRO_INCLUDE_DIRS}
-            ${OPENTLD_INCLUDES}
-            ${OpenCV_INCLUDE_DIRS}
             ${CF_HEADER_DIRS}
             ${CMAKE_CURRENT_SOURCE_DIR}/
             ${CMAKE_CURRENT_SOURCE_DIR}/third-party/mavlink/include

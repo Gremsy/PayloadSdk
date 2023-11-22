@@ -32,19 +32,9 @@ int main(int argc, char *argv[]){
 	my_payload->sdkInitConnection();
 	printf("Waiting for payload signal! \n");
 
-	// check connection
-	while(!time_to_exit){
-		mavlink_message_t msg;
-		uint8_t msg_cnt = my_payload->getNewMewssage(msg);
-
-		if(msg_cnt && msg.sysid == PAYLOAD_SYSTEM_ID && msg.compid == PAYLOAD_COMPONENT_ID){
-			printf("Payload connected! \n");
-			break;
-		}
-		usleep(10000);
-	}
+	my_payload->checkPayloadConnection();
 	
-	// change Zio zoom mode to SuperResolution
+	// change payload zoom mode to SuperResolution
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_MODE, PAYLOAD_CAMERA_VIDEO_ZOOM_MODE_SUPER_RESOLUTION, PARAM_TYPE_UINT32);
 
 	

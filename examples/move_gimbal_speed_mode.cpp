@@ -17,8 +17,8 @@ void gstreamer_terminate();
 void *start_loop_thread(void *threadid);
 
 
-bool all_threads_init();
 void quit_handler(int sig);
+void onPayloadStatusChanged(int event, double* param);
 
 
 int main(int argc, char *argv[]){
@@ -32,27 +32,14 @@ int main(int argc, char *argv[]){
 	my_payload->sdkInitConnection();
 	printf("Waiting for payload signal! \n");
 
+	// register callback function
+	my_payload->regPayloadStatusChanged(onPayloadStatusChanged);
+
 	// check connection
-	while(!time_to_exit){
-		mavlink_message_t msg;
-		uint8_t msg_cnt = my_payload->getNewMewssage(msg);
-
-		if(msg_cnt && msg.sysid == PAYLOAD_SYSTEM_ID && msg.compid == PAYLOAD_COMPONENT_ID){
-			printf("Payload connected! \n");
-			break;
-		}
-		usleep(10000);
-	}
+	my_payload->checkPayloadConnection();
 	
-	// change Zio zoom mode to SuperResolution
+	// change payload zoom mode to SuperResolution
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_MODE, PAYLOAD_CAMERA_VIDEO_ZOOM_MODE_SUPER_RESOLUTION, PARAM_TYPE_UINT32);
-
-	/* set gimbal speed to
-	 * pitch: 10 deg/s
-	 * roll: 0 deg/s
-	 * yaw: 0 deg/s
-	 * mode: speed control
-	 */
 
 	/*
 	 * change gimbal control combine with zoom option
@@ -62,12 +49,12 @@ int main(int argc, char *argv[]){
 	
 	while(!time_to_exit){
 		printf("Move gimbal yaw to the right 20 deg/s, zoom in to 20x, delay in 5secs \n");
-		my_payload->setGimbalSpeed(0, 0 , 20, Gimbal_Protocol::INPUT_SPEED);
+		my_payload->setGimbalSpeed(0, 0 , 120, Gimbal_Protocol::INPUT_SPEED);
 		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_20X, PARAM_TYPE_UINT32);
 		usleep(5000000); // sleep 2s
 		
-		printf("Move gimbal yaw to the left 20 deg/s, zoom in to 20x, delay in 5secs \n");
-		my_payload->setGimbalSpeed(-0, -0 , -20, Gimbal_Protocol::INPUT_SPEED);
+		printf("Move gimbal yaw to the left 20 deg/s, zoom in to 1x, delay in 5secs \n");
+		my_payload->setGimbalSpeed(-0, -0 , -120, Gimbal_Protocol::INPUT_SPEED);
 		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);
 		usleep(5000000); // sleep 2s
 		
@@ -96,4 +83,19 @@ void quit_handler( int sig ){
 
     // end program here
     exit(0);
+}
+
+void onPayloadStatusChanged(int event, double* param){
+	
+	switch(event){
+	case PAYLOAD_GB_ATTITUDE:{
+		// param[0]: pitch
+		// param[1]: roll
+		// param[2]: yaw
+
+		printf("Pich: %.2f - Roll: %.2f - Yaw: %.2f\n", param[0], param[1], param[2]);
+		break;
+	}
+	default: break;
+	}
 }

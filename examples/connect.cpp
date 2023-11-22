@@ -18,27 +18,11 @@ int main(int argc, char *argv[]){
 	printf("Waiting for payload signal! \n");
 
 	// check connection
-	while(!time_to_exit){
-		mavlink_message_t msg;
-		uint8_t msg_cnt = my_payload->getNewMewssage(msg);
-
-		if(msg_cnt && msg.sysid == PAYLOAD_SYSTEM_ID && msg.compid == PAYLOAD_COMPONENT_ID){
-			printf("Payload connected! \n");
-			break;
-		}
-	}
+	my_payload->checkPayloadConnection();
 
 	// check payload messages
-	while(!time_to_exit){
-		mavlink_message_t msg;
-		uint8_t msg_cnt = my_payload->getNewMewssage(msg);
-		if(msg_cnt){
-			printf("Got %d message in queue \n", msg_cnt);
-			printf("   --> message %d from system_id: %d with component_id: %d \n", msg.msgid, msg.sysid, msg.compid);
-		}else{
-			// if no message come, sleep for 500ms
-			usleep(500000);
-		}
+	while(1){
+		// do nothing
 
 		usleep(1000);
 	}

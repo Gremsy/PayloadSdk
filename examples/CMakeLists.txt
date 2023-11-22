@@ -10,7 +10,7 @@ set(EXAMPLES
     get_video_streaming.cpp
     move_gimbal_angle_mode.cpp
     move_gimbal_speed_mode.cpp
-    get_gimbal_status.cpp
+    get_payload_status.cpp
     set_camera_zoom_focus.cpp
 )
 

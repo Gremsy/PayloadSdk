@@ -5,7 +5,32 @@
 #include "payloadsdk.h"
 #include "gimbal_protocol_v2.h"
 
-#define SDK_VERSION "1.0.1_build.25052023"
+#define SDK_VERSION "2.0.0_build.22112023"
+
+typedef void (*payload_status_callback_t)(int event, double* param);
+typedef void (*payload_streamInfo_callback_t)(int event, char* param_char, double* param_double);
+
+enum payload_status_event_t{
+	PAYLOAD_CAM_CAPTURE_STATUS = 0,
+	PAYLOAD_CAM_STORAGE_INFO,
+	PAYLOAD_CAM_SETTINGS,
+	PAYLOAD_CAM_PARAM_VALUE,
+
+	PAYLOAD_GB_ATTITUDE,
+
+	PAYLOAD_CAM_INFO,
+	PAYLOAD_CAM_STREAMINFO,
+
+	PAYLOAD_PARAMS,
+};
+
+enum payload_param_t{
+	PARAM_EO_ZOOM_LEVEL = 0,
+	PARAM_IR_ZOOM_LEVEL,
+
+	PARAM_LRF_RANGE,
+	PARAM_COUNT
+};
 
 class PayloadSdkInterface
 {
@@ -15,6 +40,13 @@ public:
 	PayloadSdkInterface();
 	PayloadSdkInterface(T_ConnInfo data);
 	~PayloadSdkInterface();
+
+	void regPayloadStatusChanged(payload_status_callback_t func);
+  	payload_status_callback_t __notifyPayloadStatusChanged = NULL;
+
+  	void regPayloadStreamChanged(payload_streamInfo_callback_t func);
+  	payload_streamInfo_callback_t __notifyPayloadStreamChanged = NULL;
+
 	/**
 	 * Init connection to payload
 	 **/
@@ -23,6 +55,10 @@ public:
 	 * Interface terminator
 	 **/
 	void sdkQuit();
+
+	bool all_threads_init();
+
+	void checkPayloadConnection();
 
 	/**
 	 * Check new message 
@@ -91,9 +127,15 @@ public:
 	 **/
 	void setPayloadCameraRecordVideoStop();
 
+	void requestParamValue(uint8_t pIndex);
+	void setParamRate(uint8_t pIndex, uint16_t time_ms);
 
 private:
 	Autopilot_Interface* payload_interface;
+
+	pthread_t thrd_recv;
+	pthread_t thrd_request_params;
+
 	uint8_t payload_ctrl_type = CONTROL_METHOD;
 	Generic_Port *port;
 	Generic_Port *port_quit = nullptr;
@@ -104,6 +146,10 @@ private:
 
 	uint8_t SYS_ID = 1;
 	uint8_t COMP_ID = MAV_COMP_ID_ONBOARD_COMPUTER;
+
+	bool time_to_exit = false;
+
+	uint16_t paramRate[PARAM_COUNT];
 
 
 public:
@@ -147,5 +193,24 @@ public:
 	 * (FOCUS_OUT, FOCUS_STOP, FOCUS_IN)
 	 * */
 	void setCameraFocus(float focusType, float focusValue=0);
+
+	// handle receive message
+	void payload_recv_handle();
+
+	// handle request message
+	void payload_request_handle();
+
+private:
+	void _handle_msg_param_ext_value(mavlink_message_t* msg);
+	void _handle_msg_command_ack(mavlink_message_t* msg);
+	void _handle_msg_storage_information(mavlink_message_t* msg);
+	void _handle_msg_camera_capture_status(mavlink_message_t* msg);
+	void _handle_msg_camera_settings(mavlink_message_t* msg);
+
+	void _handle_msg_mount_orientation(mavlink_message_t* msg);
+	void _handle_msg_param_value(mavlink_message_t* msg);
+
+	void _handle_msg_camera_stream_information(mavlink_message_t* msg);
+	void _handle_msg_camera_information(mavlink_message_t* msg);
 };
 #endif

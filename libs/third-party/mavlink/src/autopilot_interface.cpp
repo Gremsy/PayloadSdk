@@ -505,6 +505,4 @@ w_heartbeat(){
 
 	// do the write
 	push_message_to_queue(message);
-
-	printf("%s \n", __func__);
 }

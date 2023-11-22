@@ -130,11 +130,9 @@ int8_t psdk_run_sample(){
 			/*! Set OSD Mode to STATUS */
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_OSD_MODE,PAYLOAD_CAMERA_VIDEO_OSD_MODE_STATUS,PARAM_TYPE_UINT32);
 			/*! Set Dual RC Mode*/
-			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_RC_MODE,PAYLOAD_CAMERA_RC_MODE_DUAL,PARAM_TYPE_UINT32);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_RC_MODE,PAYLOAD_CAMERA_RC_MODE_STANDARD,PARAM_TYPE_UINT32);
 			/*! Turn Off Flip mode*/
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_FLIP,PAYLOAD_CAMERA_VIDEO_FLIP_OFF,PARAM_TYPE_UINT32);
-			/*! Set Display mode to HDMI only*/
-			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_OUTPUT,PAYLOAD_CAMERA_VIDEO_OUTPUT_HDMI,PARAM_TYPE_UINT32);
 			/*! Set shutter speed to 1/1000*/
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED,PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_1000,PARAM_TYPE_UINT32);
 			/*! Set Apertture value to 10*/

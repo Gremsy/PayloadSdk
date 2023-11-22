@@ -1,19 +1,19 @@
 #include "stdio.h"
 #include <pthread.h>
 #include <cstdlib>
+#include <string>
 
 #include"payloadSdkInterface.h"
 
 PayloadSdkInterface* my_payload = nullptr;
-
-void onPayloadStatusChanged(int event, double* param);
+bool time_to_exit = false;
 
 void quit_handler(int sig);
+void onPayloadStatusChanged(int event, double* param);
 
-void _handle_msg_param_ext_value(mavlink_message_t* msg);
 
 int main(int argc, char *argv[]){
-	printf("Starting LoadPayloadSettings example...\n");
+	printf("Starting Set gimbal mode example...\n");
 	signal(SIGINT,quit_handler);
 
 	// create payloadsdk object
@@ -28,13 +28,13 @@ int main(int argc, char *argv[]){
 
 	// check connection
 	my_payload->checkPayloadConnection();
-	
-	// request to read all settings of payload
-	my_payload->getPayloadCameraSettingList();
 
-	while(1){
-		// main loop
-		usleep(1000);
+	// set the interval for param update
+	my_payload->setParamRate(PARAM_LRF_RANGE, 1000);
+
+	while(!time_to_exit){
+
+		usleep(10000);
 	}
 
     
@@ -46,6 +46,7 @@ void quit_handler( int sig ){
     printf("TERMINATING AT USER REQUEST \n");
     printf("\n");
 
+    time_to_exit = true;
 
     // close payload interface
     try {
@@ -57,15 +58,30 @@ void quit_handler( int sig ){
     exit(0);
 }
 
+  
 void onPayloadStatusChanged(int event, double* param){
-	printf("%s %d \n", __func__, event);
-
+	
 	switch(event){
-	case PAYLOAD_CAM_PARAM_VALUE:{
-		// param[0]: param_index
-		// param[1]: value
+	case PAYLOAD_GB_ATTITUDE:{
+		// param[0]: pitch
+		// param[1]: roll
+		// param[2]: yaw
 
-		printf(" --> Param_id: %.2f, value: %.2f\n", param[0], param[1]);
+		printf("Pich: %.2f - Roll: %.2f - Yaw: %.2f\n", param[0], param[1], param[2]);
+		break;
+	}
+	case PAYLOAD_PARAMS:{
+		// param[0]: param index
+		// param[1]: value
+		if(param[0] == PARAM_EO_ZOOM_LEVEL){
+			printf("Payload EO_ZOOM_LEVEL: %.2f \n", param[1]);
+		}
+		else if(param[0] == PARAM_IR_ZOOM_LEVEL){
+			printf("Payload IR_ZOOM_LEVEL: %.2f \n", param[1]);
+		}
+		else if(param[0] == PARAM_LRF_RANGE){
+			printf("Payload LRF_RANGE: %.2f \n", param[1]);
+		}
 		break;
 	}
 	default: break;

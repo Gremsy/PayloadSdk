@@ -75,17 +75,13 @@ enum param_type {
 #define PAYLOAD_CAMERA_VIDEO_OSD_MODE_STATUS        2
 
 #define PAYLOAD_CAMERA_RC_MODE 			"RC_MODE"
-#define PAYLOAD_CAMERA_RC_MODE_SINGLE 		0
-#define PAYLOAD_CAMERA_RC_MODE_DUAL 		1
+#define PAYLOAD_CAMERA_RC_MODE_GREMSY 		0
+#define PAYLOAD_CAMERA_RC_MODE_STANDARD 		1
 
 #define PAYLOAD_CAMERA_VIDEO_FLIP        "C_V_FLIP"
 #define PAYLOAD_CAMERA_VIDEO_FLIP_OFF       0
 #define PAYLOAD_CAMERA_VIDEO_FLIP_ON        1
 
-#define PAYLOAD_CAMERA_VIDEO_OUTPUT      "C_V_OUT"
-#define PAYLOAD_CAMERA_VIDEO_OUTPUT_HDMI       0
-#define PAYLOAD_CAMERA_VIDEO_OUTPUT_UDP        1
-#define PAYLOAD_CAMERA_VIDEO_OUTPUT_BOTH       2
 
 #define PAYLOAD_CAMERA_VIDEO_DEFOG        "C_V_DEFOG"
 #define PAYLOAD_CAMERA_VIDEO_DEFOG_OFF       0
@@ -180,6 +176,20 @@ enum _zoom_combine_factor{
 #define PAYLOAD_CAMERA_GIMBAL_MODE_OFF              0
 #define PAYLOAD_CAMERA_GIMBAL_MODE_FOLLOW           1
 #define PAYLOAD_CAMERA_GIMBAL_MODE_LOCK             2
+
+#define PAYLOAD_CAMERA_VIEW_SRC             "C_SOURCE"
+#define PAYLOAD_CAMERA_VIEW_EOIR                0
+#define PAYLOAD_CAMERA_VIEW_EO                  1
+#define PAYLOAD_CAMERA_VIEW_IR                  2
+#define PAYLOAD_CAMERA_VIEW_IREO                3
+#define PAYLOAD_CAMERA_VIEW_SYNC                4
+
+#define PAYLOAD_CAMERA_RECORD_SRC             "C_V_REC"
+#define PAYLOAD_CAMERA_RECORD_BOTH              0
+#define PAYLOAD_CAMERA_RECORD_EO                1
+#define PAYLOAD_CAMERA_RECORD_IR                2
+#define PAYLOAD_CAMERA_RECORD_OSD               5
+
 
 enum Camera_Zoom_Value
 {

@@ -7,8 +7,6 @@
 PayloadSdkInterface* my_payload = nullptr;
 bool time_to_exit = false;
 
-
-
 void quit_handler(int sig);
 
 int main(int argc, char *argv[]){
@@ -22,16 +20,7 @@ int main(int argc, char *argv[]){
 	my_payload->sdkInitConnection();
 	printf("Waiting for payload signal! \n");
 
-	// check connection
-	while(!time_to_exit){
-		mavlink_message_t msg;
-		uint8_t msg_cnt = my_payload->getNewMewssage(msg);
-
-		if(msg_cnt && msg.sysid == PAYLOAD_SYSTEM_ID && msg.compid == PAYLOAD_COMPONENT_ID){
-			printf("Payload connected! \n");
-			break;
-		}
-	}
+	my_payload->checkPayloadConnection();
 
     usleep(1000000);
 	while(!time_to_exit){

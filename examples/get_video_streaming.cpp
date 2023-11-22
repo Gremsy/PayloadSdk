@@ -17,7 +17,7 @@ using namespace std;
 PayloadSdkInterface* my_payload = nullptr;
 bool time_to_exit = false;
 
-pthread_t thrd_recv;
+
 pthread_t thrd_gstreamer;
 GMainLoop *loop;
 GstElement* main_pipeline = nullptr;
@@ -26,9 +26,10 @@ void gstreamer_terminate();
 void *start_loop_thread(void *threadid);
 
 
-bool all_threads_init();
-void *payload_recv_handle(void *threadid);
 void quit_handler(int sig);
+
+void onPayloadStatusChanged(int event, double* param);
+void onPayloadStreamChanged(int event, char* param_char, double* param_double);
 
 typedef enum{
 	idle = 0,
@@ -43,9 +44,6 @@ uint8_t time_to_view = 10;
 bool _is_rtsp_stream = false;
 string _stream_uri;
 
-void _handle_msg_camera_information(mavlink_message_t* msg);
-void _handle_msg_camera_stream_information(mavlink_message_t* msg);
-void _handle_msg_command_ack(mavlink_message_t* msg);
 
 int main(int argc, char *argv[]){
 	printf("Starting GetStreaming example...\n");
@@ -58,24 +56,17 @@ int main(int argc, char *argv[]){
 	my_payload->sdkInitConnection();
 	printf("Waiting for payload signal! \n");
 
+	// register callback function
+	my_payload->regPayloadStatusChanged(onPayloadStatusChanged);
+	my_payload->regPayloadStreamChanged(onPayloadStreamChanged);
+
 	// check connection
-	while(!time_to_exit){
-		mavlink_message_t msg;
-		uint8_t msg_cnt = my_payload->getNewMewssage(msg);
+	my_payload->checkPayloadConnection();
 
-		if(msg_cnt && msg.sysid == PAYLOAD_SYSTEM_ID && msg.compid == PAYLOAD_COMPONENT_ID){
-			printf("Payload connected! \n");
-			break;
-		}
-		usleep(10000);
-	}
 
-	// init thread to check receive message from payload
-	all_threads_init();
+	// set record source
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_IREO, PARAM_TYPE_UINT32);
 	
-	// change setting of VIDEO_OUT to BOTH_HDMI_UDP
-	printf("Change VideoOutput to both HDMI and Ethernet \n");
-	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_OUTPUT, PAYLOAD_CAMERA_VIDEO_OUTPUT_BOTH, PARAM_TYPE_UINT32);
 	usleep(500000);
 
 	my_job = check_camera_info;
@@ -133,109 +124,56 @@ void quit_handler( int sig ){
     exit(0);
 }
 
-bool all_threads_init(){
+void onPayloadStatusChanged(int event, double* param){
 
-	int rc = pthread_create(&thrd_recv, NULL, &payload_recv_handle, (int *)1);
-	if (rc){
-		std::cout << "\nError: Can not create thread!" << rc << std::endl;
-		return false;
+	switch(event){
+	case PAYLOAD_CAM_INFO:{
+		// param[0]: flags
+
+		// if payload have stream video
+		if((int16_t)param[0] & (CAMERA_CAP_FLAGS_HAS_VIDEO_STREAM)){
+			printf("   ---> Got payload has streaming video, Check streaming URI \n");
+			my_job = check_streaming_uri;
+		}else{
+			printf("   ---> Payload has no streaming video \n");
+			printf("It looks like your payload was setting to output video only to HDMI \n");
+			printf("Payload setting changed to: both HDMI and Ethernet.\n");
+			printf("Please reboot your payload to apply this setting. Then try again.\n");
+			my_job = idle;
+		}
+
+		break;
 	}
-	std::cout << "Thread created\n" << std::endl;
-}
-
-void *payload_recv_handle(void *threadid)
-{
-	// check payload messages
-	while(!time_to_exit){
-	#if 1
-		try{
-			if(my_payload != nullptr){
-				mavlink_message_t msg;
-				uint8_t msg_cnt = my_payload->getNewMewssage(msg);
-				// printf("message cnt: %d \n", msg_cnt);
-
-				if(msg_cnt){
-					// printf("Got %d message in queue \n", msg_cnt);
-					// printf("   --> message %d from system_id: %d with component_id: %d \n", msg.msgid, msg.sysid, msg.compid);
-					switch(msg.msgid){
-					case MAVLINK_MSG_ID_COMMAND_ACK:{
-						_handle_msg_command_ack(&msg);
-						break;
-					} 
-					case MAVLINK_MSG_ID_CAMERA_INFORMATION:{
-						_handle_msg_camera_information(&msg);
-						break;
-					} 
-					case MAVLINK_MSG_ID_VIDEO_STREAM_INFORMATION:{
-						_handle_msg_camera_stream_information(&msg);
-						break;
-					}
-					default: break;
-					}
-				}else{
-					// printf("Recieved message queue empty. \n");
-				}
-
-				usleep(10000);
-			}else{
-				printf("My_payload nullptr \n");
-			}
-		}catch ( ... ) {};
-	#else
-		printf("thread running \n");
-		usleep(1000000);
-	#endif
-	}
-	pthread_exit(NULL);
-}
-
-void _handle_msg_command_ack(mavlink_message_t* msg){
-	mavlink_command_ack_t cmd_ack = {0};
-
-	mavlink_msg_command_ack_decode(msg, &cmd_ack);
-
-	// printf("Got ACK for command %d with status %d\n", cmd_ack.command, cmd_ack.progress);
-}
-
-void _handle_msg_camera_information(mavlink_message_t* msg){
-	mavlink_camera_information_t camera_info = {0};
-
-	mavlink_msg_camera_information_decode(msg, &camera_info);
-
-	// if payload have stream video
-	if(camera_info.flags & (CAMERA_CAP_FLAGS_HAS_VIDEO_STREAM)){
-		printf("   ---> Got payload has streaming video, Check streaming URI \n");
-		my_job = check_streaming_uri;
-	}else{
-		printf("   ---> Payload has no streaming video \n");
-		printf("It looks like your payload was setting to output video only to HDMI \n");
-		printf("Payload setting changed to: both HDMI and Ethernet.\n");
-		printf("Please reboot your payload to apply this setting. Then try again.\n");
-		my_job = idle;
+	default: break;
 	}
 }
 
-void _handle_msg_camera_stream_information(mavlink_message_t* msg){
-	mavlink_video_stream_information_t stream_info = {0};
+void onPayloadStreamChanged(int event, char* param_char, double* param_double){
+	switch(event){
+	case PAYLOAD_CAM_STREAMINFO:{
+		// param_char: stream uri
+		// param_double[0]: stream type
 
-	mavlink_msg_video_stream_information_decode(msg, &stream_info);
+		printf("   ---> Got streaming information: \n");
+		printf("   ---> Streaming type: %.2f \n", param_double[0]);
+		printf("   ---> Streaming resolution_v: %.2f \n", param_double[1]);
+		printf("   ---> Streaming resolution_h: %.2f \n", param_double[2]);
+		printf("   ---> Streaming uri: %s \n", param_char);
 
-	printf("   ---> Got streaming information: \n");
-	printf("   ---> Streaming type: %d \n", stream_info.type);
-	printf("   ---> Streaming resolution_v: %d \n", stream_info.resolution_v);
-	printf("   ---> Streaming resolution_h: %d \n", stream_info.resolution_h);
-	printf("   ---> Streaming name: %s \n", stream_info.name);
-	printf("   ---> Streaming uri: %s \n", stream_info.uri);
+		if(my_job == check_streaming_uri){
+			my_job = start_pipeline;
 
-	if(my_job == check_streaming_uri){
-		my_job = start_pipeline;
+			_is_rtsp_stream = (param_double[0] == VIDEO_STREAM_TYPE_RTSP) ? true : false;
+			_stream_uri = param_char;
+		}
 
-		_is_rtsp_stream = (stream_info.type == VIDEO_STREAM_TYPE_RTSP) ? true : false;
-		_stream_uri = stream_info.uri;
+		break;
+	}
+	default: break;
 	}
 }
 
-//  pipeline handle
+//  pipeline handle to show video
 bool gstreamer_start(){
 
     int rc = pthread_create(&thrd_gstreamer, NULL, &start_loop_thread, (int *)1);

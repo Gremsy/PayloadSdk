@@ -5,13 +5,10 @@
 #include"payloadSdkInterface.h"
 
 PayloadSdkInterface* my_payload = nullptr;
-bool time_to_exit = false;
 
-pthread_t thrd_recv;
-
-bool all_threads_init();
-void *payload_recv_handle(void *threadid);
 void quit_handler(int sig);
+
+void onPayloadStatusChanged(int event, double* param);
 
 typedef enum{
 	idle = 0,
@@ -26,11 +23,7 @@ typedef enum{
 capture_sequence_t my_capture = idle;
 uint8_t image_to_capture = 3;
 
-void _handle_msg_param_ext_value(mavlink_message_t* msg);
-void _handle_msg_command_ack(mavlink_message_t* msg);
-void _handle_msg_storage_information(mavlink_message_t* msg);
-void _handle_msg_camera_capture_status(mavlink_message_t* msg);
-void _handle_msg_camera_settings(mavlink_message_t* msg);
+
 
 int main(int argc, char *argv[]){
 	printf("Starting CaptureImage example...\n");
@@ -43,25 +36,17 @@ int main(int argc, char *argv[]){
 	my_payload->sdkInitConnection();
 	printf("Waiting for payload signal! \n");
 
+	// register callback function
+	my_payload->regPayloadStatusChanged(onPayloadStatusChanged);
+
 	// check connection
-	while(!time_to_exit){
-		mavlink_message_t msg;
-		uint8_t msg_cnt = my_payload->getNewMewssage(msg);
-
-		if(msg_cnt && msg.sysid == PAYLOAD_SYSTEM_ID && msg.compid == PAYLOAD_COMPONENT_ID){
-			printf("Payload connected! \n");
-			break;
-		}
-	}
-
-	// init thread to check receive message from payload
-	all_threads_init();
+	my_payload->checkPayloadConnection();
 	
 	// set payload to video mode for testing
 	my_payload->setPayloadCameraMode(CAMERA_MODE_VIDEO);
 
 	my_capture = check_storage;
-	while(!time_to_exit){
+	while(1){
 		// to caputre image with payload, follow this sequence
 		switch(my_capture){
 		case idle:{
@@ -120,141 +105,77 @@ void quit_handler( int sig ){
     exit(0);
 }
 
-bool all_threads_init(){
+void onPayloadStatusChanged(int event, double* param){
+	printf("%s %d \n", __func__, event);
 
-	int rc = pthread_create(&thrd_recv, NULL, &payload_recv_handle, (int *)1);
-	if (rc){
-		std::cout << "\nError: Can not create thread!" << rc << std::endl;
-		return false;
-	}
-	std::cout << "Thread created\n" << std::endl;
-}
+	switch(event){
+	case PAYLOAD_CAM_CAPTURE_STATUS:{
+		// param[0]: image_status
+		// param[1]: video_status
+		// param[2]: image_count
+		// param[3]: recording_time_ms
 
-void *payload_recv_handle(void *threadid)
-{
-	// check payload messages
-	while(!time_to_exit){
-		if(my_payload != nullptr){
-			mavlink_message_t msg;
-			uint8_t msg_cnt = my_payload->getNewMewssage(msg);
-			if(msg_cnt){
-				// printf("Got %d message in queue \n", msg_cnt);
-				// printf("   --> message %d from system_id: %d with component_id: %d \n", msg.msgid, msg.sysid, msg.compid);
-				switch(msg.msgid){
-				case MAVLINK_MSG_ID_PARAM_EXT_VALUE:{
-					_handle_msg_param_ext_value(&msg);
-					break;
-				}
-				case MAVLINK_MSG_ID_COMMAND_ACK:{
-					_handle_msg_command_ack(&msg);
-					break;
-				} 
-				case MAVLINK_MSG_ID_STORAGE_INFORMATION:{
-					_handle_msg_storage_information(&msg);
-					break;
-				} 
-				case MAVLINK_MSG_ID_CAMERA_CAPTURE_STATUS:{
-					_handle_msg_camera_capture_status(&msg);
-					break;
-				}
-				case MAVLINK_MSG_ID_CAMERA_SETTINGS:{
-					_handle_msg_camera_settings(&msg);
-					break;
-				}
-				default: break;
-				}
+		if(my_capture == check_capture_status){
+			printf("Got payload capture status: image_status: %.2f, video_status: %.2f \n", param[0], param[1]);
+
+			// if image status is idle, do capture
+			if(param[0] == 0 ){
+				my_capture = check_camera_mode;
+				printf("   ---> Payload is idle, Check camera mode \n");
 			}else{
-
-			}
-
-			usleep(10000);
-		}
-	}
-}
-
-void _handle_msg_param_ext_value(mavlink_message_t* msg){
-	// printf("%s msg_id %d \n", __func__, msg->msgid);
-
-	mavlink_param_ext_value_t param_ext_value = {0};
-	mavlink_msg_param_ext_value_decode(msg, &param_ext_value);
-
-    uint32_t param_uint32;
-    memcpy(&param_uint32, param_ext_value.param_value, sizeof(param_uint32));
-    
-
-	printf(" --> Param_id: %s, value: %d\n", param_ext_value.param_id, param_uint32);
-}
-
-void _handle_msg_command_ack(mavlink_message_t* msg){
-	mavlink_command_ack_t cmd_ack = {0};
-
-	mavlink_msg_command_ack_decode(msg, &cmd_ack);
-
-	// printf("Got ACK for command %d with status %d\n", cmd_ack.command, cmd_ack.progress);
-}
-
-void _handle_msg_storage_information(mavlink_message_t* msg){
-	mavlink_storage_information_t storage_info = {0};
-
-	mavlink_msg_storage_information_decode(msg, &storage_info);
-
-	if(my_capture == check_storage){
-		printf("Got payload storage info: total: %.2f MB, used: %.2f MB, available: %.2f MB \n", 
-			storage_info.total_capacity, storage_info.used_capacity, storage_info.available_capacity);
-
-		// if payload have enough space, check capture status
-		if(storage_info.available_capacity >= 10.0){
-			my_capture = check_capture_status;
-			printf("   ---> Storage ready, check capture status \n");
-		}else{
-			printf("   ---> Payload's storage is not ready \n");
-			my_capture = idle;
-		}
-	}
-}
-
-void _handle_msg_camera_capture_status(mavlink_message_t* msg){
-	mavlink_camera_capture_status_t capture_status = {0};
-
-	mavlink_msg_camera_capture_status_decode(msg, &capture_status);
-
-	if(my_capture == check_capture_status){
-		printf("Got payload capture status: image_status: %d, video_status: %d \n", capture_status.image_status, capture_status.video_status);
-
-		// if image status is idle, do capture
-		if(capture_status.image_status == 0 ){
-			my_capture = check_camera_mode;
-			printf("   ---> Payload is idle, Check camera mode \n");
-		}else{
-			printf("   ---> Payload is busy \n");
-			my_capture = idle;
-		}
-	}else if(my_capture == wait_capture_done){
-		if(capture_status.image_status == 0 ){
-			my_capture = check_storage;
-			printf("   ---> Payload is completed capture image, Do next sequence %d\n", --image_to_capture);
-			if(image_to_capture == 0)
+				printf("   ---> Payload is busy \n");
 				my_capture = idle;
-		}else{
-			printf("   ---> Payload is busy \n");
+			}
+		}else if(my_capture == wait_capture_done){
+			if(param[0] == 0 ){
+				my_capture = check_storage;
+				printf("   ---> Payload is completed capture image, Do next sequence %d\n", --image_to_capture);
+				if(image_to_capture == 0)
+					my_capture = idle;
+			}else{
+				printf("   ---> Payload is busy \n");
+			}
 		}
+		break;
 	}
-}
+	case PAYLOAD_CAM_STORAGE_INFO:{
+		// param[0]: total_capacity
+		// param[1]: used_capacity
+		// param[2]: available_capacity
+		// param[3]: status
 
-void _handle_msg_camera_settings(mavlink_message_t* msg){
-	mavlink_camera_settings_t camera_setting = {0};
+		if(my_capture == check_storage){
+			printf("Got payload storage info: total: %.2f MB, used: %.2f MB, available: %.2f MB \n", 
+				param[0], param[1], param[2]);
 
-	mavlink_msg_camera_settings_decode(msg, &camera_setting);
-
-	if(my_capture == check_camera_mode){
-		printf("Got camera mode: %d \n", camera_setting.mode_id);
-
-		if(camera_setting.mode_id == CAMERA_MODE_IMAGE){
-			my_capture = do_capture;
-			printf("   ---> Payload in Image mode, do capture image \n");
-		}else{
-			my_capture = change_camera_mode;
-			printf("   ---> Payload in Video mode, change camera mode \n");
+			// if payload have enough space, check capture status
+			if(param[2] >= 10.0){
+				my_capture = check_capture_status;
+				printf("   ---> Storage ready, check capture status \n");
+			}else{
+				printf("   ---> Payload's storage is not ready \n");
+				my_capture = idle;
+			}
 		}
+		break;
+	}
+	case PAYLOAD_CAM_SETTINGS:{
+		// param[0]: mode_id
+		// param[1]: zoomLevel
+		// param[2]: focusLevel
+		if(my_capture == check_camera_mode){
+			printf("Got camera mode: %.2f \n", param[0]);
+
+			if(param[0] == CAMERA_MODE_IMAGE){
+				my_capture = do_capture;
+				printf("   ---> Payload in Image mode, do capture image \n");
+			}else{
+				my_capture = change_camera_mode;
+				printf("   ---> Payload in Video mode, change camera mode \n");
+			}
+		}
+		break;
+	}
+	default: break;
 	}
 }

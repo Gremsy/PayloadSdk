@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
+set(PAYLOADSDKLIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../libs)
 
 set(EXAMPLES
     connect.cpp
@@ -16,6 +17,14 @@ set(EXAMPLES
 
 find_package( Threads )
 
+#include 
+include_directories(${PAYLOADSDKLIB_DIR}
+                    ${PAYLOADSDKLIB_DIR}/third-party/mavlink/include
+                    ${PAYLOADSDKLIB_DIR}/gSDK/src/mavlink/include/mavlink/v2.0
+                    ${PAYLOADSDKLIB_DIR}/gSDK/src
+                    ${GST_INCLUDE_DIRS}
+                    )
+
 #
 # build examples 
 foreach(entry ${EXAMPLES})
@@ -23,7 +32,7 @@ foreach(entry ${EXAMPLES})
   add_executable(${target} ${target}.cpp ${SOURCES})
 
   target_link_libraries(${target}
-                     PayloadSDK
+                     ${PAYLOADSDKLIB_DIR}/libPayloadSDK.a
                      ${CMAKE_THREAD_LIBS_INIT}
                      ${GST_LIBRARIES} 
                      stdc++fs

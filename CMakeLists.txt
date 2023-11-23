@@ -13,8 +13,6 @@ pkg_check_modules(GST REQUIRED
                     gstreamer-app-1.0
                     )
 
-add_subdirectory(libs)
-
 # examples
 add_subdirectory(examples)
 

@@ -41,9 +41,9 @@ void directory_listing(std::string url)
     // Check for errors
     if (res != CURLE_OK)
         std::cerr << "Request failed: " << curl_easy_strerror(res) << std::endl;
-
     // Regular expression pattern
-    std::regex pattern("<a href=\"(/delete/.*?)\" class=\"delete-link\">\\[Delete\\]</a>");
+    // std::regex pattern("<a href=\"(/delete/.*?)\" class=\"delete-link\" onclick=\"return confirm('Are you sure you want to delete this image?')\">[Delete]</a>");
+    std::regex pattern("<a href=\"(/delete/.*?)\" class=\"delete-link\"");
     std::smatch match;
     std::string::const_iterator searchStart(response.cbegin());
     while (std::regex_search(searchStart, response.cend(), match, pattern)) {
@@ -221,14 +221,14 @@ int main(int argc, char* argv[]) {
             std::cout << "" << std::endl;
             if (choice == "1") {
                 std::cout << "Listing items..." << std::endl;
-                directory_listing(url);
+                directory_listing(url+"/list-file");
                 std::cout << "" << std::endl;
                 for (const auto& element : hrefElements) {
                     std::cout << element << std::endl;
                 }
 
             } else if (choice == "2") {
-                directory_listing(url);
+                directory_listing(url+"/list-file");
                 std::cout << "" << std::endl;
                 for (const auto& element : hrefElements) {
                     std::cout << element << std::endl;
@@ -247,7 +247,7 @@ int main(int argc, char* argv[]) {
                             dowload_file(url, element);
                     }
                 } else {
-                    directory_listing(url);
+                    directory_listing(url+"/list-file");
                     std::cout << "" << std::endl;
                     for (const auto& element : hrefElements) {
                         if (isImageExtension(element))
@@ -264,7 +264,7 @@ int main(int argc, char* argv[]) {
                             dowload_file(url, element);
                     }
                 } else {
-                    directory_listing(url);
+                    directory_listing(url+"/list-file");
                     std::cout << "" << std::endl;
                     for (const auto& element : hrefElements) {
                         if (isVideoExtension(element))

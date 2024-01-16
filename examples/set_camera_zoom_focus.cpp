@@ -41,13 +41,13 @@ int main(int argc, char *argv[]){
         // focus continuous
         printf("Start Focus In! \n");
         my_payload->setCameraFocus(FOCUS_TYPE_CONTINUOUS, FOCUS_IN); // focus in
-		usleep(15000000); // sleep 15s
+		usleep(4000000); // sleep 4s
         printf("Stop Focus! \n");
         my_payload->setCameraFocus(FOCUS_TYPE_CONTINUOUS, FOCUS_STOP); // stop focus
 		usleep(2000000); // sleep 2s
         printf("Start Focus Out! \n");
         my_payload->setCameraFocus(FOCUS_TYPE_CONTINUOUS, FOCUS_OUT); // focus out
-		usleep(15000000); // sleep 15s
+		usleep(4000000); // sleep 4s
         printf("Stop Focus! \n");
         my_payload->setCameraFocus(FOCUS_TYPE_CONTINUOUS, FOCUS_STOP); // stop focus
 		usleep(2000000); // sleep 2s

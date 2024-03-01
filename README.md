@@ -8,6 +8,10 @@ This repo is officially SDK for all Gremsy's Payloads
 ## Clone the project 
 ```
 git clone -b develop --recurse-submodules git@github.com:Gremsy/PayloadSdk.git
+
+cd PayloadSdk/libs/gSDK/
+git checkout gSDK_V3_alpha
+git pull origin gSDK_V3_alpha
 ```
 ## How to build
 ```

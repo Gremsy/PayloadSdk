@@ -13,6 +13,7 @@ set(EXAMPLES
     move_gimbal_speed_mode.cpp
     get_payload_status.cpp
     set_camera_zoom_focus.cpp
+    gimbal_set_mode.cpp
 )
 
 find_package( Threads )

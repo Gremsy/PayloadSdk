@@ -1,4 +1,4 @@
 [submodule "libs/gSDK"]
 	path = libs/gSDK
-	url = git@github.com:Gremsy/gSDK.git
+	url = https://github.com/Gremsy/gSDK.git
 	branch = gSDK_V3_alpha

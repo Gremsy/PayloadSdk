@@ -14,6 +14,12 @@ git checkout gSDK_V3_alpha
 git pull origin gSDK_V3_alpha
 ```
 ## How to build
+- Install required lib
+```
+sudo apt-get install libcurl4-openssl-dev libjsoncpp-dev
+```
+
+- Build project
 ```
 cd PayloadSdk 
 mkdir build && cd build  

@@ -4,6 +4,12 @@
 
 #include"payloadSdkInterface.h"
 
+T_ConnInfo s_conn = {
+	CONTROL_UART,
+	"/dev/ttyUSB0",
+	115200
+};
+
 PayloadSdkInterface* my_payload = nullptr;
 
 void quit_handler(int sig);
@@ -31,7 +37,7 @@ int main(int argc, char *argv[]){
 	signal(SIGINT,quit_handler);
 
 	// create payloadsdk object
-	my_payload = new PayloadSdkInterface();
+	my_payload = new PayloadSdkInterface(s_conn);
 
 	// init payload
 	my_payload->sdkInitConnection();

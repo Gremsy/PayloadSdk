@@ -5,8 +5,6 @@
 #include "payloadsdk.h"
 #include "gimbal_protocol_v2.h"
 
-#define SDK_VERSION "2.1.0_build.02242024"
-
 typedef void (*payload_status_callback_t)(int event, double* param);
 typedef void (*payload_streamInfo_callback_t)(int event, char* param_char, double* param_double);
 

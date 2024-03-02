@@ -4,7 +4,7 @@
 PayloadSdkInterface* my_payload = nullptr;
 bool time_to_exit = false;
 
-static T_ConnInfo s_conn = {
+T_ConnInfo s_conn = {
 	CONTROL_UART,
 	"/dev/ttyUSB0",
 	115200

@@ -6,7 +6,7 @@ bool time_to_exit = false;
 
 T_ConnInfo s_conn = {
 	CONTROL_UART,
-	"/dev/ttyUSB0",
+	"/dev/ttyACM0",
 	115200
 };
 

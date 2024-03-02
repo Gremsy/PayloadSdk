@@ -51,6 +51,29 @@ int main(int argc, char *argv[]){
 	// set payload to video mode for testing
 	my_payload->setPayloadCameraMode(CAMERA_MODE_VIDEO);
 
+	if(argv[1] != nullptr){
+		if(strcmp(argv[1], "EO") == 0){
+			printf("Change record source to EO \n");
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_RECORD_SRC, PAYLOAD_CAMERA_RECORD_EO, PARAM_TYPE_UINT32);
+			usleep(100000);
+		}
+		else if(strcmp(argv[1], "IR") == 0){
+			printf("Change record source to IR \n");
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_RECORD_SRC, PAYLOAD_CAMERA_RECORD_IR, PARAM_TYPE_UINT32);
+			usleep(100000);
+		}
+		else if(strcmp(argv[1], "OSD") == 0){
+			printf("Change record source to OSD \n");
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_RECORD_SRC, PAYLOAD_CAMERA_RECORD_OSD, PARAM_TYPE_UINT32);
+			usleep(100000);
+		}
+		else if(strcmp(argv[1], "BOTH") == 0){
+			printf("Change record source to BOTH Eo and IR \n");
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_RECORD_SRC, PAYLOAD_CAMERA_RECORD_BOTH, PARAM_TYPE_UINT32);
+			usleep(100000);
+		}
+	}
+
 	my_capture = check_storage;
 	while(1){
 		// to caputre image with payload, follow this sequence
@@ -112,7 +135,7 @@ void quit_handler( int sig ){
 }
 
 void onPayloadStatusChanged(int event, double* param){
-	printf("%s %d \n", __func__, event);
+	// printf("%s %d \n", __func__, event);
 
 	switch(event){
 	case PAYLOAD_CAM_CAPTURE_STATUS:{
@@ -122,24 +145,26 @@ void onPayloadStatusChanged(int event, double* param){
 		// param[3]: recording_time_ms
 
 		if(my_capture == check_capture_status){
-			printf("Got payload capture status: image_status: %.2f, video_status: %.2f \n", param[0], param[1]);
+			// printf("Got payload capture status: image_status: %.2f, video_status: %.2f \n", param[0], param[1]);
 
 			// if image status is idle, do capture
 			if(param[0] == 0 ){
 				my_capture = check_camera_mode;
-				printf("   ---> Payload is idle, Check camera mode \n");
+				// printf("   ---> Payload is idle, Check camera mode \n");
 			}else{
-				printf("   ---> Payload is busy \n");
+				// printf("   ---> Payload is busy \n");
 				my_capture = idle;
 			}
 		}else if(my_capture == wait_capture_done){
 			if(param[0] == 0 ){
 				my_capture = check_storage;
 				printf("   ---> Payload is completed capture image, Do next sequence %d\n", --image_to_capture);
-				if(image_to_capture == 0)
+				if(image_to_capture == 0){
 					my_capture = idle;
+					exit(0);
+				}
 			}else{
-				printf("   ---> Payload is busy \n");
+				// printf("   ---> Payload is busy \n");
 			}
 		}
 		break;

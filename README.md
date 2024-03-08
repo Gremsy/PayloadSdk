@@ -2,9 +2,9 @@
 This repo is officially SDK for all Gremsy's Payloads
 
 ## Hardware
-- Ubuntu PC x86_64
-- Jetson platform aarch64
-- Raspberry Pi
+- Ubuntu PC (x86_64)
+- Jetson platform (aarch64)
+- Raspberry Pi (developing)
 
 ## Clone the project 
 ```
@@ -21,7 +21,7 @@ sudo apt-get install libcurl4-openssl-dev libjsoncpp-dev
 ```
 
 - Select Host platform
-  Confirm you host platform by edit the CMakeLists.txt file at top folder
+
 ```
 # set library path
 set(PAYLOADSDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs)

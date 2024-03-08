@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
 
-set(PAYLOADSDKLIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../libs)
-
 set(EXAMPLES
     connect.cpp
     load_payload_settings.cpp
@@ -19,11 +17,14 @@ set(EXAMPLES
 
 find_package( Threads )
 
+# Now SUBMODULE_VAR is available here
+message(STATUS "SUBMODULE_VAR = ${PAYLOADSDK_DIR}")
+  
 #include 
-include_directories(${PAYLOADSDKLIB_DIR}
-                    ${PAYLOADSDKLIB_DIR}/third-party/mavlink/include
-                    ${PAYLOADSDKLIB_DIR}/gSDK/src/mavlink/include/mavlink/v2.0
-                    ${PAYLOADSDKLIB_DIR}/gSDK/src
+include_directories(${PAYLOADSDK_DIR}
+                    ${PAYLOADSDK_DIR}/third-party/mavlink/include
+                    ${PAYLOADSDK_DIR}/gSDK/src/mavlink/include/mavlink/v2.0
+                    ${PAYLOADSDK_DIR}/gSDK/src
                     ${GST_INCLUDE_DIRS}
                     )
 
@@ -34,7 +35,7 @@ foreach(entry ${EXAMPLES})
   add_executable(${target} ${target}.cpp ${SOURCES})
 
   target_link_libraries(${target}
-                     ${PAYLOADSDKLIB_DIR}/libPayloadSDK.a
+                     ${PAYLOADSDK_LIB}/libPayloadSDK.a
                      ${CMAKE_THREAD_LIBS_INIT}
                      ${GST_LIBRARIES} 
                      stdc++fs

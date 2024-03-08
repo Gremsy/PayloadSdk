@@ -2,8 +2,9 @@
 This repo is officially SDK for all Gremsy's Payloads
 
 ## Hardware
-  This source code can run on any Linux system  
-  In this repo, all examples were tested on Jetson Xavier NX (Jetpack 4.6)
+- Ubuntu PC x86_64
+- Jetson platform aarch64
+- Raspberry Pi
 
 ## Clone the project 
 ```
@@ -17,6 +18,14 @@ git pull origin gSDK_V3_alpha
 - Install required lib
 ```
 sudo apt-get install libcurl4-openssl-dev libjsoncpp-dev
+```
+
+- Select Host platform
+  Confirm you host platform by edit the CMakeLists.txt file at top folder
+```
+# set library path
+set(PAYLOADSDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs)
+set(PAYLOADSDK_LIB ${CMAKE_CURRENT_SOURCE_DIR}/libs/x86_64)
 ```
 
 - Build project

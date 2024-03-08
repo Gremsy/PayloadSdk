@@ -13,6 +13,10 @@ pkg_check_modules(GST REQUIRED
                     gstreamer-app-1.0
                     )
 
+# set library path
+set(PAYLOADSDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs)
+set(PAYLOADSDK_LIB ${CMAKE_CURRENT_SOURCE_DIR}/libs/x86_64)
+
 # examples
 add_subdirectory(examples)
 

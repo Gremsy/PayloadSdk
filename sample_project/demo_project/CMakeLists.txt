@@ -9,14 +9,14 @@ set(APP_SOURCES
 # 	${SOURCES}
 	)
 
-set(PAYLOADSDKLIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../libs)
+
 
 #include 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include
-                    ${PAYLOADSDKLIB_DIR}
-                    ${PAYLOADSDKLIB_DIR}/third-party/mavlink/include
-                    ${PAYLOADSDKLIB_DIR}/gSDK/src/mavlink/include/mavlink/v2.0
-                    ${PAYLOADSDKLIB_DIR}/gSDK/src
+                    ${PAYLOADSDK_DIR}
+                    ${PAYLOADSDK_DIR}/third-party/mavlink/include
+                    ${PAYLOADSDK_DIR}/gSDK/src/mavlink/include/mavlink/v2.0
+                    ${PAYLOADSDK_DIR}/gSDK/src
                     )
 # 
 add_executable(${PROJECT_NAME}
@@ -24,7 +24,7 @@ add_executable(${PROJECT_NAME}
                )
 find_package( Threads )
 target_link_libraries(${PROJECT_NAME}
-                     ${PAYLOADSDKLIB_DIR}/libPayloadSDK.a
+                     ${PAYLOADSDK_LIB}/libPayloadSDK.a
                      ${CMAKE_THREAD_LIBS_INIT}
                      ${GST_LIBRARIES} 
                      stdc++fs

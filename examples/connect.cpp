@@ -4,11 +4,19 @@
 PayloadSdkInterface* my_payload = nullptr;
 bool time_to_exit = false;
 
+#if (CONTROL_METHOD == CONTROL_UART)
 T_ConnInfo s_conn = {
-	CONTROL_UART,
-	"/dev/ttyACM0",
-	115200
+    CONTROL_UART,
+    "/dev/ttyACM0",
+    115200
 };
+#else
+T_ConnInfo s_conn = {
+    CONTROL_UDP,
+    "0.0.0.0",
+    14567
+};
+#endif
 
 void quit_handler(int sig);
 

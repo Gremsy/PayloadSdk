@@ -21,7 +21,7 @@ find_package( Threads )
 message(STATUS "SUBMODULE_VAR = ${PAYLOADSDK_DIR}")
   
 #include 
-include_directories(${PAYLOADSDK_DIR}
+include_directories(${PAYLOADSDK_LIB}
                     ${PAYLOADSDK_DIR}/third-party/mavlink/include
                     ${PAYLOADSDK_DIR}/gSDK/src/mavlink/include/mavlink/v2.0
                     ${PAYLOADSDK_DIR}/gSDK/src

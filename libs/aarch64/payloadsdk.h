@@ -13,7 +13,13 @@
 
 #define CONTROL_UART    0
 #define CONTROL_UDP     1
-#define CONTROL_METHOD  CONTROL_UDP
+#define CONTROL_METHOD CONTROL_UART
+
+static char *payload_uart_port = (char*)"/dev/ttyUSB0";
+static int payload_uart_baud = 115200;
+static char *udp_ip_target = (char*)"192.168.12.240";   // This is an ip address of the payload
+static int udp_port_target = 14566;                     // Do not change
+
 
 /**/
 /**/

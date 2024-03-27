@@ -15,6 +15,7 @@ pkg_check_modules(GST REQUIRED
 
 # Set library path based on system architecture
 set(PAYLOADSDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs)
+
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
     set(PAYLOADSDK_LIB ${CMAKE_CURRENT_SOURCE_DIR}/libs/x86_64)
 elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
@@ -22,6 +23,9 @@ elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
 else()
     message(FATAL_ERROR "Unsupported architecture: ${CMAKE_SYSTEM_PROCESSOR}")
 endif()
+
+message("Processor detected: ${CMAKE_SYSTEM_PROCESSOR}")
+message("Path to library: ${PAYLOADSDK_LIB}")
 
 # examples
 add_subdirectory(examples)

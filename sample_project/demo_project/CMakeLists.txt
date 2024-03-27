@@ -13,7 +13,7 @@ set(APP_SOURCES
 
 #include 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include
-                    ${PAYLOADSDK_DIR}
+                    ${PAYLOADSDK_LIB}
                     ${PAYLOADSDK_DIR}/third-party/mavlink/include
                     ${PAYLOADSDK_DIR}/gSDK/src/mavlink/include/mavlink/v2.0
                     ${PAYLOADSDK_DIR}/gSDK/src

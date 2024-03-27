@@ -7,14 +7,14 @@ bool time_to_exit = false;
 #if (CONTROL_METHOD == CONTROL_UART)
 T_ConnInfo s_conn = {
     CONTROL_UART,
-    "/dev/ttyACM0",
-    115200
+    payload_uart_port,
+    payload_uart_baud
 };
 #else
 T_ConnInfo s_conn = {
     CONTROL_UDP,
-    "0.0.0.0",
-    14567
+    udp_ip_target,
+    udp_port_target
 };
 #endif
 

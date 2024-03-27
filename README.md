@@ -20,14 +20,6 @@ git pull origin gSDK_V3_alpha
 sudo apt-get install libcurl4-openssl-dev libjsoncpp-dev
 ```
 
-- Select Host platform
-
-```
-# set library path
-set(PAYLOADSDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libs)
-set(PAYLOADSDK_LIB ${CMAKE_CURRENT_SOURCE_DIR}/libs/x86_64)
-```
-
 - Build project
 ```
 cd PayloadSdk 

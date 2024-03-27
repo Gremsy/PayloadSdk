@@ -1,11 +1,19 @@
 #include "main.h"
 
 /*!< Private variables */
-static T_ConnInfo s_conn = {
-	CONTROL_UART,
-	"/dev/ttyUSB0",
-	115200
+#if (CONTROL_METHOD == CONTROL_UART)
+T_ConnInfo s_conn = {
+    CONTROL_UART,
+    payload_uart_port,
+    payload_uart_baud
 };
+#else
+T_ConnInfo s_conn = {
+    CONTROL_UDP,
+    udp_ip_target,
+    udp_port_target
+};
+#endif
 
 T_psdk_process_state s_proc;
 
@@ -174,7 +182,7 @@ int8_t psdk_run_sample(){
 			my_payload->setGimbalPowerOff();
 			usleep(2000000);
 			my_payload->setGimbalPowerOn();
-			usleep(2000000);
+			usleep(5000000);
 			s_proc._state = STATE_MOVEMENT_0;
 		}
 		break;

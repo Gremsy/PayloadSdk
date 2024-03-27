@@ -15,8 +15,8 @@ T_ConnInfo s_conn = {
 #else
 T_ConnInfo s_conn = {
     CONTROL_UDP,
-    "0.0.0.0",
-    14567
+    "192.168.12.240",
+    14566
 };
 #endif
 

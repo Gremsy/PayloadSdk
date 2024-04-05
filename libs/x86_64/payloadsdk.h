@@ -85,8 +85,8 @@ enum param_type {
 #define PAYLOAD_CAMERA_RC_MODE_STANDARD 		1
 
 #define PAYLOAD_CAMERA_VIDEO_FLIP        "C_V_FLIP"
-#define PAYLOAD_CAMERA_VIDEO_FLIP_OFF       0
-#define PAYLOAD_CAMERA_VIDEO_FLIP_ON        1
+#define PAYLOAD_CAMERA_VIDEO_FLIP_OFF       3
+#define PAYLOAD_CAMERA_VIDEO_FLIP_ON        2
 
 
 #define PAYLOAD_CAMERA_VIDEO_DEFOG        "C_V_DEFOG"
@@ -196,6 +196,17 @@ enum _zoom_combine_factor{
 #define PAYLOAD_CAMERA_RECORD_IR                2
 #define PAYLOAD_CAMERA_RECORD_OSD               5
 
+#define PAYLOAD_CAMERA_IR_PALETTE             "C_T_PALETTE" 
+#define PAYLOAD_CAMERA_IR_PALETTE_1           0         // G1: WhiteHot, F1:
+#define PAYLOAD_CAMERA_IR_PALETTE_2           1         // G1: BlackHot
+#define PAYLOAD_CAMERA_IR_PALETTE_3           2         // G1: Rainbow
+#define PAYLOAD_CAMERA_IR_PALETTE_4           3         // G1: RainbowHC
+#define PAYLOAD_CAMERA_IR_PALETTE_5           4         // G1: Ironbow
+#define PAYLOAD_CAMERA_IR_PALETTE_6           5         // G1: Lava
+#define PAYLOAD_CAMERA_IR_PALETTE_7           6         // G1: Arctic
+#define PAYLOAD_CAMERA_IR_PALETTE_8           7         // G1: Globow
+#define PAYLOAD_CAMERA_IR_PALETTE_9           8         // G1: Gradedfire
+#define PAYLOAD_CAMERA_IR_PALETTE_10          9         // G1: Hottest
 
 enum Camera_Zoom_Value
 {

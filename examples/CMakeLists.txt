@@ -13,6 +13,7 @@ set(EXAMPLES
     set_camera_zoom_focus.cpp
     gimbal_set_mode.cpp
     set_video_source.cpp
+    thermal_zoom.cpp
 )
 
 find_package( Threads )

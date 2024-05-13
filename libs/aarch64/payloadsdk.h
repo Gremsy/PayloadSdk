@@ -228,5 +228,17 @@ enum Camera_Focus_Value
 #define PAYLOAD_CAMERA_GIMBAL_COMBINE_ZOOM_DISABLE  0
 #define PAYLOAD_CAMERA_GIMBAL_COMBINE_ZOOM_ENABLE   1
 
+// Zoom value can be set from 1x to 8x for camera thermal
+#define PAYLOAD_CAMERA_IR_ZOOM_FACTOR              "C_T_ZOOM"
+enum _zoom_ir_factor{
+    ZOOM_IR_1X = 0,
+    ZOOM_IR_2X,
+    ZOOM_IR_3X,
+    ZOOM_IR_4X,
+    ZOOM_IR_5X,
+    ZOOM_IR_6X,
+    ZOOM_IR_7X,
+    ZOOM_IR_8X
+};
 
 #endif

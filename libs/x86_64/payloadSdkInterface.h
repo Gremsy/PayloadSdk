@@ -6,6 +6,7 @@
 #include "gimbal_protocol_v2.h"
 
 typedef void (*payload_status_callback_t)(int event, double* param);
+typedef void (*payload_param_callback_t)(int event, char* param_char, double* param_double);
 typedef void (*payload_streamInfo_callback_t)(int event, char* param_char, double* param_double);
 
 enum payload_status_event_t{
@@ -41,6 +42,9 @@ public:
 
 	void regPayloadStatusChanged(payload_status_callback_t func);
   	payload_status_callback_t __notifyPayloadStatusChanged = NULL;
+
+  	void regPayloadParamChanged(payload_param_callback_t func);
+  	payload_param_callback_t __notifyPayloadParamChanged = NULL;
 
   	void regPayloadStreamChanged(payload_streamInfo_callback_t func);
   	payload_streamInfo_callback_t __notifyPayloadStreamChanged = NULL;
@@ -137,6 +141,8 @@ private:
 	bool time_to_exit = false;
 
 	uint16_t paramRate[PARAM_COUNT];
+
+	uint8_t SYS_ID_USER2 = 1;
 
 
 public:

@@ -90,6 +90,13 @@ int main(int argc, char *argv[]){
 		case idle:{
 			// do nothing;
 			printf("Program exit. \n");
+
+			// close payload interface
+			try {
+				my_payload->sdkQuit();
+			}
+			catch (int error){}
+
 			exit(0);
 			break;
 		}

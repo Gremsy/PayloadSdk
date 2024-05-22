@@ -101,7 +101,14 @@ int main(int argc, char *argv[]){
         my_payload->setCameraFocus(FOCUS_TYPE_AUTO); // auto focus
 
         printf("!--------------------! \n");
-        usleep(7000000); // sleep 7s
+
+        // close payload interface
+        try {
+            my_payload->sdkQuit();
+        }
+        catch (int error){}
+        
+        exit(0);
 	}
 
     

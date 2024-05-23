@@ -37,11 +37,9 @@ int main(int argc, char *argv[]){
 	// check payload messages
 	while(1){
 		// do nothing
-
 		usleep(1000);
 	}
 
-    
 	return 0;
 }
 
@@ -49,7 +47,6 @@ void quit_handler( int sig ){
     printf("\n");
     printf("TERMINATING AT USER REQUEST \n");
     printf("\n");
-
 
     // close payload interface
     try {

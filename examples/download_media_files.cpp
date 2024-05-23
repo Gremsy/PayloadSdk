@@ -226,7 +226,6 @@ int main(int argc, char* argv[]) {
                 for (const auto& element : hrefElements) {
                     std::cout << element << std::endl;
                 }
-
             } else if (choice == "2") {
                 directory_listing(url+"/list-file");
                 std::cout << "" << std::endl;
@@ -237,7 +236,6 @@ int main(int argc, char* argv[]) {
                 std::cout << "Downloading a image or video. Enter the name: ";
                 std::cin >> name;
                 dowload_file(url, name);
-
             } else if (choice == "3") {
                 // Process "Download Video" option
                 std::cout << "Downloading all Images..." << std::endl;
@@ -254,7 +252,6 @@ int main(int argc, char* argv[]) {
                             dowload_file(url, element);
                     }
                 }
-
             } else if (choice == "4") {
                 // Process "Download Video" option
                 std::cout << "Downloading all Videos..." << std::endl;
@@ -271,11 +268,9 @@ int main(int argc, char* argv[]) {
                             dowload_file(url, element);
                     }
                 }
-
             } else if (choice == "q") {
                 // Quit the program
                 break;
-
             } else {
                 std::cout << "Invalid choice. Please try again." << std::endl;
             }

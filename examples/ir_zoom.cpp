@@ -45,21 +45,40 @@ int main(int argc, char *argv[]){
 
 	while(!time_to_exit){
         my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, ZOOM_IR_1X , PARAM_TYPE_UINT32);
+        printf("Start Zoom Index 1X! \n");
         usleep(2000000); // sleep 2s
         my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, ZOOM_IR_2X , PARAM_TYPE_UINT32);
+        printf("Start Zoom Index 2X! \n");
         usleep(2000000); // sleep 2s
         my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, ZOOM_IR_3X , PARAM_TYPE_UINT32);
+        printf("Start Zoom Index 3X! \n");
         usleep(2000000); // sleep 2s
         my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, ZOOM_IR_4X , PARAM_TYPE_UINT32);
+        printf("Start Zoom Index 4X! \n");
         usleep(2000000); // sleep 2s
         my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, ZOOM_IR_5X , PARAM_TYPE_UINT32);
+        printf("Start Zoom Index 5X! \n");
         usleep(2000000); // sleep 2s
         my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, ZOOM_IR_6X , PARAM_TYPE_UINT32);
+        printf("Start Zoom Index 6X! \n");
         usleep(2000000); // sleep 2s
         my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, ZOOM_IR_7X , PARAM_TYPE_UINT32);
+        printf("Start Zoom Index 7X! \n");
         usleep(2000000); // sleep 2s
         my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, ZOOM_IR_8X , PARAM_TYPE_UINT32);
+        printf("Start Zoom Index 8X! \n");
         usleep(2000000); // sleep 2s
+        my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, ZOOM_IR_1X , PARAM_TYPE_UINT32);
+        printf("Start Zoom Index 1X! \n");
+        usleep(200000); // sleep 2s
+
+        // close payload interface
+        try {
+            my_payload->sdkQuit();
+        }
+        catch (int error){}
+        
+        exit(0);
 	}
 	return 0;
 }

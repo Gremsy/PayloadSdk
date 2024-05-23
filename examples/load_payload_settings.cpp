@@ -20,11 +20,9 @@ T_ConnInfo s_conn = {
 
 PayloadSdkInterface* my_payload = nullptr;
 
-void onPayloadStatusChanged(int event, double* param);
-
 void quit_handler(int sig);
-
 void _handle_msg_param_ext_value(mavlink_message_t* msg);
+void onPayloadParamChanged(int event, char* param_char, double* param_double);
 
 int main(int argc, char *argv[]){
 	printf("Starting LoadPayloadSettings example...\n");
@@ -38,7 +36,7 @@ int main(int argc, char *argv[]){
 	printf("Waiting for payload signal! \n");
 
 	// register callback function
-	my_payload->regPayloadStatusChanged(onPayloadStatusChanged);
+	my_payload->regPayloadParamChanged(onPayloadParamChanged);
 
 	// check connection
 	my_payload->checkPayloadConnection();
@@ -50,8 +48,6 @@ int main(int argc, char *argv[]){
 		// main loop
 		usleep(1000);
 	}
-
-    
 	return 0;
 }
 
@@ -59,7 +55,6 @@ void quit_handler( int sig ){
     printf("\n");
     printf("TERMINATING AT USER REQUEST \n");
     printf("\n");
-
 
     // close payload interface
     try {
@@ -71,15 +66,13 @@ void quit_handler( int sig ){
     exit(0);
 }
 
-void onPayloadStatusChanged(int event, double* param){
-	printf("%s %d \n", __func__, event);
-
+void onPayloadParamChanged(int event, char* param_char, double* param){
+	// printf("%s %d \n", __func__, event);
 	switch(event){
 	case PAYLOAD_CAM_PARAM_VALUE:{
 		// param[0]: param_index
 		// param[1]: value
-
-		printf(" --> Param_id: %.2f, value: %.2f\n", param[0], param[1]);
+		printf(" --> Param_id: %s, value: %.2f\n", param_char, param[1]);
 		break;
 	}
 	default: break;

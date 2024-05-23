@@ -56,20 +56,26 @@ int main(int argc, char *argv[]){
 		printf("Move gimbal yaw to 90 deg, zoom in to 20x, delay in 5secs \n");
 		my_payload->setGimbalSpeed(0, 0 , 90, Gimbal_Protocol::INPUT_ANGLE);
 		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_20X, PARAM_TYPE_UINT32);
-		usleep(5000000); // sleep 2s
+		usleep(5000000);
 
 		printf("Move gimbal yaw to -90 deg, zoom out to 1x, delay in 5secs \n");
 		my_payload->setGimbalSpeed(-0, -0 , -90, Gimbal_Protocol::INPUT_ANGLE);
 		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);
-		usleep(5000000); // sleep 2s
+		usleep(5000000);
 
-		printf("Move gimbal yaw to 0 deg, zoom in to 10x, delay in 5secs \n");
+		printf("Move gimbal yaw to 0 deg, zoom in to 10x, exit ... \n");
 		my_payload->setGimbalSpeed(0, 0 , 0, Gimbal_Protocol::INPUT_ANGLE);
 		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_10X, PARAM_TYPE_UINT32);
-		usleep(5000000); // sleep 2s
-	}
+		usleep(500000);
 
-    
+		// close payload interface
+		try {
+			my_payload->sdkQuit();
+		}
+		catch (int error){}
+
+		exit(0);
+	}
 	return 0;
 }
 

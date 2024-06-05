@@ -36,6 +36,10 @@ int main(int argc, char *argv[]){
 
 	my_payload->checkPayloadConnection();
 
+	// set view source
+    printf("Set view source to EO! \n");
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_EO, PARAM_TYPE_UINT32);
+
     usleep(1000000);
 	while(!time_to_exit){
         // zoom step

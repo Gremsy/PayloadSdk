@@ -48,36 +48,45 @@ int main(int argc, char *argv[]){
 
 	my_payload->checkPayloadConnection();
 	
+#if defined VIO
 	// change payload zoom mode to SuperResolution
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_MODE, PAYLOAD_CAMERA_VIDEO_ZOOM_MODE_SUPER_RESOLUTION, PARAM_TYPE_UINT32);
+#endif /* VIO */
 
 	
-	while(!time_to_exit){
-		printf("Move gimbal yaw to 90 deg, zoom in to 20x, delay in 5secs \n");
-		my_payload->setGimbalSpeed(0, 0 , 90, Gimbal_Protocol::INPUT_ANGLE);
-		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_20X, PARAM_TYPE_UINT32);
-		usleep(5000000);
+	printf("Move gimbal yaw to 90 deg, zoom in, delay in 5secs \n");
+	my_payload->setGimbalSpeed(0, 0 , 90, Gimbal_Protocol::INPUT_ANGLE);
+#if defined VIO
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_20X, PARAM_TYPE_UINT32);
+#elif defined GHADRON
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_FACTOR, ZOOM_EO_8X, PARAM_TYPE_UINT32);
+#endif
+	usleep(5000000);
 
-		printf("Move gimbal yaw to -90 deg, zoom out to 1x, delay in 5secs \n");
-		my_payload->setGimbalSpeed(-0, -0 , -90, Gimbal_Protocol::INPUT_ANGLE);
-		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);
-		usleep(5000000);
+	printf("Move gimbal yaw to -90 deg, zoom out to 1x, delay in 5secs \n");
+	my_payload->setGimbalSpeed(-0, -0 , -90, Gimbal_Protocol::INPUT_ANGLE);
+#if defined VIO
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);
+#elif defined GHADRON
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_FACTOR, ZOOM_EO_1X, PARAM_TYPE_UINT32);
+#endif
+	usleep(5000000);
 
-		printf("Move gimbal yaw to 0 deg, zoom in to 10x, delay in 5secs \n");
-		my_payload->setGimbalSpeed(0, 0 , 0, Gimbal_Protocol::INPUT_ANGLE);
-		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_10X, PARAM_TYPE_UINT32);
-		usleep(500000);
+	printf("Move gimbal yaw to 0 deg, zoom in, delay in 5secs \n");
+	my_payload->setGimbalSpeed(0, 0 , 0, Gimbal_Protocol::INPUT_ANGLE);
+#if defined VIO
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_10X, PARAM_TYPE_UINT32);
+#elif defined GHADRON
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_FACTOR, ZOOM_EO_4X, PARAM_TYPE_UINT32);
+#endif
+	usleep(500000);
 
-		// close payload interface
-		try {
-			my_payload->sdkQuit();
-		}
-		catch (int error){}
-
-		exit(0);
+	// close payload interface
+	try {
+		my_payload->sdkQuit();
 	}
+	catch (int error){}
 
-    
 	return 0;
 }
 

@@ -7,6 +7,13 @@
 #include <pthread.h>
 #include <iostream>
 #include <chrono>
+
+#if defined GHADRON
+#include "ghadron_sdk.h"
+#else
+#include "vio_sdk.h"
+#endif
+
 /**/
 PayloadSdkInterface* my_payload = nullptr;
 

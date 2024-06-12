@@ -48,34 +48,28 @@ int main(int argc, char *argv[]){
 
 	my_payload->checkPayloadConnection();
 	
-	// change payload zoom mode to SuperResolution
-	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_MODE, PAYLOAD_CAMERA_VIDEO_ZOOM_MODE_SUPER_RESOLUTION, PARAM_TYPE_UINT32);
+	printf("Gimbal set mode LOCK, delay in 5 secs \n");
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, PAYLOAD_CAMERA_GIMBAL_MODE_LOCK, PARAM_TYPE_UINT32);
+	usleep(5000000);
 
-	
-	while(!time_to_exit){
-		printf("Move gimbal yaw to 90 deg, zoom in to 20x, delay in 5secs \n");
-		my_payload->setGimbalSpeed(0, 0 , 90, Gimbal_Protocol::INPUT_ANGLE);
-		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_20X, PARAM_TYPE_UINT32);
-		usleep(5000000);
+	printf("Gimbal set mode FOLLOW, delay in 5 secs \n");
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, PAYLOAD_CAMERA_GIMBAL_MODE_FOLLOW, PARAM_TYPE_UINT32);
+	usleep(5000000);
 
-		printf("Move gimbal yaw to -90 deg, zoom out to 1x, delay in 5secs \n");
-		my_payload->setGimbalSpeed(-0, -0 , -90, Gimbal_Protocol::INPUT_ANGLE);
-		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);
-		usleep(5000000);
+	printf("Gimbal set mode OFF, delay in 5 secs \n");
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, PAYLOAD_CAMERA_GIMBAL_MODE_OFF, PARAM_TYPE_UINT32);
+	usleep(5000000);
 
-		printf("Move gimbal yaw to 0 deg, zoom in to 10x, exit ... \n");
-		my_payload->setGimbalSpeed(0, 0 , 0, Gimbal_Protocol::INPUT_ANGLE);
-		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_10X, PARAM_TYPE_UINT32);
-		usleep(500000);
+	printf("Gimbal set mode RESET, delay in 5 secs \n");
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, PAYLOAD_CAMERA_GIMBAL_MODE_RESET, PARAM_TYPE_UINT32);
+	usleep(5000000);
 
-		// close payload interface
-		try {
-			my_payload->sdkQuit();
-		}
-		catch (int error){}
-
-		exit(0);
+	// close payload interface
+	try {
+		my_payload->sdkQuit();
 	}
+	catch (int error){}
+
 	return 0;
 }
 

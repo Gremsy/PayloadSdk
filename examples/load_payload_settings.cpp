@@ -46,8 +46,15 @@ int main(int argc, char *argv[]){
 
 	while(1){
 		// main loop
-		usleep(1000);
+		usleep(10000000);
+    	break;
 	}
+
+    try {
+        my_payload->sdkQuit();
+    }
+    catch (int error){}
+
 	return 0;
 }
 

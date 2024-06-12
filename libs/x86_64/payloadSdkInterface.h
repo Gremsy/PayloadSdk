@@ -25,10 +25,13 @@ enum payload_status_event_t{
 
 enum payload_param_t{
 	PARAM_EO_ZOOM_LEVEL = 0,
-	PARAM_IR_ZOOM_LEVEL,
+    PARAM_IR_ZOOM_LEVEL,
+    PARAM_LRF_RANGE,
 
-	PARAM_LRF_RANGE,
-	PARAM_COUNT
+    PARAM_TRACK_POS_X,
+    PARAM_TRACK_POS_Y,
+    PARAM_TRACK_STATUS,
+    PARAM_COUNT
 };
 
 class PayloadSdkInterface
@@ -186,6 +189,11 @@ public:
 	 * (FOCUS_OUT, FOCUS_STOP, FOCUS_IN)
 	 * */
 	void setCameraFocus(float focusType, float focusValue=0);
+
+	/**
+	 * send bounding box position for object tracking feature
+	 **/
+	void setPayloadObjectTrackingParams(float cmd, float pos_x, float pos_y);
 
 	// handle receive message
 	void payload_recv_handle();

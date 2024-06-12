@@ -205,12 +205,12 @@ void onPayloadStatusChanged(int event, double* param){
 		if(my_capture == check_camera_mode){
 			printf("Got camera mode: %.2f \n", param[0]);
 
-			if(param[0] == CAMERA_MODE_IMAGE){
+			if(param[0] == CAMERA_MODE_VIDEO){
 				my_capture = do_record_video;
-				printf("   ---> Payload in Image mode, do capture image \n");
+				printf("   ---> Payload in Video mode, change camera mode \n");
 			}else{
 				my_capture = change_camera_mode;
-				printf("   ---> Payload in Video mode, change camera mode \n");
+				printf("   ---> Payload in Image mode, do capture image \n");
 			}
 		}
 		break;

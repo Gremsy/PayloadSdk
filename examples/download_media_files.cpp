@@ -5,6 +5,7 @@
 #include <regex>
 #include <string>
 #include <vector>
+#include <limits>
 
 CURL *curl;
 FILE *fp;

@@ -37,17 +37,12 @@ int main(int argc, char *argv[]){
 	my_payload->checkPayloadConnection();
 
 	// set view source
-    printf("Set view source to EO! \n");
-	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_EO, PARAM_TYPE_UINT32);
-
+    printf("Set view source to IR! \n");
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_IR, PARAM_TYPE_UINT32);
     usleep(1000000);
 
     printf("Set zoom level to 1x ! \n");
-    #if defined GHADRON
-	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_FACTOR, ZOOM_EO_1X, PARAM_TYPE_UINT32);
-    #elif defined VIO
-	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);
-    #endif
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, ZOOM_IR_1X, PARAM_TYPE_UINT32);
     usleep(3000000);
 
     // zoom step
@@ -93,27 +88,6 @@ int main(int argc, char *argv[]){
     printf("Zoom Range 0%! \n");
     my_payload->setCameraZoom(ZOOM_TYPE_RANGE, 0.0);  // zoom 0%
     usleep(5000000); // sleep 5s
-
-    #if defined VIO
-        // focus continuous
-        printf("Start Focus In! \n");
-        my_payload->setCameraFocus(FOCUS_TYPE_CONTINUOUS, FOCUS_IN); // focus in
-        usleep(4000000); // sleep 4s
-        printf("Stop Focus! \n");
-        my_payload->setCameraFocus(FOCUS_TYPE_CONTINUOUS, FOCUS_STOP); // stop focus
-        usleep(2000000); // sleep 2s
-        printf("Start Focus Out! \n");
-        my_payload->setCameraFocus(FOCUS_TYPE_CONTINUOUS, FOCUS_OUT); // focus out
-        usleep(4000000); // sleep 4s
-        printf("Stop Focus! \n");
-        my_payload->setCameraFocus(FOCUS_TYPE_CONTINUOUS, FOCUS_STOP); // stop focus
-        usleep(2000000); // sleep 2s
-
-        // auto focus
-        printf("Auto Focus! \n");
-        my_payload->setCameraFocus(FOCUS_TYPE_AUTO); // auto focus
-    #endif /* VIO */
-
     printf("!--------------------! \n");
 
     // close payload interface
@@ -121,7 +95,7 @@ int main(int argc, char *argv[]){
         my_payload->sdkQuit();
     }
     catch (int error){}
-    
+        
 	return 0;
 }
 

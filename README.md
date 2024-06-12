@@ -21,9 +21,15 @@ sudo apt-get install libcurl4-openssl-dev libjsoncpp-dev
 ```
 
 - Build project
-```
-cd PayloadSdk 
-mkdir build && cd build  
-cmake ..  
-make -j6  
-```
+<pre>
+cd PayloadSdk
+mkdir build && cd build
+
+cmake -D<b>payload</b> ../
+<i>e.g. cmake -DVIO ../</i>
+<i>     cmake -DGHADRON ../</i>
+<i>     cmake -DZIO ../</i>
+
+make -j6
+
+</pre>

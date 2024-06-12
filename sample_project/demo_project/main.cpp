@@ -136,7 +136,7 @@ int8_t psdk_run_sample(){
 		#if 1
 			PRINT_INFO("%s | %s | Upload default parameter for payload!!!!",__func__,state_name[s_proc._state]);
 			/*! Enable tracking mode*/
-			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE,PAYLOAD_CAMERA_TRACKING_ENABLE,PARAM_TYPE_UINT32);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE,PAYLOAD_CAMERA_TRACKING_OBJ_TRACKING,PARAM_TYPE_UINT32);
 			/*! Set OSD Mode to STATUS */
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_OSD_MODE,PAYLOAD_CAMERA_VIDEO_OSD_MODE_STATUS,PARAM_TYPE_UINT32);
 			/*! Set Dual RC Mode*/

@@ -18,6 +18,7 @@ set(EXAMPLES
     ir_record_video.cpp
     ir_set_palete.cpp
     download_media_files.cpp
+    do_object_tracking.cpp
 )
 endif(VIO)
 

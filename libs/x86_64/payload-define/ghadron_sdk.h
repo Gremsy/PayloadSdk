@@ -1,6 +1,10 @@
 #ifndef GHADRON_SDK_H
 #define GHADRON_SDK_H
 
+#define PAYLOAD_CAMERA_RC_MODE 			"RC_MODE"
+#define PAYLOAD_CAMERA_RC_MODE_GREMSY 		0
+#define PAYLOAD_CAMERA_RC_MODE_STANDARD 		1
+
 // Zoom super resolution value can be set from 1x to 12x
 #define PAYLOAD_CAMERA_VIDEO_ZOOM_FACTOR              "C_V_ZOOM"
 enum _zoom_eo_factor{

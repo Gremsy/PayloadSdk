@@ -51,7 +51,11 @@ int main(int argc, char *argv[]){
 	// check connection
 	my_payload->checkPayloadConnection();
 	usleep(100000);
-	
+
+	// change setting of RC_MODE to STANDARD
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_RC_MODE, PAYLOAD_CAMERA_RC_MODE_STANDARD, PARAM_TYPE_UINT32);
+
+	// change setting of View Source to EO
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_EO, PARAM_TYPE_UINT32);
 
 	printf("Zoom out 1x, delay in 1sec \n");

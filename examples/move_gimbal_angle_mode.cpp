@@ -47,7 +47,11 @@ int main(int argc, char *argv[]){
 	printf("Waiting for payload signal! \n");
 
 	my_payload->checkPayloadConnection();
-	
+
+	printf("Gimbal set mode FOLLOW \n");
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, PAYLOAD_CAMERA_GIMBAL_MODE_FOLLOW, PARAM_TYPE_UINT32);
+	usleep(1000000);
+
 #if defined VIO
 	// change payload zoom mode to SuperResolution
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_MODE, PAYLOAD_CAMERA_VIDEO_ZOOM_MODE_SUPER_RESOLUTION, PARAM_TYPE_UINT32);

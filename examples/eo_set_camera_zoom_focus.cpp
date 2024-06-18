@@ -45,7 +45,7 @@ int main(int argc, char *argv[]){
     printf("Set zoom level to 1x ! \n");
     #if defined GHADRON
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_FACTOR, ZOOM_EO_1X, PARAM_TYPE_UINT32);
-    #elif defined VIO
+    #elif defined VIO || defined ZIO
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);
     #endif
     usleep(3000000);
@@ -94,7 +94,7 @@ int main(int argc, char *argv[]){
     my_payload->setCameraZoom(ZOOM_TYPE_RANGE, 0.0);  // zoom 0%
     usleep(5000000); // sleep 5s
 
-    #if defined VIO
+    #if defined VIO || defined ZIO
         // focus continuous
         printf("Start Focus In! \n");
         my_payload->setCameraFocus(FOCUS_TYPE_CONTINUOUS, FOCUS_IN); // focus in

@@ -14,6 +14,17 @@ cd PayloadSdk/libs/gSDK/
 git checkout gSDK_V3_alpha
 git pull origin gSDK_V3_alpha
 ```
+
+## Hardware setup
+PayloadSDK supports 2 Control method, that's configured at payloadsdk.h:
+- UDP - ETHERNET
+![Image](PayloadSDK_ethernet.png)
+Hardware Setup connect Ethernet
+
+- UART PORT
+![Image](PayloadSDK_uart.png)
+Hardware Setup connect UART
+
 ## How to build
 - Install required lib
 ```

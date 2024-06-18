@@ -12,6 +12,8 @@
 #include "ghadron_sdk.h"
 #elif defined VIO
 #include "vio_sdk.h"
+#elif defined ZIO
+#include "zio_sdk.h"
 #endif
 
 #define PAYLOAD_SYSTEM_ID 1

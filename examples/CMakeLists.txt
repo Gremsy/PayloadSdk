@@ -22,6 +22,28 @@ set(EXAMPLES
 )
 endif(VIO)
 
+if (ZIO)
+set(EXAMPLES
+    connect.cpp
+    load_payload_settings.cpp
+    change_payload_settings.cpp
+    eo_capture_image.cpp
+    eo_record_video.cpp
+    get_video_streaming.cpp
+    move_gimbal_angle_mode.cpp
+    move_gimbal_speed_mode.cpp
+    get_payload_status.cpp
+    eo_set_camera_zoom_focus.cpp
+    gimbal_set_mode.cpp
+    # ir_set_camera_zoom.cpp
+    # ir_capture_image.cpp
+    # ir_record_video.cpp
+    # ir_set_palete.cpp
+    download_media_files.cpp
+    # do_object_tracking.cpp
+)
+endif(ZIO)
+
 if (GHADRON)
 set(EXAMPLES
     connect.cpp

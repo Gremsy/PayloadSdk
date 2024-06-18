@@ -11,10 +11,16 @@ add_definitions(-DGHADRON=${GHADRON})
 endif(GHADRON)
 
 if (VIO)
-set(VIO $ENV{GHADRON})
+set(VIO $ENV{VIO})
 message("-- VIO: ${VIO}")
 add_definitions(-DVIO=${VIO})
 endif(VIO)
+
+if (ZIO)
+set(ZIO $ENV{ZIO})
+message("-- ZIO: ${ZIO}")
+add_definitions(-DZIO=${ZIO})
+endif(ZIO)
 
 find_package(PkgConfig REQUIRED)
 #Use Pkg-config to configure GStreamer

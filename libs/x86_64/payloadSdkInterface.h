@@ -4,10 +4,7 @@
 #include <iostream>
 #include "payloadsdk.h"
 #include "gimbal_protocol_v2.h"
-
-typedef void (*payload_status_callback_t)(int event, double* param);
-typedef void (*payload_param_callback_t)(int event, char* param_char, double* param_double);
-typedef void (*payload_streamInfo_callback_t)(int event, char* param_char, double* param_double);
+#include <functional>
 
 enum payload_status_event_t{
 	PAYLOAD_CAM_CAPTURE_STATUS = 0,
@@ -38,6 +35,9 @@ class PayloadSdkInterface
 {
 
 public:
+	typedef std::function<void(int event, double* param)> payload_status_callback_t;
+	typedef std::function<void(int event, char* param_char, double* param_double)> payload_param_callback_t;
+	typedef std::function<void(int event, char* param_char, double* param_double)> payload_streamInfo_callback_t;
 
 	PayloadSdkInterface();
 	PayloadSdkInterface(T_ConnInfo data);
@@ -113,7 +113,12 @@ public:
 	/**
 	 * set payload's camera capture image
 	 **/
-	void setPayloadCameraCaptureImage();
+	void setPayloadCameraCaptureImage(int = 0);
+
+	/**
+	 * set payload's camera stop image
+	 **/
+	void setPayloadCameraStopImage();
 
 	/**
 	 * set payload's camera start record video

@@ -1,7 +1,6 @@
 #include "stdio.h"
 #include <pthread.h>
 #include <cstdlib>
-#include <iostream>
 
 #include"payloadSdkInterface.h"
 
@@ -32,11 +31,13 @@ typedef enum{
 	check_camera_mode,
 	change_camera_mode,
 	do_capture,
-	wait_capture_done,
+	image_in_capturing,
+	stop_capturing_image,
 }capture_sequence_t;
 
 capture_sequence_t my_capture = idle;
-uint8_t image_to_capture = 3;
+uint8_t interval = 3;
+uint8_t time_to_capturing = 12;
 
 int main(int argc, char *argv[]){
 	printf("Starting CaptureImage example...\n");
@@ -57,6 +58,8 @@ int main(int argc, char *argv[]){
 	
 	// set payload to video mode for testing
 	my_payload->setPayloadCameraMode(CAMERA_MODE_VIDEO);
+
+	// Change PAYLOAD_CAMERA_RECORD_EO or PAYLOAD_CAMERA_RECORD_IR here
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_RECORD_SRC, PAYLOAD_CAMERA_RECORD_EO, PARAM_TYPE_UINT32);
 
 	my_capture = check_storage;
@@ -85,11 +88,22 @@ int main(int argc, char *argv[]){
 			break;
 		}
 		case do_capture:{
-			my_payload->setPayloadCameraCaptureImage();
-			my_capture = wait_capture_done;
+			my_payload->setPayloadCameraCaptureImage(interval);
+			printf("Payload is capturing image elapsed time between %ds, within %ds, wait... \n", interval, time_to_capturing);
+			my_capture = image_in_capturing;
 			break;
 		}
-		case wait_capture_done:{
+		case image_in_capturing:{
+			printf("Captured ... \n");
+			sleep(interval); // interval (s)
+			time_to_capturing-=interval;
+			if(time_to_capturing <= 0){
+				my_capture = stop_capturing_image;
+			}
+			break;
+		}
+		case stop_capturing_image:{
+			my_payload->setPayloadCameraStopImage();
 			my_payload->getPayloadCaptureStatus();
 			break;
 		}
@@ -136,19 +150,18 @@ void onPayloadStatusChanged(int event, double* param){
 				printf("   ---> Payload is busy \n");
 				my_capture = idle;
 			}
-		}else if(my_capture == wait_capture_done){
+		}else if(my_capture == stop_capturing_image){
 			if(param[0] == 0 ){
 				my_capture = check_storage;
-				printf("   ---> Payload is completed capture image, Do next sequence %d\n\n", --image_to_capture);
-				if(image_to_capture == 0) {
-					// close payload interface
-					try {
-						my_payload->sdkQuit();
-					}
-					catch (int error){}
+				printf("   ---> Payload is completed capture image \n");
 
-					exit(0);
+				// close payload interface
+				try {
+					my_payload->sdkQuit();
 				}
+				catch (int error){}
+
+				exit(0);
 			}else{
 				printf("   ---> Payload is busy \n");
 			}

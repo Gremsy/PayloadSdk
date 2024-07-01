@@ -19,6 +19,7 @@ set(EXAMPLES
     ir_set_palete.cpp
     download_media_files.cpp
     do_object_tracking.cpp
+    time_lapse_photography.cpp
 )
 endif(VIO)
 
@@ -41,6 +42,7 @@ set(EXAMPLES
     # ir_set_palete.cpp
     download_media_files.cpp
     # do_object_tracking.cpp
+    time_lapse_photography.cpp
 )
 endif(ZIO)
 
@@ -62,9 +64,9 @@ set(EXAMPLES
     ir_record_video.cpp
     ir_set_palete.cpp
     download_media_files.cpp
+    # time_lapse_photography.cpp
 )
 endif(GHADRON)
-
 find_package( Threads )
 
 find_package(PkgConfig REQUIRED)

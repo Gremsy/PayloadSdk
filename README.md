@@ -37,9 +37,9 @@ cd PayloadSdk
 mkdir build && cd build
 
 cmake -D<b>payload</b> ../
-<i>e.g. cmake -DVIO ../</i>
-<i>     cmake -DGHADRON ../</i>
-<i>     cmake -DZIO ../</i>
+<i>e.g. cmake -DVIO=1 ../</i>
+<i>     cmake -DGHADRON=1 ../</i>
+<i>     cmake -DZIO=1 ../</i>
 
 make -j6
 

@@ -1,14 +1,9 @@
-#ifndef GHADRON_SDK_H
-#define GHADRON_SDK_H
+#ifndef VIO_SDK_H
+#define VIO_SDK_H
 
 #define PAYLOAD_CAMERA_TRACKING_MODE 	"TRACK_MODE"
 #define PAYLOAD_CAMERA_TRACKING_OBJ_TRACKING 	    0
 #define PAYLOAD_CAMERA_TRACKING_OBJ_DETECTION 		1
-
-// Option for control gimbal combine with zoom factor
-#define PAYLOAD_CAMERA_GIMBAL_COMBINE_ZOOM      "TRACK_MODE"
-#define PAYLOAD_CAMERA_GIMBAL_COMBINE_ZOOM_DISABLE  0
-#define PAYLOAD_CAMERA_GIMBAL_COMBINE_ZOOM_ENABLE   1
 
 #define PAYLOAD_CAMERA_VIDEO_OSD_MODE    "OSD_MODE"
 #define PAYLOAD_CAMERA_VIDEO_OSD_MODE_DISABLE       0
@@ -158,11 +153,6 @@ enum Camera_Focus_Value
    FOCUS_IN   = 1,
    FOCUS_AUTO,
 };
-
-// Option for control gimbal combine with zoom factor
-#define PAYLOAD_CAMERA_GIMBAL_COMBINE_ZOOM      "GB_FT_ZOOM"
-#define PAYLOAD_CAMERA_GIMBAL_COMBINE_ZOOM_DISABLE  0
-#define PAYLOAD_CAMERA_GIMBAL_COMBINE_ZOOM_ENABLE   1
 
 // Zoom value can be set from 1x to 8x for camera thermal
 #define PAYLOAD_CAMERA_IR_ZOOM_FACTOR              "C_T_ZOOM"

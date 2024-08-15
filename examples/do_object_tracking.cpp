@@ -125,7 +125,6 @@ void all_threads_init(){
 		return;
 	}
 	std::cout << "Thread created\n" << std::endl;
-
 }
 
 void handle_tracking(){

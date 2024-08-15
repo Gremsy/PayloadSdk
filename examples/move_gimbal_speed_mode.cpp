@@ -52,30 +52,20 @@ int main(int argc, char *argv[]){
 	my_payload->checkPayloadConnection();
 	usleep(100000);
 
-	// change setting of RC_MODE to STANDARD
+	printf("Set gimbal RC mode \n");
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_RC_MODE, PAYLOAD_CAMERA_RC_MODE_STANDARD, PARAM_TYPE_UINT32);
-
-	// change setting of View Source to EO
-	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_EO, PARAM_TYPE_UINT32);
-
-	printf("Zoom out 1x, delay in 1sec \n");
-#if defined VIO
-	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);
-#elif defined GHADRON
-	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_FACTOR, ZOOM_EO_1X, PARAM_TYPE_UINT32);
-#endif
 	usleep(100000);
 
 	printf("Move gimbal yaw to the right 20 deg/s, delay in 5secs \n");
-	my_payload->setGimbalSpeed(0, 0 , 20, Gimbal_Protocol::INPUT_SPEED);
+	my_payload->setGimbalSpeed(0, 0 , 20, INPUT_SPEED);
 	usleep(5000000);
 
 	printf("Move gimbal yaw to the left 20 deg/s, delay in 5secs \n");
-	my_payload->setGimbalSpeed(-0, -0 , -20, Gimbal_Protocol::INPUT_SPEED);
+	my_payload->setGimbalSpeed(-0, -0 , -20, INPUT_SPEED);
 	usleep(5000000);
 
-	printf("Keep gimbal stop, zoom in, delay in 5secs \n");
-	my_payload->setGimbalSpeed(0, 0 , 0, Gimbal_Protocol::INPUT_SPEED);
+	printf("Keep gimbal stop, delay in 5secs \n");
+	my_payload->setGimbalSpeed(0, 0 , 0, INPUT_SPEED);
 	usleep(500000);
 
 	// close payload interface

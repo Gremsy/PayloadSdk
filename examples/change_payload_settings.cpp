@@ -53,9 +53,11 @@ int main(int argc, char *argv[]){
 
 	printf("\nChange some params\n");
 
+    #if defined VIO || defined ZIO
 	// change Zio zoom mode to SuperResolution
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_MODE, PAYLOAD_CAMERA_VIDEO_ZOOM_MODE_SUPER_RESOLUTION, PARAM_TYPE_UINT32);
 	usleep(3000000);
+    #endif /* VIO || ZIO */
 
 	// request to read all settings of payload to verify
 	printf("------------------------> Changed values \n");

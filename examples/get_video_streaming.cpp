@@ -213,12 +213,7 @@ void *start_loop_thread(void *threadid)
     gst_init(NULL, NULL);
 
     string descr;
-    if(!_is_rtsp_stream){
-	    descr = "udpsrc port=" + _stream_uri + " ! application/x-rtp,encoding-name=H264,payload=96 ! rtph264depay ! h264parse ! queue ! avdec_h264 ! nvvidconv ! nvoverlaysink sync=false async=false"
-	                    ;
-    }else{
-    	descr = "rtspsrc location=" + _stream_uri + " latency=0 ! rtph264depay ! h264parse ! avdec_h264 ! autovideosink sync=false async=false";
-    }
+	descr = "rtspsrc location=" + _stream_uri + " latency=0 ! decodebin ! videoconvert ! autovideosink sync=false async=false";
 
     printf("%s %s \n", __func__, descr.c_str());
     main_pipeline = gst_parse_launch(descr.c_str(), &error);

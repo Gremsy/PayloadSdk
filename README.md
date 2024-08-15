@@ -4,15 +4,11 @@ This repo is officially SDK for all Gremsy's Payloads
 ## Hardware
 - Ubuntu PC (x86_64)
 - Jetson platform (aarch64)
-- Raspberry Pi (developing)
+- Raspberry Pi
 
 ## Clone the project 
 ```
-git clone -b develop --recurse-submodules https://github.com/Gremsy/PayloadSdk.git
-
-cd PayloadSdk/libs/gSDK/
-git checkout gSDK_V3_alpha
-git pull origin gSDK_V3_alpha
+git clone -b develop https://github.com/Gremsy/PayloadSdk.git
 ```
 
 ## Hardware setup

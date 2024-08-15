@@ -39,7 +39,6 @@ typedef enum{
 capture_sequence_t my_capture = idle;
 uint8_t time_to_record = 10;
 
-
 int main(int argc, char *argv[]){
 	printf("Starting RecordVideo example...\n");
 	signal(SIGINT,quit_handler);

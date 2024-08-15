@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <limits>
+#include "payloadsdk.h"
 
 CURL *curl;
 FILE *fp;
@@ -171,37 +172,19 @@ bool isIPAddress(const std::string& str) {
 }
 
 int main(int argc, char* argv[]) {
-    std::string ip;
     if (argc == 1) {
         std::cout << "The download directory is in build folder." << std::endl;
-        std::cout << "Input Payload IP (xxx.xxx.xxx.xxx): ";
-        std::cin >> ip;
     }
-    else if (argc == 2) {
+    else {
         if (isDirectoryPath(argv[1])) {
             downloadDirectory = argv[1];
             std::cout << "The download directory: " << downloadDirectory << std::endl;
-            std::cout << "Input Payload IP (xxx.xxx.xxx.xxx): ";
-            std::cin >> ip;
         } else {
-            if (isIPAddress(argv[1])) {
-                std::cout << "The download directory is in build folder." << std::endl;
-                ip = argv[1];
-            }
-        }
-    } else {
-        if (isDirectoryPath(argv[1])) {
-            downloadDirectory = argv[1];
-            std::cout << "The download directory: " << downloadDirectory << std::endl;
-            ip = argv[2];
-        } else {
-            ip = argv[1];
-            downloadDirectory = argv[2];
-            std::cout << "The download directory: " << downloadDirectory << std::endl;
+            std::cout << "The download directory is in build folder." << std::endl;
         }
     }
-    std::cout << "IP Address: " << ip << std::endl;
-    std::string url = "http://" + ip + ":8000";
+    std::cout << "IP Address: " << std::string(udp_ip_target) << std::endl;
+    std::string url = "http://" + std::string(udp_ip_target) + ":8000";
     curl_global_init(CURL_GLOBAL_DEFAULT);
     curl = curl_easy_init();
 

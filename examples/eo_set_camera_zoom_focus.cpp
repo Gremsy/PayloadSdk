@@ -112,7 +112,7 @@ int main(int argc, char *argv[]){
         // auto focus
         printf("Auto Focus! \n");
         my_payload->setCameraFocus(FOCUS_TYPE_AUTO); // auto focus
-    #endif /* VIO */
+    #endif /* VIO || ZIO */
 
     printf("!--------------------! \n");
 

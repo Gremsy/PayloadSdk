@@ -23,17 +23,10 @@ T_ConnInfo s_conn = {
 PayloadSdkInterface* my_payload = nullptr;
 bool time_to_exit = false;
 
-pthread_t thrd_recv;
-pthread_t thrd_gstreamer;
-
-bool gstreamer_start();
-void gstreamer_terminate();
 void *start_loop_thread(void *threadid);
-
 
 bool all_threads_init();
 void quit_handler(int sig);
-
 
 int main(int argc, char *argv[]){
 	printf("Starting Set gimbal mode example...\n");
@@ -56,6 +49,10 @@ int main(int argc, char *argv[]){
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, PAYLOAD_CAMERA_GIMBAL_MODE_FOLLOW, PARAM_TYPE_UINT32);
 	usleep(5000000);
 
+	printf("Gimbal set mode MAPPING, delay in 5 secs \n");
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, PAYLOAD_CAMERA_GIMBAL_MODE_MAPPING, PARAM_TYPE_UINT32);
+	usleep(5000000);
+
 	printf("Gimbal set mode OFF, delay in 5 secs \n");
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, PAYLOAD_CAMERA_GIMBAL_MODE_OFF, PARAM_TYPE_UINT32);
 	usleep(5000000);
@@ -67,6 +64,7 @@ int main(int argc, char *argv[]){
 	// close payload interface
 	try {
 		my_payload->sdkQuit();
+
 	}
 	catch (int error){}
 

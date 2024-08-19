@@ -8,7 +8,7 @@ This repo is officially SDK for all Gremsy's Payloads
 
 ## Clone the project 
 ```
-git clone -b develop https://github.com/Gremsy/PayloadSdk.git
+git clone -b payloadsdk_v2 https://github.com/Gremsy/PayloadSdk.git
 ```
 
 ## Hardware setup

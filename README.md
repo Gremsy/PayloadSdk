@@ -4,26 +4,19 @@ This repo is officially SDK for all Gremsy's Payloads
 ## Hardware
 - Ubuntu PC (x86_64)
 - Jetson platform (aarch64)
-- Raspberry Pi (developing)
+- Raspberry Pi
 
 ## Clone the project 
 ```
-git clone -b develop --recurse-submodules https://github.com/Gremsy/PayloadSdk.git
-
-cd PayloadSdk/libs/gSDK/
-git checkout gSDK_V3_alpha
-git pull origin gSDK_V3_alpha
+git clone -b develop https://github.com/Gremsy/PayloadSdk.git
 ```
 
 ## Hardware setup
-PayloadSDK supports 2 Control method, that's configured at payloadsdk.h:
-- UDP - ETHERNET
-![Image](PayloadSDK_ethernet.png)
-Hardware Setup connect Ethernet
+PayloadSDK supports 2 control conections, that's configured at payloadsdk.h:
 
-- UART PORT
-![Image](PayloadSDK_uart.png)
-Hardware Setup connect UART
+![Image](PayloadSDK_HW_Setup.png)
+
+**Figure 1:** Hardware setup use Ethernet and UART connection
 
 ## How to build
 - Install required lib

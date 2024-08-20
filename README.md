@@ -12,14 +12,11 @@ git clone -b payloadsdk_v2 https://github.com/Gremsy/PayloadSdk.git
 ```
 
 ## Hardware setup
-PayloadSDK supports 2 Control method, that's configured at payloadsdk.h:
-- UDP - ETHERNET
-![Image](PayloadSDK_ethernet.png)
-Hardware Setup connect Ethernet
+PayloadSDK supports 2 control conections, that's configured at payloadsdk.h:
 
-- UART PORT
-![Image](PayloadSDK_uart.png)
-Hardware Setup connect UART
+![Image](PayloadSDK_HW_Setup.png)
+
+**Figure 1:** Hardware setup use Ethernet and UART connection
 
 ## How to build
 - Install required lib

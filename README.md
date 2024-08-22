@@ -20,7 +20,7 @@ PayloadSDK supports 2 control conections, that's configured at payloadsdk.h:
 
 ![Image](PayloadSDK_HW_Setup.png)
 
-**Figure 1:** Hardware setup use Ethernet and UART connection
+**Figure 1:** Hardware setup use Ethernet or UART connection
 
 ## How to build
 - Install required lib

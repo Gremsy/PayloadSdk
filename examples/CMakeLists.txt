@@ -23,6 +23,8 @@ set(EXAMPLES
     download_media_files.cpp
     do_object_tracking.cpp
     time_lapse_photography.cpp
+    send_gps.cpp
+    send_system_time.cpp
 )
 endif(VIO)
 

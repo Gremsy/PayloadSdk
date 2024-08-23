@@ -59,9 +59,9 @@ public:
       void regPayloadStreamChanged(payload_streamInfo_callback_t func);
       payload_streamInfo_callback_t __notifyPayloadStreamChanged = NULL;
 
-//     /**
-//      * Init connection to payload
-//      **/
+    /**
+     * Init connection to payload
+     **/
     bool sdkInitConnection();
     /**
      * Interface terminator
@@ -179,13 +179,22 @@ public:
      **/
     void setPayloadObjectTrackingParams(float cmd, float pos_x, float pos_y);
 
+    /**
+     * Send the GPS information to the payload
+     **/
+    void sendPayloadGPSPosition(mavlink_global_position_int_t gps);
+
+    /**
+     * Send the Sytem Time to the payload
+     **/
+    void sendPayloadSystemTime(mavlink_system_time_t sys_time);
+
     // handle receive message
     void payload_recv_handle();
 
     // handle request message
     void payload_request_handle();
 
-// private:
     void _handle_msg_param_ext_value(mavlink_message_t* msg);
     void _handle_msg_command_ack(mavlink_message_t* msg);
     void _handle_msg_storage_information(mavlink_message_t* msg);

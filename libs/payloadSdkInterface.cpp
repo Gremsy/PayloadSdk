@@ -647,6 +647,43 @@ setPayloadObjectTrackingParams(float cmd, float pos_x, float pos_y){
     printf("%s %.2f %.2f \n", __func__, pos_x, pos_y);
 }
 
+void 
+PayloadSdkInterface::
+sendPayloadGPSPosition(mavlink_global_position_int_t gps){
+    
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_global_position_int_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &gps);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+sendPayloadSystemTime(mavlink_system_time_t sys_time){
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_system_time_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &sys_time);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
 void
 PayloadSdkInterface::
 payload_recv_handle()

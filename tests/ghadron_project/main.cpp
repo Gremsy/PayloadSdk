@@ -31,7 +31,7 @@ static void usage(){
 // static int udp_stream_target_get();
 static std::string ir_vid_dev_get() {
     std::string ret;
-    const char* command = "v4l2-ctl --list-devices | grep -A 1 \"FLIRs Video\" | tail -1 | sed 's/^[[:blank:]]*//'"; // Replace with your desired shell command
+    const char* command = "v4l2-ctl --list-devices | grep -A 1 \"FLIR Video\" | tail -1 | sed 's/^[[:blank:]]*//'"; // Replace with your desired shell command
 
     FILE* pipe = popen(command, "r");
     if (!pipe) {

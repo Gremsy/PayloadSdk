@@ -200,22 +200,39 @@ int8_t psdk_run_sample(){
 		{
 			PRINT_INFO("%s | %s | Recenter gimbal postion",__func__,state_name[s_proc._state]);
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, PAYLOAD_CAMERA_GIMBAL_MODE_RESET, PARAM_TYPE_UINT32);
-			usleep(3000000);
+			usleep(300000);
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);
 
-			usleep(10000000); // wait for 10 secs
+			usleep(1000000); // wait for 1 secs
 
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_PALETTE, PAYLOAD_CAMERA_IR_PALETTE_3, PARAM_TYPE_UINT32);
-			usleep(10000000);
+			usleep(100000);
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_IR, PARAM_TYPE_UINT32);
-			usleep(10000000);
+			usleep(2000000);
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_PALETTE, PAYLOAD_CAMERA_IR_PALETTE_1, PARAM_TYPE_UINT32);
-			usleep(10000000);
+			usleep(1000000);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_PALETTE, PAYLOAD_CAMERA_IR_PALETTE_2, PARAM_TYPE_UINT32);
+			usleep(1000000);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_PALETTE, PAYLOAD_CAMERA_IR_PALETTE_4, PARAM_TYPE_UINT32);
+			usleep(1000000);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_PALETTE, PAYLOAD_CAMERA_IR_PALETTE_5, PARAM_TYPE_UINT32);
+			usleep(1000000);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_PALETTE, PAYLOAD_CAMERA_IR_PALETTE_6, PARAM_TYPE_UINT32);
+			usleep(1000000);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_PALETTE, PAYLOAD_CAMERA_IR_PALETTE_7, PARAM_TYPE_UINT32);
+			usleep(1000000);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_PALETTE, PAYLOAD_CAMERA_IR_PALETTE_8, PARAM_TYPE_UINT32);
+			usleep(1000000);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_PALETTE, PAYLOAD_CAMERA_IR_PALETTE_9, PARAM_TYPE_UINT32);
+			usleep(1000000);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_PALETTE, PAYLOAD_CAMERA_IR_PALETTE_10, PARAM_TYPE_UINT32);
+			usleep(100000);
 
-			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_EOIR, PARAM_TYPE_UINT32);
-			usleep(5000000);
+
+			// my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_SYNC, PARAM_TYPE_UINT32);
+			// usleep(2000000);
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_PALETTE, PAYLOAD_CAMERA_IR_PALETTE_3, PARAM_TYPE_UINT32);
-			usleep(10000000);
+			usleep(2000000);
 
 			my_payload->setGimbalSpeed(0, 0, 0, INPUT_SPEED);
 			s_proc._state = STATE_MOVEMENT_1;
@@ -225,18 +242,18 @@ int8_t psdk_run_sample(){
 		{
 			PRINT_INFO("%s | %s | Zoom in to 30x 5 seconds and Zoom out to 1x 5 seconds",__func__,state_name[s_proc._state]);
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_30X, PARAM_TYPE_UINT32);	
-			usleep(10000000);
+			usleep(5000000);
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);	
-			usleep(10000000);
+			usleep(5000000);
 			s_proc._state = STATE_MOVEMENT_2;	
 		}
 		break;
 	case STATE_MOVEMENT_2:
 		{	
-			PRINT_INFO("%s | %s | Set yaw to 60 degree and Zoom in to 20x",__func__,state_name[s_proc._state]);
+			PRINT_INFO("%s | %s | Set yaw to 60 degree and Zoom in to 2x",__func__,state_name[s_proc._state]);
 			my_payload->setGimbalSpeed(0, 0, 60, INPUT_ANGLE);
-			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_20X, PARAM_TYPE_UINT32);	
-			usleep(10000000);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_2X, PARAM_TYPE_UINT32);
+			usleep(1500000);
 			s_proc._state = STATE_MOVEMENT_3;
 			s_proc._time_usec = _get_time_usec();
 		}	
@@ -271,8 +288,8 @@ int8_t psdk_run_sample(){
 			PRINT_INFO("%s | %s | Stop gimbal, Zoom in to 1x",__func__,state_name[s_proc._state]);
 			/**/
 			my_payload->setGimbalSpeed(0.0f,0.0f,0.0f, INPUT_SPEED);
-			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);	
-			usleep(10000000);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);
+			usleep(1000000);
 			s_proc._state = STATE_MOVEMENT_6;
 		}
 		break;
@@ -280,11 +297,13 @@ int8_t psdk_run_sample(){
 		{
 			PRINT_INFO("%s | %s | Set pitch angle to 20 degree, yaw angle to 60 degree and Zoom in to 2x for 5 seconds",__func__,state_name[s_proc._state]);
 			/**/
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_SIDE_BY_SIDE, PARAM_TYPE_UINT32);
+			usleep(2000000);
 			my_payload->setGimbalSpeed(0.0f,20.0f,-60.0f, INPUT_ANGLE);
-			usleep(5000000);
-			uint8_t _zoom_level = ZOOM_SUPER_RESOLUTION_4X;
-			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, _zoom_level, PARAM_TYPE_UINT32);	
-			usleep(10000000);
+			usleep(2000000);
+			// uint8_t _zoom_level = ZOOM_SUPER_RESOLUTION_4X;
+			// my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, _zoom_level, PARAM_TYPE_UINT32);
+			// usleep(1000000);
 			s_proc._state = STATE_MOVEMENT_7;
 			s_proc._time_usec = _get_time_usec();
 		}
@@ -297,7 +316,7 @@ int8_t psdk_run_sample(){
 				s_proc._time_usec = _get_time_usec();
 				s_proc._state = STATE_MOVEMENT_8;
 			}else{
-				my_payload->setGimbalSpeed(0.0f,0.0f ,200.0f, INPUT_SPEED);
+				my_payload->setGimbalSpeed(0.0f,0.0f ,100.0f, INPUT_SPEED);
 			}
 		}
 		break;
@@ -309,7 +328,7 @@ int8_t psdk_run_sample(){
 				s_proc._time_usec = _get_time_usec();
 				s_proc._state = STATE_DONE;
 			}else{
-				my_payload->setGimbalSpeed(0.0f,0.0f ,-200.0f, INPUT_SPEED);
+				my_payload->setGimbalSpeed(0.0f,0.0f ,-100.0f, INPUT_SPEED);
 			}
 		}
 		break;
@@ -317,8 +336,8 @@ int8_t psdk_run_sample(){
 		{
 			PRINT_INFO("%s | %s | Stop gimbal, Zoom in to 1x",__func__,state_name[s_proc._state]);
 			my_payload->setGimbalSpeed(0.0f, 0.0f , 0.0f, INPUT_SPEED);	
-			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);	
-			usleep(5000000);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);
+			usleep(1000000);
 			s_proc._state = STATE_START_MOVEMENT;
 			/**/
 		}

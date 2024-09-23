@@ -121,6 +121,7 @@ enum _zoom_combine_factor{
 #define PAYLOAD_CAMERA_VIEW_IR                  2
 #define PAYLOAD_CAMERA_VIEW_IREO                3
 #define PAYLOAD_CAMERA_VIEW_SYNC                4
+#define PAYLOAD_CAMERA_VIEW_SIDE_BY_SIDE        6
 
 #define PAYLOAD_CAMERA_RECORD_SRC             "C_V_REC"
 #define PAYLOAD_CAMERA_RECORD_BOTH              0

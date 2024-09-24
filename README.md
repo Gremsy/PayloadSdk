@@ -5,6 +5,7 @@ This repo is officially SDK for all Gremsy's Payloads
 - Ubuntu PC (x86_64)
 - Jetson platform (aarch64)
 - Raspberry Pi
+- Qualcomm RB5165
 
 ## Clone the project 
 ```

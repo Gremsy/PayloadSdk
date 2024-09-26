@@ -47,6 +47,10 @@ enum _zoom_eo_factor{
 #define PAYLOAD_CAMERA_RECORD_IR                2
 #define PAYLOAD_CAMERA_RECORD_OSD               5
 
+#define PAYLOAD_CAMERA_STORAGE                "STORAGE"
+#define PAYLOAD_CAMERA_STORAGE_INTERNAL         0
+#define PAYLOAD_CAMERA_STORAGE_SDCARD           1
+
 #define PAYLOAD_CAMERA_IR_PALETTE             "C_T_PALETTE" 
 #define PAYLOAD_CAMERA_IR_PALETTE_1           0           //      F1: WhiteHot         |       G1: WhiteHot
 #define PAYLOAD_CAMERA_IR_PALETTE_2           1           //      F1: BlackHot         |       G1: Fulgurite

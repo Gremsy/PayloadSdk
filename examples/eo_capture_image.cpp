@@ -54,9 +54,15 @@ int main(int argc, char *argv[]){
 	// check connection
 	my_payload->checkPayloadConnection();
 	
-	// set payload to video mode for testing
-	my_payload->setPayloadCameraMode(CAMERA_MODE_VIDEO);
+	// set payload to IMAGE mode for testing
+	my_payload->setPayloadCameraMode(CAMERA_MODE_IMAGE);
+
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_RECORD_SRC, PAYLOAD_CAMERA_RECORD_EO, PARAM_TYPE_UINT32);
+
+    #if defined GHADRON
+	// set photo storage to Internal
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_STORAGE, PAYLOAD_CAMERA_STORAGE_INTERNAL, PARAM_TYPE_UINT32);
+    #endif /* GHADRON */
 
 	my_capture = check_storage;
 	while(1){

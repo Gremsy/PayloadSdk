@@ -58,7 +58,7 @@ set(EXAMPLES
     change_payload_settings.cpp
     eo_capture_image.cpp
     eo_record_video.cpp
-    # get_video_streaming.cpp
+    get_video_streaming.cpp
     move_gimbal_angle_mode.cpp
     move_gimbal_speed_mode.cpp
     get_payload_status.cpp

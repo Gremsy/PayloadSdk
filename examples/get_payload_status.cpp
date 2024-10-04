@@ -43,7 +43,8 @@ int main(int argc, char *argv[]){
 	// check connection
 	my_payload->checkPayloadConnection();
 
-
+	my_payload->setParamRate(PARAM_EO_ZOOM_LEVEL, 1000);
+	my_payload->setParamRate(PARAM_IR_ZOOM_LEVEL, 1000);
 
     #if defined VIO
 	// set the interval for param update

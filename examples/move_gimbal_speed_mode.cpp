@@ -21,15 +21,6 @@ T_ConnInfo s_conn = {
 #endif
 
 PayloadSdkInterface* my_payload = nullptr;
-bool time_to_exit = false;
-
-pthread_t thrd_recv;
-pthread_t thrd_gstreamer;
-
-bool gstreamer_start();
-void gstreamer_terminate();
-void *start_loop_thread(void *threadid);
-
 
 void quit_handler(int sig);
 void onPayloadStatusChanged(int event, double* param);
@@ -81,8 +72,6 @@ void quit_handler( int sig ){
     printf("\n");
     printf("TERMINATING AT USER REQUEST \n");
     printf("\n");
-
-    time_to_exit = true;
 
     // close payload interface
     try {

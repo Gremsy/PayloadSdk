@@ -37,25 +37,12 @@ int main(int argc, char *argv[]){
 
 	my_payload->checkPayloadConnection();
 	
-	printf("Gimbal set mode LOCK, delay in 5 secs \n");
-	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, PAYLOAD_CAMERA_GIMBAL_MODE_LOCK, PARAM_TYPE_UINT32);
+	printf("Enable object detection, delay in 5 secs \n");
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE, PAYLOAD_CAMERA_TRACKING_OBJ_DETECTION, PARAM_TYPE_UINT32);
 	usleep(5000000);
 
-	printf("Gimbal set mode FOLLOW, delay in 5 secs \n");
-	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, PAYLOAD_CAMERA_GIMBAL_MODE_FOLLOW, PARAM_TYPE_UINT32);
-	usleep(5000000);
-
-	printf("Gimbal set mode MAPPING, delay in 5 secs \n");
-	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, PAYLOAD_CAMERA_GIMBAL_MODE_MAPPING, PARAM_TYPE_UINT32);
-	usleep(5000000);
-
-	printf("Gimbal set mode OFF, delay in 5 secs \n");
-	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, PAYLOAD_CAMERA_GIMBAL_MODE_OFF, PARAM_TYPE_UINT32);
-	usleep(5000000);
-
-	printf("Gimbal set mode RESET, delay in 5 secs \n");
-	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, PAYLOAD_CAMERA_GIMBAL_MODE_RESET, PARAM_TYPE_UINT32);
-	usleep(5000000);
+	printf("Disable object detection. Exit! \n");
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE, PAYLOAD_CAMERA_TRACKING_OBJ_TRACKING, PARAM_TYPE_UINT32);
 
 	// close payload interface
 	try {

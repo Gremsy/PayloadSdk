@@ -9,7 +9,6 @@
 #include <chrono>
 
 PayloadSdkInterface* my_payload = nullptr;
-bool time_to_exit = false;
 
 #if (CONTROL_METHOD == CONTROL_UART)
 T_ConnInfo s_conn = {

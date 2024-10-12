@@ -19,7 +19,6 @@ T_ConnInfo s_conn = {
 #endif
 
 PayloadSdkInterface* my_payload = nullptr;
-bool time_to_exit = false;
 
 void quit_handler(int sig);
 
@@ -81,8 +80,6 @@ void quit_handler( int sig ){
     printf("\n");
     printf("TERMINATING AT USER REQUEST \n");
     printf("\n");
-
-    time_to_exit = true;
 
     // close payload interface
     try {

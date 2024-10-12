@@ -23,6 +23,7 @@ PayloadSDK supports 2 control conections, that's configured at payloadsdk.h:
 - Install required lib
 ```
 sudo apt-get install libcurl4-openssl-dev libjsoncpp-dev
+sudo apt-get install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 ```
 
 - Build project

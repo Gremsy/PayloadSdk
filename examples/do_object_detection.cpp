@@ -36,13 +36,19 @@ int main(int argc, char *argv[]){
 	printf("Waiting for payload signal! \n");
 
 	my_payload->checkPayloadConnection();
-	
+
+	// set view source
+    printf("Set view source to EO! \n");
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_EO, PARAM_TYPE_UINT32);
+	usleep(500000);
+
 	printf("Enable object detection, delay in 5 secs \n");
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE, PAYLOAD_CAMERA_TRACKING_OBJ_DETECTION, PARAM_TYPE_UINT32);
 	usleep(5000000);
 
 	printf("Disable object detection. Exit! \n");
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE, PAYLOAD_CAMERA_TRACKING_OBJ_TRACKING, PARAM_TYPE_UINT32);
+	usleep(500000);
 
 	// close payload interface
 	try {

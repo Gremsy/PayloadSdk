@@ -157,9 +157,8 @@ void onPayloadStatusChanged(int event, double* param){
 			my_job = check_streaming_uri;
 		}else{
 			printf("   ---> Payload has no streaming video \n");
-			printf("It looks like your payload was setting to output video only to HDMI \n");
-			printf("Payload setting changed to: both HDMI and Ethernet.\n");
-			printf("Please reboot your payload to apply this setting. Then try again.\n");
+			printf("It looks like your video streaming setting was DISABLE Auto Connection \n");
+			printf("Please enter the Web server and switch Auto Connection to ENABLE. Then try again.\n");
 			my_job = idle;
 		}
 

@@ -644,7 +644,7 @@ setPayloadObjectTrackingParams(float cmd, float pos_x, float pos_y){
     // do the write
     payload_interface->push_message_to_queue(message);
 
-    printf("%s %.2f %.2f \n", __func__, pos_x, pos_y);
+    printf("%s %.2f %.2f %.2f \n", __func__, cmd, pos_x, pos_y);
 }
 
 void 

@@ -67,7 +67,9 @@ int main(int argc, char *argv[]){
 	// change view mode to EO
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_EO, PARAM_TYPE_UINT32);
 	// change tracking mode to Object tracking
+    #if defined VIO || defined ZIO
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE, PAYLOAD_CAMERA_TRACKING_OBJ_TRACKING, PARAM_TYPE_UINT32);
+    #endif
 	// change OSD mode to Status
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_OSD_MODE, PAYLOAD_CAMERA_VIDEO_OSD_MODE_STATUS, PARAM_TYPE_UINT32);
 
@@ -129,8 +131,9 @@ void all_threads_init(){
 
 void handle_tracking(){
 	while(!time_to_exit){
-		int random_w = std::rand() % 1921 - 20; // 1920 + 1 to include 1920
-		int random_h = std::rand() % 1079 - 20; // 1080 + 1 to include 1080
+		int random_w = std::rand() % (1921 - 20); // 1920 + 1 to include 1920
+		int random_h = std::rand() % (1079 - 20); // 1080 + 1 to include 1080
+
 		my_payload->setPayloadObjectTrackingParams(TRACK_ACT, random_w, random_h);
 
 		// sleep for 2s

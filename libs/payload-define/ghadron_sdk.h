@@ -63,6 +63,18 @@ enum _zoom_eo_factor{
 #define PAYLOAD_CAMERA_IR_PALETTE_9           8           //      F1: Gradedfire       |       G1: Tint
 #define PAYLOAD_CAMERA_IR_PALETTE_10          9           //      F1: Hottest          |       G1: BlackHot
 
+#define PAYLOAD_CAMERA_OBJECT_DETECTION         	"DETECTION_EN"
+#define PAYLOAD_CAMERA_OBJECT_DETECTION_DISABLE 	    0
+#define PAYLOAD_CAMERA_OBJECT_DETECTION_ENABLE 		    1
+
+#define PAYLOAD_CAMERA_IR_ISOTHERMS         	"ISOTHERMS_EN"
+#define PAYLOAD_CAMERA_IR_ISOTHERMS_DISABLE 	    0
+#define PAYLOAD_CAMERA_IR_ISOTHERMS_ENABLE 		    1
+
+#define PAYLOAD_CAMERA_IR_ISOTHERMS_GAIN         	"ISOTHERMS_GAIN"
+#define PAYLOAD_CAMERA_IR_ISOTHERMS_HIGH_GAIN 		    0
+#define PAYLOAD_CAMERA_IR_ISOTHERMS_LOW_GAIN 	        1
+
 enum Camera_Zoom_Value
 {
    ZOOM_OUT  = -1,

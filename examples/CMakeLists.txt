@@ -70,9 +70,10 @@ set(EXAMPLES
     ir_record_video.cpp
     ir_set_palette.cpp
     download_media_files.cpp
-    # do_object_tracking.cpp
-    # do_object_detection.cpp
+    do_object_tracking.cpp
+    do_object_detection.cpp
     time_lapse_photography.cpp
+    ir_set_isotherms.cpp
 )
 endif(GHADRON)
 

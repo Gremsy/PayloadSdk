@@ -43,11 +43,19 @@ int main(int argc, char *argv[]){
 	usleep(500000);
 
 	printf("Enable object detection, delay in 5 secs \n");
+    #if defined VIO || defined ZIO
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE, PAYLOAD_CAMERA_TRACKING_OBJ_DETECTION, PARAM_TYPE_UINT32);
+    #elif defined GHADRON
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_OBJECT_DETECTION, PAYLOAD_CAMERA_OBJECT_DETECTION_ENABLE, PARAM_TYPE_UINT32);
+    #endif
 	usleep(5000000);
 
 	printf("Disable object detection. Exit! \n");
+    #if defined VIO || defined ZIO
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE, PAYLOAD_CAMERA_TRACKING_OBJ_TRACKING, PARAM_TYPE_UINT32);
+    #elif defined GHADRON
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_OBJECT_DETECTION, PAYLOAD_CAMERA_OBJECT_DETECTION_DISABLE, PARAM_TYPE_UINT32);
+    #endif
 	usleep(500000);
 
 	// close payload interface

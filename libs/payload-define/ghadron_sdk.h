@@ -14,7 +14,7 @@ enum _zoom_eo_factor{
     ZOOM_EO_8X,
     ZOOM_EO_9X,
     ZOOM_EO_10X,
-    ZOOM_EO_11X,   
+    ZOOM_EO_11X,
     ZOOM_EO_12X
 };
 
@@ -94,19 +94,13 @@ enum Camera_Focus_Value
 #define PAYLOAD_CAMERA_IR_ZOOM_FACTOR              "C_T_ZOOM"
 enum _zoom_ir_factor{
     ZOOM_IR_1X = 0,
-    ZOOM_IR_2X = 2,
-    ZOOM_IR_4X = 4,
-    ZOOM_IR_8X = 8,
-    ZOOM_IR_12X = 12,
-    ZOOM_IR_16X = 16,
-    ZOOM_IR_20X = 20,
-    ZOOM_IR_24X = 24,
-    ZOOM_IR_28X = 28,
-    ZOOM_IR_32X = 32,
-    ZOOM_IR_36X = 36,
-    ZOOM_IR_40X = 40,
-    ZOOM_IR_44X = 44,
-    ZOOM_IR_48X = 48
+    ZOOM_IR_2X,
+    ZOOM_IR_3X,
+    ZOOM_IR_4X,
+    ZOOM_IR_5X,
+    ZOOM_IR_6X,
+    ZOOM_IR_7X,
+    ZOOM_IR_8X
 };
 
 #endif

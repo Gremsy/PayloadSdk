@@ -17,31 +17,12 @@ start_thrd_received_msg(void *args)
     return NULL;
 }
 
-
-void*
-start_thrd_request_msg(void *args)
-{
-    // takes an smart track object argument
-    PayloadSdkInterface *my_payload = (PayloadSdkInterface *)args;
-
-    // run the object's read thread
-    my_payload->payload_request_handle();
-
-    // done!
-    return NULL;
-}
-
 PayloadSdkInterface::PayloadSdkInterface(){
-    printf("Starting Gremsy PayloadSdk %s\n", SDK_VERSION);
-
-    // init paramRate
-    for(int i = 0; i < PARAM_COUNT; i++){
-        paramRate[i] = 0; // 500ms as default
-    }
+    SDK_LOG("Starting Gremsy PayloadSdk %s", SDK_VERSION);
 }
 
 PayloadSdkInterface::PayloadSdkInterface(T_ConnInfo data){
-    printf("Starting Gremsy PayloadSdk %s\n", SDK_VERSION);
+    SDK_LOG("Starting Gremsy PayloadSdk %s", SDK_VERSION);
     payload_ctrl_type = data.type;
     if(payload_ctrl_type == CONTROL_UART){
         payload_uart_port = (char*)data.device.uart.name;
@@ -49,11 +30,6 @@ PayloadSdkInterface::PayloadSdkInterface(T_ConnInfo data){
     }else if(payload_ctrl_type == CONTROL_UDP){
         udp_ip_target = (char*)data.device.udp.ip;
         udp_port_target = data.device.udp.port;
-    }
-
-    // init paramRate
-    for(int i = 0; i < PARAM_COUNT; i++){
-        paramRate[i] = 0; // 500ms as default
     }
 }
 
@@ -87,7 +63,7 @@ sdkInitConnection(){
     }else if(payload_ctrl_type == CONTROL_UDP)
         port = new UDP_Port(udp_ip_target, udp_port_target);
     else{
-        printf("Please define your control method first. See payloadsdk.h\n");
+        SDK_LOG("Please define your control method first. See payloadsdk.h");
         return false;
     }
     /* Instantiate an gimbal interface object */
@@ -101,7 +77,7 @@ sdkInitConnection(){
         port->start();
         payload_interface->start();
     }catch(...){
-        printf("Open Serial Port Error\r\n");
+        SDK_LOG("Open Serial Port Error\r");
         return false;
     }
 
@@ -130,12 +106,6 @@ all_threads_init(){
     }
     std::cout << "Thread created\n" << std::endl;
 
-    rc = pthread_create(&thrd_request_params, NULL, &start_thrd_request_msg, this);
-    if (rc){
-        std::cout << "\nError: Can not create thread!" << rc << std::endl;
-        return false;
-    }
-    std::cout << "Thread created\n" << std::endl;
     return true;
 }
 
@@ -147,7 +117,7 @@ checkPayloadConnection(){
         uint8_t msg_cnt = getNewMewssage(msg);
 
         if(msg_cnt && msg.sysid == PAYLOAD_SYSTEM_ID && msg.compid == PAYLOAD_COMPONENT_ID){
-            printf("Payload connected! \n");
+            SDK_LOG("Payload connected! ");
             break;
         }
     }
@@ -476,13 +446,14 @@ setPayloadCameraRecordVideoStop(){
 void
 PayloadSdkInterface::
 requestParamValue(uint8_t pIndex){
-    // printf("%s \n", __func__);
+    // SDK_LOG("%s ", __func__);
 
     mavlink_param_request_read_t request = {0};
 
     request.target_system = SYS_ID_USER2;
     request.target_component = MAV_COMP_ID_USER2;
-    request.param_index = pIndex;
+    // request.param_index = pIndex;
+    strncpy(request.param_id, payloadParams[pIndex].id, 16);
 
     // --------------------------------------------------------------------------
     //   ENCODE
@@ -502,7 +473,36 @@ requestParamValue(uint8_t pIndex){
 void
 PayloadSdkInterface::
 setParamRate(uint8_t pIndex, uint16_t time_ms){
-    paramRate[pIndex] = time_ms;
+    payloadParams[pIndex].msg_rate = time_ms;
+}
+
+void 
+PayloadSdkInterface::
+requestMessageStreamInterval(){
+    for(uint8_t i =0; i < PARAM_COUNT; i++){
+        if(payloadParams[i].msg_rate > 0){
+            printf("msd_id %d, interval %ld, send to %d, %d\n", i, payloadParams[i].msg_rate, SYS_ID_USER2, MAV_COMP_ID_USER2);
+
+            mavlink_command_long_t cmd{0};
+
+            cmd.target_system = SYS_ID_USER2;
+            cmd.target_component = MAV_COMP_ID_USER2;
+
+            cmd.command = MAV_CMD_SET_MESSAGE_INTERVAL;
+            cmd.param1 = i;
+            cmd.param2 = payloadParams[i].msg_rate * 1000; // interval
+            cmd.param7 = 1; // Response to requestor
+
+            // --------------------------------------------------------------------------
+            //   ENCODE
+            // --------------------------------------------------------------------------
+            mavlink_message_t message;
+            mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &cmd);
+
+            // do the write
+            payload_interface->push_message_to_queue(message);
+        }
+    }
 }
 
 void
@@ -517,16 +517,16 @@ setGimbalSpeed(float spd_pitch, float spd_roll, float spd_yaw, input_mode_t mode
         /* Convert target to quaternion */
         if (spd_yaw > 180.f || spd_yaw < -180.f)
         {
-            printf("ERROR: Gimbal Protocol V2 only supports yaw axis from -180 degrees to 180 degrees!\n");
+            SDK_LOG("ERROR: Gimbal Protocol V2 only supports yaw axis from -180 degrees to 180 degrees!");
             return;
         }
         if (spd_roll > 180.f || spd_roll < -180.f)
         {
-            printf("ERROR: Gimbal Protocol V2 only supports roll axis from -180 degrees to 180 degrees!\n");
+            SDK_LOG("ERROR: Gimbal Protocol V2 only supports roll axis from -180 degrees to 180 degrees!");
             return;
         }
         if(spd_pitch > 90.f || spd_pitch < -90.f){
-            printf("ERROR: Gimbal Protocol V2 only supports roll axis from -90 degrees to 90 degrees!\n");
+            SDK_LOG("ERROR: Gimbal Protocol V2 only supports roll axis from -90 degrees to 90 degrees!");
             return;
         }
         mavlink_euler_to_quaternion(to_rad(spd_roll), to_rad(spd_pitch), to_rad(spd_yaw), attitude.q);
@@ -644,7 +644,8 @@ setPayloadObjectTrackingParams(float cmd, float pos_x, float pos_y){
     // do the write
     payload_interface->push_message_to_queue(message);
 
-    printf("%s %.2f %.2f %.2f \n", __func__, cmd, pos_x, pos_y);
+    SDK_LOG("%s %.2f %.2f ", __func__, pos_x, pos_y);
+
 }
 
 void 
@@ -693,12 +694,25 @@ payload_recv_handle()
         mavlink_message_t msg;
         uint8_t msg_cnt = getNewMewssage(msg);
         if(msg_cnt){
-            // printf("Got %d message in queue \n", msg_cnt);
-            // printf("   --> message %d from system_id: %d with component_id: %d \n", msg.msgid, msg.sysid, msg.compid);
-            if(msg.compid == MAV_COMP_ID_USER2)
+            // SDK_LOG("Got %d message in queue ", msg_cnt);
+            // SDK_LOG("   --> message %d from system_id: %d with component_id: %d ", msg.msgid, msg.sysid, msg.compid);
+            if(msg.compid == MAV_COMP_ID_USER2){
                 SYS_ID_USER2 = msg.sysid;
 
+                if(!is_send_stream_request){
+                    // only need to send 1 time, after get the sys_id of the payload
+                    requestMessageStreamInterval();
+                    is_send_stream_request = true;
+                }
+            }
+
             switch(msg.msgid){
+            case MAVLINK_MSG_ID_HEARTBEAT:{
+                if(msg.compid == 101)
+                    SDK_LOG("Got hearbeat, from %d, seq %d", msg.compid, msg.seq);
+
+                break;
+            }
             case MAVLINK_MSG_ID_PARAM_EXT_VALUE:{
                 _handle_msg_param_ext_value(&msg);
                 break;
@@ -746,26 +760,8 @@ payload_recv_handle()
 
 void
 PayloadSdkInterface::
-payload_request_handle(){
-    uint8_t param_id = 0;
-    uint64_t tick_cnt = 0;
-
-    while(!time_to_exit){
-        tick_cnt++;
-        for(int i = 0; i < PARAM_COUNT; i++){
-            if(paramRate[i] > 0){
-                if(!(tick_cnt % paramRate[i]))
-                    requestParamValue(i);
-            }
-        }
-        usleep(1000); // 1ms
-    }
-}
-
-void
-PayloadSdkInterface::
 _handle_msg_param_ext_value(mavlink_message_t* msg){
-    // printf("%s msg_id %d \n", __func__, msg->msgid);
+    // SDK_LOG("%s msg_id %d ", __func__, msg->msgid);
     mavlink_param_ext_value_t param_ext_value = {0};
     mavlink_msg_param_ext_value_decode(msg, &param_ext_value);
 
@@ -784,7 +780,7 @@ _handle_msg_command_ack(mavlink_message_t* msg){
     mavlink_command_ack_t cmd_ack = {0};
     mavlink_msg_command_ack_decode(msg, &cmd_ack);
 
-    // printf("Got ACK for command %d with status %d\n", cmd_ack.command, cmd_ack.result);
+    // SDK_LOG("Got ACK for command %d with status %d", cmd_ack.command, cmd_ack.result);
     if(__notifyPayloadStatusChanged != NULL){
         double params[2] = {cmd_ack.command, cmd_ack.result};
         __notifyPayloadStatusChanged(PAYLOAD_GB_ACK, params);

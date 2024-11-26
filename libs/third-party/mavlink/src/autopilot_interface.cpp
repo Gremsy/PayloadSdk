@@ -411,7 +411,7 @@ write_thread(void)
 			pthread_mutex_unlock(&write_queue_mutex);
 		}
 
-		usleep(10000);
+		usleep(1000);
 	}
 
 	// signal end

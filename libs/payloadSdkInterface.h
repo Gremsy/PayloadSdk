@@ -2,6 +2,7 @@
 #define PAYLOADSDK_INTERFACE_H_
 
 #include <iostream>
+#include <chrono> // for get time
 #include "payloadsdk.h"
 #include <functional>
 
@@ -20,7 +21,7 @@ enum payload_status_event_t{
     PAYLOAD_PARAMS,
 };
 
-enum payload_param_t{
+enum {
     PARAM_EO_ZOOM_LEVEL = 0,
     PARAM_IR_ZOOM_LEVEL,
     PARAM_LRF_RANGE,
@@ -36,8 +37,62 @@ enum payload_param_t{
     PARAM_TARGET_COOR_LAT,
     PARAM_TARGET_COOR_ALT,
 
+    PARAM_PAYLOAD_APP_VER_X,
+    PARAM_PAYLOAD_APP_VER_Y,
+    PARAM_PAYLOAD_APP_VER_Z,
+
     PARAM_COUNT
 };
+
+struct {
+    const uint8_t index;
+    const char *id;
+    float value;
+    uint16_t msg_rate;
+
+} payloadParams[PARAM_COUNT] = {
+
+    {PARAM_EO_ZOOM_LEVEL,   "EO_ZOOM", 0,0},
+    {PARAM_IR_ZOOM_LEVEL,   "IR_ZOOM", 0,0},
+    {PARAM_LRF_RANGE,       "LRF_RANGE", 0,0},
+
+    {PARAM_TRACK_POS_X,     "TRK_POS_X", 0,0},
+    {PARAM_TRACK_POS_Y,     "TRK_POS_Y", 0,0},
+    {PARAM_TRACK_STATUS,    "TRK_STATUS", 0,0},
+
+    {PARAM_LRF_OFSET_X,     "LRF_OFFSET_X", 0,0},
+    {PARAM_LRF_OFSET_Y,     "LRF_OFFSET_Y", 0,0},
+
+    {PARAM_TARGET_COOR_LON, "TARGET_LON", 0,0},
+    {PARAM_TARGET_COOR_LAT, "TARGET_LAT", 0,0},
+    {PARAM_TARGET_COOR_ALT, "TARGET_ALT", 0,0},
+
+    {PARAM_PAYLOAD_APP_VER_X, "APP_VER_X", 0,0},
+    {PARAM_PAYLOAD_APP_VER_Y, "APP_VER_Y", 0,0},
+    {PARAM_PAYLOAD_APP_VER_Z, "APP_VER_Z", 0,0},
+};
+
+static std::chrono::time_point<std::chrono::high_resolution_clock> start_time = std::chrono::high_resolution_clock::now();;
+static long long _getElapsedTimeInMs(){
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+    return elapsed.count();
+}
+
+/* PayloadSDK log.
+   class: must be a pointer to class
+ */
+// #define SDK_DEBUG
+#ifdef SDK_DEBUG
+#define SDK_LOG(fmt, ...)               \
+    printf("[%lld] SDK %s(): " fmt "\n",   \
+            _getElapsedTimeInMs(),          \
+            __func__,                       \
+            ##__VA_ARGS__);
+#else
+#define SDK_LOG(fmt, ...)
+    ;
+#endif
 
 class PayloadSdkInterface
 {
@@ -139,6 +194,7 @@ public:
 
     void requestParamValue(uint8_t pIndex);
     void setParamRate(uint8_t pIndex, uint16_t time_ms);
+    void requestMessageStreamInterval();
 
 private:
     pthread_t thrd_recv;
@@ -153,9 +209,9 @@ private:
 
     bool time_to_exit = false;
 
-    uint16_t paramRate[PARAM_COUNT];
-
     uint8_t SYS_ID_USER2 = 1;
+
+    bool is_send_stream_request = false;
 
 public:
     /*!<@brief: used to rotate gimbal for each axis depend on angular rate or angle mode
@@ -177,7 +233,7 @@ public:
     /**
      * send bounding box position for object tracking feature
      **/
-    void setPayloadObjectTrackingParams(float cmd, float pos_x, float pos_y);
+    void setPayloadObjectTrackingParams(float cmd, float pos_x=960, float pos_y=540);
 
     /**
      * Send the GPS information to the payload
@@ -206,5 +262,6 @@ public:
 
     void _handle_msg_camera_stream_information(mavlink_message_t* msg);
     void _handle_msg_camera_information(mavlink_message_t* msg);
+
 };
 #endif

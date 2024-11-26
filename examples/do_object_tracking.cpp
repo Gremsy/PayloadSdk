@@ -134,24 +134,24 @@ void handle_tracking(){
 		int random_w = std::rand() % (1921 - 20); // 1920 + 1 to include 1920
 		int random_h = std::rand() % (1079 - 20); // 1080 + 1 to include 1080
 
+		printf("Start tracking new object \n");
 		my_payload->setPayloadObjectTrackingParams(TRACK_ACT, random_w, random_h);
 
-		// sleep for 2s
-		usleep(2000000);
+		// sleep for 200ms
+		usleep(200000);
 
 		// check tracking status
 		if(track_status){
-			printf("Object was tracked \n");
-			printf("Keep this object for 5 seconds \n");
+			printf("Object was tracked. Keep this object for 5 seconds... \n");
 			usleep(5000000); // sleep for 5 secs
 
 			// release object
 			my_payload->setPayloadObjectTrackingParams(TRACK_IDLE, random_w, random_h);
+			printf("Object was released. Wait 3 seconds... \n");
 			usleep(3000000); // sleep for 3 secs
 		}
 		else{
-			printf("Lost object \n");
-			printf("Try catch another object \n");
+			printf("Lost object. Try catch another object \n");
 			my_payload->setPayloadObjectTrackingParams(TRACK_IDLE, random_w, random_h);
 			usleep(1000000);
 		}
@@ -177,7 +177,7 @@ void onPayloadStatusChanged(int event, double* param){
 			break;
 		}
 
-		// printf("%s, status: %.2f, x: %.2f, y: %.2f \n", __func__, track_status, track_pos_x, track_pos_y);
+		printf("%s, status: %.2f, x: %.2f, y: %.2f \n", __func__, track_status, track_pos_x, track_pos_y);
 		break;
 	}
 	default: break;

@@ -28,6 +28,8 @@ enum {
 
     PARAM_TRACK_POS_X,
     PARAM_TRACK_POS_Y,
+    PARAM_TRACK_POS_W,
+    PARAM_TRACK_POS_H,
     PARAM_TRACK_STATUS,
 
     PARAM_LRF_OFSET_X,
@@ -58,6 +60,8 @@ struct {
 
     {PARAM_TRACK_POS_X,     "TRK_POS_X", 0,0},
     {PARAM_TRACK_POS_Y,     "TRK_POS_Y", 0,0},
+    {PARAM_TRACK_POS_W,     "TRK_POS_W", 0,0},
+    {PARAM_TRACK_POS_H,     "TRK_POS_H", 0,0},
     {PARAM_TRACK_STATUS,    "TRK_STATUS", 0,0},
 
     {PARAM_LRF_OFSET_X,     "LRF_OFFSET_X", 0,0},
@@ -75,7 +79,7 @@ struct {
 static std::chrono::time_point<std::chrono::high_resolution_clock> start_time = std::chrono::high_resolution_clock::now();;
 static long long _getElapsedTimeInMs(){
     auto end_time = std::chrono::high_resolution_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
     return elapsed.count();
 }
 

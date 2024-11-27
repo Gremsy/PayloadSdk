@@ -44,7 +44,7 @@ enum tracking_cmd_t{
 };
 
 pthread_t thrd_tracking;
-float track_pos_x = 0, track_pos_y = 0, track_status = 0;
+float track_pos_x = 0, track_pos_y = 0, track_status = 0, track_pos_w = 0, track_pos_h = 0;
 
 int main(int argc, char *argv[]){
 	printf("Starting Do Object Tracking example...\n");
@@ -76,6 +76,8 @@ int main(int argc, char *argv[]){
 	// init the status messages rate
 	my_payload->setParamRate(PARAM_TRACK_POS_X, 100);
 	my_payload->setParamRate(PARAM_TRACK_POS_Y, 100);
+	my_payload->setParamRate(PARAM_TRACK_POS_W, 100);
+	my_payload->setParamRate(PARAM_TRACK_POS_H, 100);
 	my_payload->setParamRate(PARAM_TRACK_STATUS, 100);
 
 
@@ -170,6 +172,12 @@ void onPayloadStatusChanged(int event, double* param){
 		else if(param[0] == PARAM_TRACK_POS_Y){
 			track_pos_y = param[1];
 		}
+		else if(param[0] == PARAM_TRACK_POS_W){
+			track_pos_w = param[1];
+		}
+		else if(param[0] == PARAM_TRACK_POS_H){
+			track_pos_h = param[1];
+		}
 		else if(param[0] == PARAM_TRACK_STATUS){
 			track_status = param[1];
 		}
@@ -177,7 +185,7 @@ void onPayloadStatusChanged(int event, double* param){
 			break;
 		}
 
-		printf("%s, status: %.2f, x: %.2f, y: %.2f \n", __func__, track_status, track_pos_x, track_pos_y);
+		printf("%s, status: %.2f, x: %.2f, y: %.2f, w: %.2f, h: %.2f \n", __func__, track_status, track_pos_x, track_pos_y, track_pos_w, track_pos_h);
 		break;
 	}
 	default: break;

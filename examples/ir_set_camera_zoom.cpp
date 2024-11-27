@@ -19,6 +19,7 @@ T_ConnInfo s_conn = {
 #endif
 
 PayloadSdkInterface* my_payload = nullptr;
+void onPayloadStatusChanged(int event, double* param);
 
 void quit_handler(int sig);
 
@@ -32,6 +33,8 @@ int main(int argc, char *argv[]){
 	// init payload
 	my_payload->sdkInitConnection();
 	printf("Waiting for payload signal! \n");
+
+    my_payload->regPayloadStatusChanged(onPayloadStatusChanged);
 
 	my_payload->checkPayloadConnection();
 
@@ -111,4 +114,15 @@ void quit_handler( int sig ){
 
     // end program here
     exit(0);
+}
+
+void onPayloadStatusChanged(int event, double* param){
+    
+    switch(event){
+    case PAYLOAD_ACK:{
+        printf(" --> Got ack, from command: %.f - result: %.2f\n", param[0], param[1]);
+        break;
+    }
+    default: break;
+    }
 }

@@ -13,7 +13,7 @@ enum payload_status_event_t{
     PAYLOAD_CAM_PARAM_VALUE,
 
     PAYLOAD_GB_ATTITUDE,
-    PAYLOAD_GB_ACK,
+    PAYLOAD_ACK,
 
     PAYLOAD_CAM_INFO,
     PAYLOAD_CAM_STREAMINFO,

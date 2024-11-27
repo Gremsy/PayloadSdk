@@ -44,7 +44,7 @@ int main(int argc, char *argv[]){
 
 	usleep(500000);
 	
-	request to read all settings of payload
+	// request to read all settings of payload
 	my_payload->getPayloadCameraSettingList();
 
 	while(1){

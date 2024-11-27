@@ -1,6 +1,6 @@
 #include "payloadSdkInterface.h"
 
-#define SDK_VERSION "2.0.0_build.16082024"
+#define SDK_VERSION "2.1.0_build.27112024"
 
 Autopilot_Interface* payload_interface = nullptr;
 
@@ -850,7 +850,7 @@ _handle_msg_command_ack(mavlink_message_t* msg){
     SDK_LOG("Got ACK for command %d with status %d", cmd_ack.command, cmd_ack.result);
     if(__notifyPayloadStatusChanged != NULL){
         double params[2] = {cmd_ack.command, cmd_ack.result};
-        __notifyPayloadStatusChanged(PAYLOAD_GB_ACK, params);
+        __notifyPayloadStatusChanged(PAYLOAD_ACK, params);
     }
 }
 

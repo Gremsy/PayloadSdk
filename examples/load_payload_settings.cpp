@@ -21,8 +21,8 @@ T_ConnInfo s_conn = {
 PayloadSdkInterface* my_payload = nullptr;
 
 void quit_handler(int sig);
-void _handle_msg_param_ext_value(mavlink_message_t* msg);
 void onPayloadParamChanged(int event, char* param_char, double* param_double);
+void onPayloadStatusChanged(int event, double* param);
 
 int main(int argc, char *argv[]){
 	printf("Starting LoadPayloadSettings example...\n");
@@ -37,11 +37,14 @@ int main(int argc, char *argv[]){
 
 	// register callback function
 	my_payload->regPayloadParamChanged(onPayloadParamChanged);
+	my_payload->regPayloadStatusChanged(onPayloadStatusChanged);
 
 	// check connection
 	my_payload->checkPayloadConnection();
+
+	usleep(500000);
 	
-	// request to read all settings of payload
+	request to read all settings of payload
 	my_payload->getPayloadCameraSettingList();
 
 	while(1){
@@ -80,6 +83,18 @@ void onPayloadParamChanged(int event, char* param_char, double* param){
 		// param[0]: param_index
 		// param[1]: value
 		printf(" --> Param_id: %s, value: %.2f\n", param_char, param[1]);
+		break;
+	}
+	
+	default: break;
+	}
+}
+
+void onPayloadStatusChanged(int event, double* param){
+	
+	switch(event){
+	case PAYLOAD_PARAM_EXT_ACK:{
+		printf(" --> Got ack, result %.2f\n", param[0]);
 		break;
 	}
 	default: break;

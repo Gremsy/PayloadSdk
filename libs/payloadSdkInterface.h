@@ -19,6 +19,7 @@ enum payload_status_event_t{
     PAYLOAD_CAM_STREAMINFO,
 
     PAYLOAD_PARAMS,
+    PAYLOAD_PARAM_EXT_ACK,
 };
 
 enum {
@@ -142,9 +143,19 @@ public:
     void setPayloadCameraParam(char param_id[], uint32_t param_value, uint8_t param_type);
 
     /**
-     * get payload's settings
+     * get all payload's settings
      **/
     void getPayloadCameraSettingList();
+
+    /**
+     * get payload's setting by id
+     **/
+    void getPayloadCameraSettingByID(char* ID);
+
+    /**
+     * get payload's setting by index
+     **/
+    void getPayloadCameraSettingByIndex(uint8_t idx);
 
     /**
      * get payload's storage volume
@@ -256,6 +267,7 @@ public:
     void payload_request_handle();
 
     void _handle_msg_param_ext_value(mavlink_message_t* msg);
+    void _handle_msg_command_ext_ack(mavlink_message_t* msg);
     void _handle_msg_command_ack(mavlink_message_t* msg);
     void _handle_msg_storage_information(mavlink_message_t* msg);
     void _handle_msg_camera_capture_status(mavlink_message_t* msg);

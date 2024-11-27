@@ -188,6 +188,56 @@ getPayloadCameraSettingList(){
     payload_interface->push_message_to_queue(message);
 }
 
+void 
+PayloadSdkInterface::
+getPayloadCameraSettingByID(char* ID){
+    mavlink_param_ext_request_read_t msg= {0};
+
+    msg.target_system = PAYLOAD_SYSTEM_ID;
+    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.param_index = -1;
+    strncpy(msg.param_id, ID, 16);
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_param_ext_request_read_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+getPayloadCameraSettingByIndex(uint8_t idx){
+    mavlink_param_ext_request_read_t msg= {0};
+
+    msg.target_system = PAYLOAD_SYSTEM_ID;
+    msg.target_component = PAYLOAD_COMPONENT_ID;
+    strncpy(msg.param_id, "", 16);
+    msg.param_index = idx;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_param_ext_request_read_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
 void
 PayloadSdkInterface::
 getPayloadStorage(){
@@ -750,6 +800,10 @@ payload_recv_handle()
                 _handle_msg_param_value(&msg);
                 break;
             }
+            case MAVLINK_MSG_ID_PARAM_EXT_ACK:{
+                _handle_msg_command_ext_ack(&msg);
+                break;
+            }
             default: break;
             }
         }else{
@@ -774,13 +828,26 @@ _handle_msg_param_ext_value(mavlink_message_t* msg){
     }
 }
 
+void 
+PayloadSdkInterface::
+_handle_msg_command_ext_ack(mavlink_message_t* msg){
+    mavlink_param_ext_ack_t ext_ack = {0};
+    mavlink_msg_param_ext_ack_decode(msg, &ext_ack);
+
+    SDK_LOG("Got ext_ack for param_id:%s with result:%d", ext_ack.param_id, ext_ack.param_result);
+    if(__notifyPayloadStatusChanged != NULL){
+        double params[1] = {ext_ack.param_result};
+        __notifyPayloadStatusChanged(PAYLOAD_PARAM_EXT_ACK, params);
+    }
+}
+
 void
 PayloadSdkInterface::
 _handle_msg_command_ack(mavlink_message_t* msg){
     mavlink_command_ack_t cmd_ack = {0};
     mavlink_msg_command_ack_decode(msg, &cmd_ack);
 
-    // SDK_LOG("Got ACK for command %d with status %d", cmd_ack.command, cmd_ack.result);
+    SDK_LOG("Got ACK for command %d with status %d", cmd_ack.command, cmd_ack.result);
     if(__notifyPayloadStatusChanged != NULL){
         double params[2] = {cmd_ack.command, cmd_ack.result};
         __notifyPayloadStatusChanged(PAYLOAD_GB_ACK, params);

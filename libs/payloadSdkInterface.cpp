@@ -530,7 +530,7 @@ void
 PayloadSdkInterface::
 requestMessageStreamInterval(){
     for(uint8_t i =0; i < PARAM_COUNT; i++){
-        if(payloadParams[i].msg_rate > 0){
+        if(payloadParams[i].msg_rate >= 0){
             printf("msd_id %d, interval %ld, send to %d, %d\n", i, payloadParams[i].msg_rate, SYS_ID_USER2, MAV_COMP_ID_USER2);
 
             mavlink_command_long_t cmd{0};

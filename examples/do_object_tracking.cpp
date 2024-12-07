@@ -74,6 +74,7 @@ int main(int argc, char *argv[]){
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_OSD_MODE, PAYLOAD_CAMERA_VIDEO_OSD_MODE_STATUS, PARAM_TYPE_UINT32);
 
 	// init the status messages rate
+	// if you do not want to receive the message anymore, need to set rate to 0
 	my_payload->setParamRate(PARAM_TRACK_POS_X, 100);
 	my_payload->setParamRate(PARAM_TRACK_POS_Y, 100);
 	my_payload->setParamRate(PARAM_TRACK_POS_W, 100);
@@ -138,6 +139,9 @@ void handle_tracking(){
 
 		printf("Start tracking new object \n");
 		my_payload->setPayloadObjectTrackingParams(TRACK_ACT, random_w, random_h);
+
+		// if you want ot track the object at the center of the screen, just use
+		// my_payload->setPayloadObjectTrackingParams(TRACK_ACT);
 
 		// sleep for 200ms
 		usleep(200000);

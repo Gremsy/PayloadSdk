@@ -22,6 +22,8 @@ message("-- ZIO: ${ZIO}")
 add_definitions(-DZIO=${ZIO})
 endif(ZIO)
 
+add_definitions(-DVIO=1)
+
 find_package(PkgConfig REQUIRED)
 #Use Pkg-config to configure GStreamer
 pkg_search_module(GLIB REQUIRED glib-2.0) 

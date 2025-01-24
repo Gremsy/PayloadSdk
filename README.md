@@ -1,5 +1,5 @@
-# GremsySdk
-This repo controls a Gremsy VIO gimbal over UDP via ROS2 commands.
+# gremsy_ros2
+This repo controls a Gremsy VIO gimbal over UDP via ROS2 commands. Forked from Gremsy's PayloadSdk repo.
 
 ## Clone the project
 

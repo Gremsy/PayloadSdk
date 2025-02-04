@@ -225,6 +225,8 @@ public:
     void requestMessageStreamInterval();
 
 private:
+    Autopilot_Interface* payload_interface = nullptr;
+    
     pthread_t thrd_recv;
     pthread_t thrd_request_params;
 

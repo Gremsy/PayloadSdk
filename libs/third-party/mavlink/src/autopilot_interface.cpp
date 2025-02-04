@@ -394,7 +394,7 @@ write_thread(void)
 	while ( !time_to_exit )
 	{
 		cnt++;
-		if(cnt >= 100){
+		if(cnt >= 1000){
 			cnt = 0;
 			w_heartbeat();
 			// printf("write hb %d\n", tick++);

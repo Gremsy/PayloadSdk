@@ -55,6 +55,12 @@ int main(int argc, char *argv[]){
 	my_payload->setParamRate(PARAM_TARGET_COOR_LON, 1000);
 	my_payload->setParamRate(PARAM_TARGET_COOR_LAT, 1000);
 	my_payload->setParamRate(PARAM_TARGET_COOR_ALT, 1000);
+
+	my_payload->setParamRate(PARAM_CAM_VIEW_MODE, 1000);
+	my_payload->setParamRate(PARAM_CAM_REC_SOURCE, 1000);
+	my_payload->setParamRate(PARAM_CAM_IR_TYPE, 1000);
+	my_payload->setParamRate(PARAM_CAM_IR_PALETTE_ID, 1000);
+	my_payload->setParamRate(PARAM_GIMBAL_MODE, 1000);
     #endif /* VIO */
 
 
@@ -123,6 +129,21 @@ void onPayloadStatusChanged(int event, double* param){
 		}
 		else if(param[0] == PARAM_TARGET_COOR_ALT){
 			SDK_LOG("Payload PARAM_TARGET_COOR_ALT: %.2f ", param[1]);
+		}
+		else if(param[0] == PARAM_CAM_VIEW_MODE){
+			SDK_LOG("Payload PARAM_CAM_VIEW_MODE: %.2f ", param[1]);
+		}
+		else if(param[0] == PARAM_CAM_REC_SOURCE){
+			SDK_LOG("Payload PARAM_CAM_REC_SOURCE: %.2f ", param[1]);
+		}
+		else if(param[0] == PARAM_CAM_IR_TYPE){
+			SDK_LOG("Payload PARAM_CAM_IR_TYPE: %.2f ", param[1]);
+		}
+		else if(param[0] == PARAM_CAM_IR_PALETTE_ID){
+			SDK_LOG("Payload PARAM_CAM_IR_PALETTE_ID: %.2f ", param[1]);
+		}
+		else if(param[0] == PARAM_GIMBAL_MODE){
+			SDK_LOG("Payload PARAM_GIMBAL_MODE: %.2f ", param[1]);
 		}
     #endif /* VIO */
 		break;

@@ -531,7 +531,7 @@ PayloadSdkInterface::
 requestMessageStreamInterval(){
     for(uint8_t i =0; i < PARAM_COUNT; i++){
         if(payloadParams[i].msg_rate >= 0){
-            printf("msd_id %d, interval %ld, send to %d, %d\n", i, payloadParams[i].msg_rate, SYS_ID_USER2, MAV_COMP_ID_USER2);
+            SDK_LOG("msd_id %d, interval %ld, send to %d, %d", i, payloadParams[i].msg_rate, SYS_ID_USER2, MAV_COMP_ID_USER2);
 
             mavlink_command_long_t cmd{0};
 
@@ -672,12 +672,11 @@ setPayloadObjectTrackingParams(float cmd, float pos_x, float pos_y){
     msg.target_system = SYS_ID_USER2;
     msg.target_component = MAV_COMP_ID_USER2;
     msg.command = MAV_CMD_USER_4;
-    msg.param1 = 1;
-    msg.param2 = 1;
-    msg.param3 = 0;
-    msg.param4 = cmd;
-    msg.param6 = pos_x;
-    msg.param7 = pos_y;
+    msg.param1 = 4;
+    msg.param2 = 0;
+    msg.param3 = cmd;
+    msg.param4 = pos_x;
+    msg.param5 = pos_y;
     msg.confirmation = 1;
 
     // --------------------------------------------------------------------------

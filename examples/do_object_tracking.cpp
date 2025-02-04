@@ -40,7 +40,8 @@ void onPayloadStatusChanged(int event, double* param);
 
 enum tracking_cmd_t{
 	TRACK_IDLE = 0,
-	TRACK_ACT = 1
+	TRACK_ACT = 1,
+	TRACK_LOST = 2
 };
 
 pthread_t thrd_tracking;

@@ -7,9 +7,16 @@ This repo is officially SDK for all Gremsy's Payloads
 - Raspberry Pi
 - Qualcomm RB5165
 
+## Software
+This branch supported:
+- Vio payload: software v2.0.0 or higher
+- Zio payload: not supported yet
+- GHardron payload: not supported yet
+- OrusL payload: software v2.0.0 or higher
+
 ## Clone the project 
 ```
-git clone -b payloadsdk_v2 https://github.com/Gremsy/PayloadSdk.git
+git clone -b payloadsdk_v3 https://github.com/Gremsy/PayloadSdk.git
 ```
 
 ## Hardware setup

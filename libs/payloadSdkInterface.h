@@ -163,6 +163,12 @@ public:
      * @para4 : Angular rate or angle mode
      * */
     void setGimbalSpeed(float spd_pitch, float spd_roll, float spd_yaw, input_mode_t mode);
+
+    /**
+     * Use to send the drone's attitude to the payload for anti-drift function
+     **/
+    void sendDroneAttitude(mavlink_attitude_t att);
+
     /**
      * set camera zoom ZOOM_TYPE_CONTINUOUS
      * (ZOOM_OUT, ZOOM_STOP, ZOOM_IN)

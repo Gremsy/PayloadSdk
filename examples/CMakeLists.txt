@@ -26,6 +26,7 @@ set(EXAMPLES
     time_lapse_photography.cpp
     send_gps.cpp
     send_system_time.cpp
+    send_dummy_attitude.cpp
 )
 endif(VIO)
 

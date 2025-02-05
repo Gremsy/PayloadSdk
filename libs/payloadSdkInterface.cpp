@@ -558,6 +558,30 @@ setGimbalSpeed(float spd_pitch, float spd_roll, float spd_yaw, input_mode_t mode
     payload_interface->push_message_to_queue(message);
 }
 
+void 
+PayloadSdkInterface::
+sendDroneAttitude(mavlink_attitude_t att){
+
+    // This function will send the autopilot attitude mesage to the payload
+    // Before sending thí mesage, please make sure that your system does not have any MAV_COMP_ID_AUTOPILOT1 to avoid any conflict
+    // The attitude message need to be send from MAV_COMP_ID_AUTOPILOT1, so we will create a dummy deivce to send this message.
+    
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message = {0};
+    mavlink_msg_attitude_encode(SYS_ID, MAV_COMP_ID_AUTOPILOT1, &message, &att);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+
+    printf("%s, from %d %d \n", __func__, SYS_ID, COMP_ID);
+}
+
 void
 PayloadSdkInterface::
 setCameraZoom(float zoomType,float zoomValue)

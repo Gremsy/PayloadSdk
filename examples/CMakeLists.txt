@@ -27,6 +27,7 @@ set(EXAMPLES
     send_gps.cpp
     send_system_time.cpp
     send_dummy_attitude.cpp
+    get_raw_temp_data.cpp
 )
 endif(VIO)
 
@@ -83,6 +84,7 @@ find_package( Threads )
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(JSONCPP jsoncpp)
 find_package(CURL REQUIRED)
+find_package(OpenCV REQUIRED)
 
 #include 
 include_directories(${PAYLOADSDKLIB_DIR}
@@ -91,6 +93,7 @@ include_directories(${PAYLOADSDKLIB_DIR}
                     ${PAYLOADSDKLIB_DIR}/gSDK/src
                     ${GST_INCLUDE_DIRS}
                     ${CURL_INCLUDE_DIR}
+                    ${OpenCV_INCLUDE_DIRS}
                     )
 
 # build examples 
@@ -104,6 +107,7 @@ foreach(entry ${EXAMPLES})
                      ${GST_LIBRARIES} 
                      ${JSONCPP_LIBRARIES}
                      ${CURL_LIBRARIES}
+                     ${OpenCV_LIBS}
                      stdc++fs
                      )
 #   install(TARGETS

@@ -1063,7 +1063,7 @@ payload_recv_handle()
 
             switch(msg.msgid){
             case MAVLINK_MSG_ID_HEARTBEAT:{
-                SDK_LOG("Got hearbeat, from %d, seq %d", msg.compid, msg.seq);
+                // SDK_LOG("Got hearbeat, from %d, seq %d", msg.compid, msg.seq);
 
                 break;
             }

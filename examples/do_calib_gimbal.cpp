@@ -1,4 +1,6 @@
 /**
+ * The calibration is very sensitivity. Please carefully consider before doing calibration. 
+ * PLEASE IGNORE THIS SAMPLE IF YOU ARE NOT FULLY UNDERSTANDING WHAT YOU WILL DO!!!
  * This sample will show you how to send command to do gimbal calibration
  * 1. Calib Gyro
  * 2. Calib Accel
@@ -62,8 +64,9 @@ int main(int argc, char *argv[]){
 	// check connection
 	my_payload->checkPayloadConnection();
 
+
 	// set the calib type
-	myCalib = CALIB_MOTOR;
+	myCalib = CALIB_GYRO;
 
 	switch(myCalib){
 	case CALIB_GYRO:{
@@ -73,6 +76,9 @@ int main(int argc, char *argv[]){
 		break;
 	}
 	case CALIB_ACCEL:{
+		is_calibration_runing = false;
+		my_payload->sendPayloadGimbalCalibAccel();
+		SDK_LOG("Calib accel command was sent. Waiting for the calibration done...");
 		break;
 	}
 	case CALIB_MOTOR:{
@@ -99,10 +105,48 @@ int main(int argc, char *argv[]){
 	// waiting the calib process done
 	while(!is_exit){
 		// do nothing
-		usleep(1000);
+		usleep(1000000);
 	}
 
-	usleep(5000000);
+	// load params to verify
+	switch(myCalib){
+	case CALIB_GYRO:{
+		SDK_LOG("Load the Gyro offset values...");
+		my_payload->getPayloadGimbalSettingByID("GYROX_OFFSET");
+		my_payload->getPayloadGimbalSettingByID("GYROY_OFFSET");
+		my_payload->getPayloadGimbalSettingByID("GYROZ_OFFSET");
+		break;
+	}
+	case CALIB_ACCEL:{
+		SDK_LOG("Load the accel offset values...");
+		my_payload->getPayloadGimbalSettingByID("ACCELX_OFFSET");
+		my_payload->getPayloadGimbalSettingByID("ACCELY_OFFSET");
+		my_payload->getPayloadGimbalSettingByID("ACCELZ_OFFSET");
+		break;
+	}
+	case CALIB_MOTOR:{
+		
+		break;
+	}
+	case AUTO_TUNE:{
+		SDK_LOG("Waiting for the gimbal rebooted...20s");
+		usleep(20000000); // waiting for the gimbal reboot
+		SDK_LOG("Load the Stiffness/Holdstrength values...");
+		my_payload->getPayloadGimbalSettingByID("STIFF_TILT");
+		my_payload->getPayloadGimbalSettingByID("STIFF_ROLL");
+		my_payload->getPayloadGimbalSettingByID("STIFF_PAN");
+		my_payload->getPayloadGimbalSettingByID("PWR_TILT");
+		my_payload->getPayloadGimbalSettingByID("PWR_ROLL");
+		my_payload->getPayloadGimbalSettingByID("PWR_PAN");
+		break;
+	}
+	case SEARCH_HOME:{
+		break;
+	}
+	default: break;
+	}
+
+	usleep(1000000);
 	SDK_LOG("Exit.");
 
 	return 0;
@@ -140,11 +184,6 @@ void onPayloadStatusChanged(int event, double* param){
 				if(param[2] == MAV_RESULT_ACCEPTED){
 					if(is_calibration_runing){
 						SDK_LOG("The gyro calibration done!");
-						SDK_LOG("Load the Gyro offset values...");
-						my_payload->getPayloadGimbalSettingByID("GYROX_OFFSET");
-						my_payload->getPayloadGimbalSettingByID("GYROY_OFFSET");
-						my_payload->getPayloadGimbalSettingByID("GYROZ_OFFSET");
-
 						is_exit= true;
 					}
 				}
@@ -156,6 +195,22 @@ void onPayloadStatusChanged(int event, double* param){
 			break;
 		}
 		case CALIB_ACCEL:{
+			if(param[0] == MAV_CMD_GIMBAL_REQUEST_AXIS_CALIBRATION){
+				if(param[1] == MAV_RESULT_ACCEPTED){
+					is_calibration_runing = true;
+				}
+
+				if(param[2] == MAV_RESULT_ACCEPTED){
+					if(is_calibration_runing){
+						SDK_LOG("The accel calibration done!");
+						is_exit= true;
+					}
+				}
+				else if(param[2] == MAV_RESULT_IN_PROGRESS){
+					is_calibration_runing = true;
+					SDK_LOG("The accel calibration is processing...");
+				}
+			}
 			break;
 		}
 		case CALIB_MOTOR:{
@@ -189,6 +244,7 @@ void onPayloadStatusChanged(int event, double* param){
 				if(param[2] == MAV_RESULT_ACCEPTED){
 					if(is_calibration_runing){
 						SDK_LOG("The Auto tune done!");
+						usleep(1000000);
 
 						is_exit= true;
 					}

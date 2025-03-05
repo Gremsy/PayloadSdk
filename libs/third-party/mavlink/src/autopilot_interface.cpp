@@ -394,7 +394,7 @@ write_thread(void)
 	while ( !time_to_exit )
 	{
 		cnt++;
-		if(cnt >= 1000){
+		if(cnt >= 50){
 			cnt = 0;
 			w_heartbeat();
 			// printf("write hb %d\n", tick++);
@@ -411,7 +411,7 @@ write_thread(void)
 			pthread_mutex_unlock(&write_queue_mutex);
 		}
 
-		usleep(1000);
+		usleep(20000);
 	}
 
 	// signal end

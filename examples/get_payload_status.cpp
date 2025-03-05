@@ -48,9 +48,9 @@ int main(int argc, char *argv[]){
 
     #if defined VIO
 	// set the interval for param update
-	my_payload->setParamRate(PARAM_LRF_RANGE, 1000);
-	my_payload->setParamRate(PARAM_LRF_OFSET_X, 1000);
-	my_payload->setParamRate(PARAM_LRF_OFSET_Y, 1000);
+	my_payload->setParamRate(PARAM_LRF_RANGE, 100);
+	my_payload->setParamRate(PARAM_LRF_OFSET_X, 100);
+	my_payload->setParamRate(PARAM_LRF_OFSET_Y, 100);
 
 	my_payload->setParamRate(PARAM_TARGET_COOR_LON, 1000);
 	my_payload->setParamRate(PARAM_TARGET_COOR_LAT, 1000);

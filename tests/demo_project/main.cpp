@@ -121,7 +121,7 @@ int8_t psdk_run_sample(){
 		break;
 	case STATE_WAIT_TO_CONNECT_PAYLOAD:
 		{
-			if(msg.sysid == PAYLOAD_SYSTEM_ID && msg.compid == PAYLOAD_COMPONENT_ID){	// found message from payload
+			if(msg.sysid == CAMERA_SYSTEM_ID && msg.compid == CAMERA_COMPONENT_ID){	// found message from payload
 				
 				PRINT_INFO("%s | %s",__func__,state_name[s_proc._state]);
 				PRINT_INFO("Connnected to payload!!!");

@@ -90,7 +90,7 @@ void quit_handler( int sig ){
 
 void onPayloadParamChanged(int event, char* param_char, double* param){
 	switch(event){
-	case PAYLOAD_CAM_PARAM_VALUE:{
+	case PAYLOAD_CAM_PARAMS:{
 		// param[0]: param_index
 		// param[1]: value
 		printf(" --> Param_id: %s, value: %.2f\n", param_char, param[1]);

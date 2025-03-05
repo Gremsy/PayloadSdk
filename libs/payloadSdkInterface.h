@@ -10,9 +10,10 @@ enum payload_status_event_t{
     PAYLOAD_CAM_CAPTURE_STATUS = 0,
     PAYLOAD_CAM_STORAGE_INFO,
     PAYLOAD_CAM_SETTINGS,
-    PAYLOAD_CAM_PARAM_VALUE,
+    PAYLOAD_CAM_PARAMS,
 
     PAYLOAD_GB_ATTITUDE,
+    PAYLOAD_GB_PARAMS,
     PAYLOAD_ACK,
 
     PAYLOAD_CAM_INFO,
@@ -202,6 +203,51 @@ public:
     void getPayloadCameraStreamingInformation();
 
     /**
+     * set payload's gimbal param
+     **/
+    void setPayloadGimbalParamByID(char* param_id, float param_value);
+
+    /**
+     * Send command to trigger gimbal gyro calibration
+     **/
+    void sendPayloadGimbalCalibGyro();
+
+    /**
+     * Send command to trigger gimbal accel calibration
+     **/
+    void sendPayloadGimbalCalibAccel();
+
+    /**
+     * Send command to trigger gimbal motor calibration
+     **/
+    void sendPayloadGimbalCalibMotor();
+
+    /**
+     * Send command to trigger gimbal search home
+     **/
+    void sendPayloadGimbalSearchHome();
+
+    /**
+     * Send command to trigger gimbal auto tune
+     **/
+    void sendPayloadGimbalAutoTune(bool status);
+
+    /**
+     * get all gimbal's settings
+     **/
+    void getPayloadGimbalSettingList();
+
+    /**
+     * get specific gimbal param by id string
+     **/
+    void getPayloadGimbalSettingByID(char* ID);
+
+    /**
+     * get specific gimbal param by index
+     **/
+    void getPayloadGimbalSettingByIndex(uint8_t idx);
+
+    /**
      * set payload's camera mode
      **/
     void setPayloadCameraMode(CAMERA_MODE mode);
@@ -228,7 +274,7 @@ public:
 
     void requestParamValue(uint8_t pIndex);
     void setParamRate(uint8_t pIndex, uint16_t time_ms);
-    void requestMessageStreamInterval();
+    void requestMessageStreamInterval();    
 
 private:
     Autopilot_Interface* payload_interface = nullptr;
@@ -239,9 +285,6 @@ private:
     uint8_t payload_ctrl_type = CONTROL_METHOD;
     Generic_Port *port;
     Generic_Port *port_quit = nullptr;
-
-    uint8_t SYS_ID = 1;
-    uint8_t COMP_ID = MAV_COMP_ID_ONBOARD_COMPUTER;
 
     bool time_to_exit = false;
 
@@ -280,6 +323,11 @@ public:
      * Send the Sytem Time to the payload
      **/
     void sendPayloadSystemTime(mavlink_system_time_t sys_time);
+
+    /**
+     * Send request for stream rate
+     **/
+    void sendPayloadRequestStreamRate(int index, uint16_t time_ms);
 
     // handle receive message
     void payload_recv_handle();

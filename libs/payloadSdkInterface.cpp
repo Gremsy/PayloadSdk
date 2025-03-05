@@ -110,14 +110,43 @@ all_threads_init(){
 void
 PayloadSdkInterface::
 checkPayloadConnection(){
+    bool result = false;
+
     while(!time_to_exit){
         mavlink_message_t msg;
         uint8_t msg_cnt = getNewMewssage(msg);
 
-        if(msg_cnt && msg.sysid == PAYLOAD_SYSTEM_ID && msg.compid == PAYLOAD_COMPONENT_ID){
+        result = false;
+
+        if(msg_cnt){ // got the message
+            if(msg.compid == MAV_COMP_ID_CAMERA
+                && msg.compid == MAV_COMP_ID_CAMERA6){ // got the message from the camera
+                // update the camera id
+                CAMERA_SYSTEM_ID = msg.sysid;
+                CAMERA_COMPONENT_ID = msg.compid;
+
+                result = true;
+            }
+            if(msg.compid == MAV_COMP_ID_GIMBAL
+                || msg.compid == MAV_COMP_ID_GIMBAL2
+                || msg.compid == MAV_COMP_ID_GIMBAL3
+                || msg.compid == MAV_COMP_ID_GIMBAL4
+                || msg.compid == MAV_COMP_ID_GIMBAL5
+                || msg.compid == MAV_COMP_ID_GIMBAL6){ // got the message from the camera
+                
+                // update the gimbal id
+                GIMBAL_SYSTEM_ID = msg.sysid;
+                GIMBAL_COMPONENT_ID = msg.compid;
+
+                result = true;
+            }
+        } 
+
+        if(result){
             SDK_LOG("Payload connected! ");
             break;
         }
+        
     }
 }
 
@@ -143,8 +172,8 @@ setPayloadCameraParam(char param_id[], uint32_t param_value, uint8_t param_type)
     strcpy(msg.param_value, str.c_str());
 
     msg.param_type = param_type;
-    msg.target_system = PAYLOAD_SYSTEM_ID;
-    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.target_system = CAMERA_SYSTEM_ID;
+    msg.target_component = CAMERA_COMPONENT_ID;
 
     // --------------------------------------------------------------------------
     //   ENCODE
@@ -167,8 +196,8 @@ PayloadSdkInterface::
 getPayloadCameraSettingList(){
     mavlink_param_ext_request_list_t msg= {0};
 
-    msg.target_system = PAYLOAD_SYSTEM_ID;
-    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.target_system = CAMERA_SYSTEM_ID;
+    msg.target_component = CAMERA_COMPONENT_ID;
     // msg.trimmed = 0;
 
     // --------------------------------------------------------------------------
@@ -191,8 +220,8 @@ PayloadSdkInterface::
 getPayloadCameraSettingByID(char* ID){
     mavlink_param_ext_request_read_t msg= {0};
 
-    msg.target_system = PAYLOAD_SYSTEM_ID;
-    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.target_system = CAMERA_SYSTEM_ID;
+    msg.target_component = CAMERA_COMPONENT_ID;
     msg.param_index = -1;
     strncpy(msg.param_id, ID, 16);
 
@@ -216,8 +245,8 @@ PayloadSdkInterface::
 getPayloadCameraSettingByIndex(uint8_t idx){
     mavlink_param_ext_request_read_t msg= {0};
 
-    msg.target_system = PAYLOAD_SYSTEM_ID;
-    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.target_system = CAMERA_SYSTEM_ID;
+    msg.target_component = CAMERA_COMPONENT_ID;
     strncpy(msg.param_id, "", 16);
     msg.param_index = idx;
 
@@ -241,8 +270,8 @@ PayloadSdkInterface::
 getPayloadStorage(){
     mavlink_command_long_t msg = {0};
 
-    msg.target_system = PAYLOAD_SYSTEM_ID;
-    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.target_system = CAMERA_SYSTEM_ID;
+    msg.target_component = CAMERA_COMPONENT_ID;
     msg.command = MAV_CMD_REQUEST_STORAGE_INFORMATION;
     msg.confirmation = 1;
 
@@ -266,8 +295,8 @@ PayloadSdkInterface::
 getPayloadCaptureStatus(){
     mavlink_command_long_t msg = {0};
 
-    msg.target_system = PAYLOAD_SYSTEM_ID;
-    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.target_system = CAMERA_SYSTEM_ID;
+    msg.target_component = CAMERA_COMPONENT_ID;
     msg.command = MAV_CMD_REQUEST_CAMERA_CAPTURE_STATUS;
     msg.confirmation = 1;
 
@@ -291,8 +320,8 @@ PayloadSdkInterface::
 getPayloadCameraMode(){
     mavlink_command_long_t msg = {0};
 
-    msg.target_system = PAYLOAD_SYSTEM_ID;
-    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.target_system = CAMERA_SYSTEM_ID;
+    msg.target_component = CAMERA_COMPONENT_ID;
     msg.command = MAV_CMD_REQUEST_CAMERA_SETTINGS;
     msg.confirmation = 1;
 
@@ -316,8 +345,8 @@ PayloadSdkInterface::
 getPayloadCameraInformation(){
     mavlink_command_long_t msg = {0};
 
-    msg.target_system = PAYLOAD_SYSTEM_ID;
-    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.target_system = CAMERA_SYSTEM_ID;
+    msg.target_component = CAMERA_COMPONENT_ID;
     msg.command = MAV_CMD_REQUEST_CAMERA_INFORMATION;
     msg.confirmation = 1;
 
@@ -344,8 +373,8 @@ PayloadSdkInterface::
 getPayloadCameraStreamingInformation(){
     mavlink_command_long_t msg = {0};
 
-    msg.target_system = PAYLOAD_SYSTEM_ID;
-    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.target_system = CAMERA_SYSTEM_ID;
+    msg.target_component = CAMERA_COMPONENT_ID;
     msg.command = MAV_CMD_REQUEST_VIDEO_STREAM_INFORMATION;
     msg.confirmation = 1;
 
@@ -364,13 +393,264 @@ getPayloadCameraStreamingInformation(){
     payload_interface->push_message_to_queue(message);
 }
 
+void 
+PayloadSdkInterface::
+setPayloadGimbalParamByID(char* param_id, float param_value){
+    mavlink_param_set_t msg={0};
+
+    strcpy((char *)msg.param_id, param_id);
+    msg.param_value = param_value;
+
+    // msg.param_type = param_type;
+    msg.target_system = GIMBAL_SYSTEM_ID;
+    msg.target_component = GIMBAL_COMPONENT_ID;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_param_set_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+sendPayloadGimbalCalibGyro(){
+    mavlink_command_long_t msg = {0};
+
+    msg.target_system = GIMBAL_SYSTEM_ID;
+    msg.target_component = GIMBAL_COMPONENT_ID;
+    msg.command = MAV_CMD_GIMBAL_REQUEST_AXIS_CALIBRATION;
+    msg.confirmation = 1;
+
+    msg.param7 = 1;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    message.sysid = SYS_ID;
+    message.compid = COMP_ID;
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+sendPayloadGimbalCalibAccel(){
+    mavlink_command_long_t msg = {0};
+
+    msg.target_system = GIMBAL_SYSTEM_ID;
+    msg.target_component = GIMBAL_COMPONENT_ID;
+    msg.command = MAV_CMD_GIMBAL_REQUEST_AXIS_CALIBRATION;
+    msg.confirmation = 1;
+
+    msg.param7 = 2;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    message.sysid = SYS_ID;
+    message.compid = COMP_ID;
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+sendPayloadGimbalCalibMotor(){
+    mavlink_command_long_t msg = {0};
+
+    msg.target_system = GIMBAL_SYSTEM_ID;
+    msg.target_component = GIMBAL_COMPONENT_ID;
+    msg.command = MAV_CMD_DO_SET_HOME;
+    msg.confirmation = 1;
+
+    msg.param7 = 1;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    message.sysid = SYS_ID;
+    message.compid = COMP_ID;
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+sendPayloadGimbalSearchHome(){
+    mavlink_command_long_t msg = {0};
+
+    msg.target_system = GIMBAL_SYSTEM_ID;
+    msg.target_component = GIMBAL_COMPONENT_ID;
+    msg.command = MAV_CMD_DO_SET_HOME;
+    msg.confirmation = 1;
+
+    msg.param7 = 2;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    message.sysid = SYS_ID;
+    message.compid = COMP_ID;
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+sendPayloadGimbalAutoTune(bool status){
+    mavlink_command_long_t msg = {0};
+
+    msg.target_system = GIMBAL_SYSTEM_ID;
+    msg.target_component = GIMBAL_COMPONENT_ID;
+    msg.command = MAV_CMD_USER_3;
+    msg.confirmation = 1;
+
+    msg.param7 = status ? 1 : 0;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    message.sysid = SYS_ID;
+    message.compid = COMP_ID;
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+void
+PayloadSdkInterface::
+getPayloadGimbalSettingList(){
+    mavlink_param_request_list_t msg= {0};
+
+    msg.target_system = GIMBAL_SYSTEM_ID;
+    msg.target_component = GIMBAL_COMPONENT_ID;
+    // msg.trimmed = 0;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_param_request_list_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+getPayloadGimbalSettingByID(char* ID){
+    mavlink_param_request_read_t msg= {0};
+
+    msg.target_system = GIMBAL_SYSTEM_ID;
+    msg.target_component = GIMBAL_COMPONENT_ID;
+    msg.param_index = -1;
+    strncpy(msg.param_id, ID, 16);
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_param_request_read_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+getPayloadGimbalSettingByIndex(uint8_t idx){
+    mavlink_param_request_read_t msg= {0};
+
+    msg.target_system = GIMBAL_SYSTEM_ID;
+    msg.target_component = GIMBAL_COMPONENT_ID;
+    strncpy(msg.param_id, "", 16);
+    msg.param_index = idx;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_param_request_read_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
 void
 PayloadSdkInterface::
 setPayloadCameraMode(CAMERA_MODE mode){
     mavlink_command_long_t msg = {0};
 
-    msg.target_system = PAYLOAD_SYSTEM_ID;
-    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.target_system = CAMERA_SYSTEM_ID;
+    msg.target_component = CAMERA_COMPONENT_ID;
     msg.command = MAV_CMD_SET_CAMERA_MODE;
     msg.param2 = (uint32_t)mode;
     msg.confirmation = 1;
@@ -395,8 +675,8 @@ PayloadSdkInterface::
 setPayloadCameraCaptureImage(int interval_s){
     mavlink_command_long_t msg = {0};
 
-    msg.target_system = PAYLOAD_SYSTEM_ID;
-    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.target_system = CAMERA_SYSTEM_ID;
+    msg.target_component = CAMERA_COMPONENT_ID;
     msg.command = MAV_CMD_IMAGE_START_CAPTURE;
     msg.param2 = (int)interval_s;
     msg.confirmation = 1;
@@ -421,8 +701,8 @@ PayloadSdkInterface::
 setPayloadCameraStopImage(){
     mavlink_command_long_t msg = {0};
 
-    msg.target_system = PAYLOAD_SYSTEM_ID;
-    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.target_system = CAMERA_SYSTEM_ID;
+    msg.target_component = CAMERA_COMPONENT_ID;
     msg.command = MAV_CMD_IMAGE_STOP_CAPTURE;
     msg.confirmation = 1;
 
@@ -446,8 +726,8 @@ PayloadSdkInterface::
 setPayloadCameraRecordVideoStart(){
     mavlink_command_long_t msg = {0};
 
-    msg.target_system = PAYLOAD_SYSTEM_ID;
-    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.target_system = CAMERA_SYSTEM_ID;
+    msg.target_component = CAMERA_COMPONENT_ID;
     msg.command = MAV_CMD_VIDEO_START_CAPTURE;
     msg.confirmation = 1;
 
@@ -471,8 +751,8 @@ PayloadSdkInterface::
 setPayloadCameraRecordVideoStop(){
     mavlink_command_long_t msg = {0};
 
-    msg.target_system = PAYLOAD_SYSTEM_ID;
-    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.target_system = CAMERA_SYSTEM_ID;
+    msg.target_component = CAMERA_COMPONENT_ID;
     msg.command = MAV_CMD_VIDEO_STOP_CAPTURE;
     msg.confirmation = 1;
 
@@ -498,8 +778,8 @@ requestParamValue(uint8_t pIndex){
 
     mavlink_param_request_read_t request = {0};
 
-    request.target_system = SYS_ID_USER2;
-    request.target_component = MAV_COMP_ID_USER2;
+    request.target_system = PAYLOAD_SYSTEM_ID;
+    request.target_component = PAYLOAD_COMPONENT_ID;
     // request.param_index = pIndex;
     strncpy(request.param_id, payloadParams[pIndex].id, 16);
 
@@ -522,6 +802,7 @@ void
 PayloadSdkInterface::
 setParamRate(uint8_t pIndex, uint16_t time_ms){
     payloadParams[pIndex].msg_rate = time_ms;
+    sendPayloadRequestStreamRate(pIndex, time_ms);
 }
 
 void 
@@ -529,26 +810,9 @@ PayloadSdkInterface::
 requestMessageStreamInterval(){
     for(uint8_t i =0; i < PARAM_COUNT; i++){
         if(payloadParams[i].msg_rate >= 0){
-            SDK_LOG("msd_id %d, interval %ld, send to %d, %d", i, payloadParams[i].msg_rate, SYS_ID_USER2, MAV_COMP_ID_USER2);
+            // SDK_LOG("msd_id %d, interval %ld, send to %d, %d", i, payloadParams[i].msg_rate, PAYLOAD_SYSTEM_ID, PAYLOAD_COMPONENT_ID);
 
-            mavlink_command_long_t cmd{0};
-
-            cmd.target_system = SYS_ID_USER2;
-            cmd.target_component = MAV_COMP_ID_USER2;
-
-            cmd.command = MAV_CMD_SET_MESSAGE_INTERVAL;
-            cmd.param1 = i;
-            cmd.param2 = payloadParams[i].msg_rate * 1000; // interval
-            cmd.param7 = 1; // Response to requestor
-
-            // --------------------------------------------------------------------------
-            //   ENCODE
-            // --------------------------------------------------------------------------
-            mavlink_message_t message;
-            mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &cmd);
-
-            // do the write
-            payload_interface->push_message_to_queue(message);
+            sendPayloadRequestStreamRate(i, payloadParams[i].msg_rate);
         }
     }
 }
@@ -612,8 +876,8 @@ setCameraZoom(float zoomType,float zoomValue)
 {
     mavlink_command_long_t msg = {0};
 
-    msg.target_system = PAYLOAD_SYSTEM_ID;
-    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.target_system = CAMERA_SYSTEM_ID;
+    msg.target_component = CAMERA_COMPONENT_ID;
     msg.command = MAV_CMD_SET_CAMERA_ZOOM;
     msg.param1 = (float)zoomType;
     msg.param2 = (float)zoomValue;
@@ -640,8 +904,8 @@ setCameraFocus(float focusType, float focusValue)
 {
     mavlink_command_long_t msg = {0};
 
-    msg.target_system = PAYLOAD_SYSTEM_ID;
-    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.target_system = CAMERA_SYSTEM_ID;
+    msg.target_component = CAMERA_COMPONENT_ID;
     msg.command = MAV_CMD_SET_CAMERA_FOCUS;
     msg.param1 = (float)focusType;
     msg.param2 = (float)focusValue;
@@ -667,8 +931,8 @@ PayloadSdkInterface::
 setPayloadObjectTrackingParams(float cmd, float pos_x, float pos_y){
     mavlink_command_long_t msg = {0};
 
-    msg.target_system = SYS_ID_USER2;
-    msg.target_component = MAV_COMP_ID_USER2;
+    msg.target_system = PAYLOAD_SYSTEM_ID;
+    msg.target_component = PAYLOAD_COMPONENT_ID;
     msg.command = MAV_CMD_USER_4;
     msg.param1 = 4;
     msg.param2 = 0;
@@ -732,6 +996,29 @@ sendPayloadSystemTime(mavlink_system_time_t sys_time){
     payload_interface->push_message_to_queue(message);
 }
 
+void 
+PayloadSdkInterface::
+sendPayloadRequestStreamRate(int index, uint16_t time_ms){
+    mavlink_command_long_t cmd{0};
+
+    cmd.target_system = PAYLOAD_SYSTEM_ID;
+    cmd.target_component = PAYLOAD_COMPONENT_ID;
+
+    cmd.command = MAV_CMD_SET_MESSAGE_INTERVAL;
+    cmd.param1 = index;
+    cmd.param2 = time_ms * 1000; // interval
+    cmd.param7 = 1; // Response to requestor
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+    mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &cmd);
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
 void
 PayloadSdkInterface::
 payload_recv_handle()
@@ -743,8 +1030,8 @@ payload_recv_handle()
         if(msg_cnt){
             // SDK_LOG("Got %d message in queue ", msg_cnt);
             // SDK_LOG("   --> message %d from system_id: %d with component_id: %d ", msg.msgid, msg.sysid, msg.compid);
-            if(msg.compid == MAV_COMP_ID_USER2){
-                SYS_ID_USER2 = msg.sysid;
+            if(msg.compid == PAYLOAD_COMPONENT_ID){
+                PAYLOAD_SYSTEM_ID = msg.sysid;
 
                 if(!is_send_stream_request){
                     // only need to send 1 time, after get the sys_id of the payload
@@ -753,10 +1040,30 @@ payload_recv_handle()
                 }
             }
 
+            // update gimbal id
+            if(msg.compid == MAV_COMP_ID_GIMBAL
+                || msg.compid == MAV_COMP_ID_GIMBAL2
+                || msg.compid == MAV_COMP_ID_GIMBAL3
+                || msg.compid == MAV_COMP_ID_GIMBAL4
+                || msg.compid == MAV_COMP_ID_GIMBAL5
+                || msg.compid == MAV_COMP_ID_GIMBAL6
+                )
+            {
+                GIMBAL_SYSTEM_ID = msg.sysid;
+                GIMBAL_COMPONENT_ID = msg.compid;
+            }
+
+            // update payload camera id
+            if(msg.compid >= MAV_COMP_ID_CAMERA
+                && msg.compid <= MAV_COMP_ID_CAMERA6)
+            {
+                CAMERA_SYSTEM_ID = msg.sysid;
+                CAMERA_COMPONENT_ID = msg.compid;
+            }
+
             switch(msg.msgid){
             case MAVLINK_MSG_ID_HEARTBEAT:{
-                if(msg.compid == 101)
-                    SDK_LOG("Got hearbeat, from %d, seq %d", msg.compid, msg.seq);
+                SDK_LOG("Got hearbeat, from %d, seq %d", msg.compid, msg.seq);
 
                 break;
             }
@@ -821,7 +1128,7 @@ _handle_msg_param_ext_value(mavlink_message_t* msg){
 
     if(__notifyPayloadParamChanged != NULL){
         double params[2] = {param_ext_value.param_index, param_uint32};
-        __notifyPayloadParamChanged(PAYLOAD_CAM_PARAM_VALUE, param_ext_value.param_id, params);
+        __notifyPayloadParamChanged(PAYLOAD_CAM_PARAMS, param_ext_value.param_id, params);
     }
 }
 
@@ -831,7 +1138,7 @@ _handle_msg_command_ext_ack(mavlink_message_t* msg){
     mavlink_param_ext_ack_t ext_ack = {0};
     mavlink_msg_param_ext_ack_decode(msg, &ext_ack);
 
-    SDK_LOG("Got ext_ack for param_id:%s with result:%d", ext_ack.param_id, ext_ack.param_result);
+    // SDK_LOG("Got ext_ack for param_id:%s with result:%d", ext_ack.param_id, ext_ack.param_result);
     if(__notifyPayloadStatusChanged != NULL){
         double params[1] = {ext_ack.param_result};
         __notifyPayloadStatusChanged(PAYLOAD_PARAM_EXT_ACK, params);
@@ -844,9 +1151,9 @@ _handle_msg_command_ack(mavlink_message_t* msg){
     mavlink_command_ack_t cmd_ack = {0};
     mavlink_msg_command_ack_decode(msg, &cmd_ack);
 
-    SDK_LOG("Got ACK for command %d with status %d", cmd_ack.command, cmd_ack.result);
+    // SDK_LOG("Got ACK for command %d with status %d", cmd_ack.command, cmd_ack.result);
     if(__notifyPayloadStatusChanged != NULL){
-        double params[2] = {cmd_ack.command, cmd_ack.result};
+        double params[3] = {cmd_ack.command, cmd_ack.result, cmd_ack.progress};
         __notifyPayloadStatusChanged(PAYLOAD_ACK, params);
     }
 }
@@ -930,8 +1237,18 @@ _handle_msg_param_value(mavlink_message_t* msg){
     mavlink_param_value_t value = {0};
     mavlink_msg_param_value_decode(msg, &value);
 
-    if(__notifyPayloadStatusChanged != NULL){
-        double params[2] = {value.param_index, value.param_value};
-        __notifyPayloadStatusChanged(PAYLOAD_PARAMS, params);
+    if(msg->compid == GIMBAL_COMPONENT_ID){
+        // params value from the gimbal
+        if(__notifyPayloadParamChanged != NULL){
+            double params[2] = {value.param_index, value.param_value};
+            __notifyPayloadParamChanged(PAYLOAD_GB_PARAMS, value.param_id, params);
+        }
+    }
+    else if(msg->compid == PAYLOAD_COMPONENT_ID){
+        // params value from the payload
+        if(__notifyPayloadStatusChanged != NULL){
+            double params[2] = {value.param_index, value.param_value};
+            __notifyPayloadStatusChanged(PAYLOAD_PARAMS, params);
+        }
     }
 }

@@ -27,6 +27,9 @@ set(EXAMPLES
     send_gps.cpp
     send_system_time.cpp
     do_setzoom_individual.cpp
+    load_gimbal_settings.cpp
+    change_gimbal_settings.cpp
+    do_calib_gimbal.cpp
 )
 endif(VIO)
 

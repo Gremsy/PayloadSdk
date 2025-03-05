@@ -2,7 +2,7 @@
 #define PAYLOADSDK_H_
 
 // mavlink communication
-#include <common/mavlink.h>
+#include <ardupilotmega/mavlink.h>
 #include <signal.h>
 #include "autopilot_interface.h"
 #include "serial_port.h"
@@ -16,19 +16,25 @@
 #include "zio_sdk.h"
 #endif
 
-#define PAYLOAD_SYSTEM_ID 1
-#define PAYLOAD_COMPONENT_ID MAV_COMP_ID_CAMERA2 // <- Fix me with your MAVLINK Camera Component ID on Web setting (http://192.168.***.***:8000/setup-systems)
+static uint8_t SYS_ID = 1;
+static uint8_t COMP_ID = MAV_COMP_ID_ONBOARD_COMPUTER;
 
-#define GIMBAL_SYSTEM_ID 1
-#define GIMBAL_COMPONENT_ID MAV_COMP_ID_GIMBAL
+static uint8_t PAYLOAD_SYSTEM_ID = 1;
+static uint8_t PAYLOAD_COMPONENT_ID = MAV_COMP_ID_USER2; // Do not change
+
+static uint8_t CAMERA_SYSTEM_ID = 1;
+static uint8_t CAMERA_COMPONENT_ID = MAV_COMP_ID_CAMERA; // auto update when got the message from the payload
+
+static uint8_t GIMBAL_SYSTEM_ID = 1;
+static uint8_t GIMBAL_COMPONENT_ID = MAV_COMP_ID_GIMBAL;  // auto update when got the message from the payload
 
 #define CONTROL_UART    0
 #define CONTROL_UDP     1
-#define CONTROL_METHOD CONTROL_UART
+#define CONTROL_METHOD CONTROL_UDP
 
 static char *payload_uart_port = (char*)"/dev/ttyUSB0";
 static int payload_uart_baud = 115200;
-static char *udp_ip_target = (char*)"192.168.12.240";   // This is an ip address of the payload
+static char *udp_ip_target = (char*)"192.168.12.251";   // This is an ip address of the payload
 static int udp_port_target = 14566;                     // Do not change
 
 typedef struct{

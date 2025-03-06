@@ -156,20 +156,22 @@ typedef struct __mavlink_message_info {
 
 #define _MAV_PAYLOAD(msg) ((const char *)(&((msg)->payload64[0])))
 #define _MAV_PAYLOAD_NON_CONST(msg) ((char *)(&((msg)->payload64[0])))
-#define _MAV_PAYLOAD_SZ ((MAVLINK_MAX_PAYLOAD_LEN+MAVLINK_NUM_CHECKSUM_BYTES+7)/8)
 
 // checksum is immediately after the payload bytes
 #define mavlink_ck_a(msg) *((msg)->len + (uint8_t *)_MAV_PAYLOAD_NON_CONST(msg))
 #define mavlink_ck_b(msg) *(((msg)->len+(uint16_t)1) + (uint8_t *)_MAV_PAYLOAD_NON_CONST(msg))
 
+#ifndef HAVE_MAVLINK_CHANNEL_T
 typedef enum {
     MAVLINK_COMM_0,
     MAVLINK_COMM_1,
     MAVLINK_COMM_2,
     MAVLINK_COMM_3,
     MAVLINK_COMM_4,
-    MAVLINK_COMM_5
+    MAVLINK_COMM_5,
+    MAVLINK_COMM_6
 } mavlink_channel_t;
+#endif
 
 /*
  * applications can set MAVLINK_COMM_NUM_BUFFERS to the maximum number
@@ -180,7 +182,7 @@ typedef enum {
 #if (defined linux) | (defined __linux) | (defined  __MACH__) | (defined _WIN32)
 # define MAVLINK_COMM_NUM_BUFFERS 16
 #else
-# define MAVLINK_COMM_NUM_BUFFERS 5
+# define MAVLINK_COMM_NUM_BUFFERS 6
 #endif
 #endif
 
@@ -243,6 +245,16 @@ typedef bool (*mavlink_accept_unsigned_t)(const mavlink_status_t *status, uint32
  */
 #define MAVLINK_SIGNING_FLAG_SIGN_OUTGOING 1    ///< Enable outgoing signing
 
+typedef enum {
+    MAVLINK_SIGNING_STATUS_NONE=0,
+    MAVLINK_SIGNING_STATUS_OK=1,
+    MAVLINK_SIGNING_STATUS_BAD_SIGNATURE=2,
+    MAVLINK_SIGNING_STATUS_NO_STREAMS=3,
+    MAVLINK_SIGNING_STATUS_TOO_MANY_STREAMS=4,
+    MAVLINK_SIGNING_STATUS_OLD_TIMESTAMP=5,
+    MAVLINK_SIGNING_STATUS_REPLAY=6,
+} mavlink_signing_status_t;
+    
 /*
   state of MAVLink signing for this channel
  */
@@ -252,6 +264,7 @@ typedef struct __mavlink_signing {
     uint64_t timestamp;                ///< Timestamp, in microseconds since UNIX epoch GMT
     uint8_t secret_key[32];
     mavlink_accept_unsigned_t accept_unsigned_callback;
+    mavlink_signing_status_t last_status;
 } mavlink_signing_t;
 
 /*

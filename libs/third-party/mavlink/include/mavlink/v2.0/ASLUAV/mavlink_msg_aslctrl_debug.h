@@ -1,7 +1,7 @@
 #pragma once
 // MESSAGE ASLCTRL_DEBUG PACKING
 
-#define MAVLINK_MSG_ID_ASLCTRL_DEBUG 204
+#define MAVLINK_MSG_ID_ASLCTRL_DEBUG 8005
 
 
 typedef struct __mavlink_aslctrl_debug_t {
@@ -20,17 +20,17 @@ typedef struct __mavlink_aslctrl_debug_t {
 
 #define MAVLINK_MSG_ID_ASLCTRL_DEBUG_LEN 38
 #define MAVLINK_MSG_ID_ASLCTRL_DEBUG_MIN_LEN 38
-#define MAVLINK_MSG_ID_204_LEN 38
-#define MAVLINK_MSG_ID_204_MIN_LEN 38
+#define MAVLINK_MSG_ID_8005_LEN 38
+#define MAVLINK_MSG_ID_8005_MIN_LEN 38
 
 #define MAVLINK_MSG_ID_ASLCTRL_DEBUG_CRC 251
-#define MAVLINK_MSG_ID_204_CRC 251
+#define MAVLINK_MSG_ID_8005_CRC 251
 
 
 
 #if MAVLINK_COMMAND_24BIT
 #define MAVLINK_MESSAGE_INFO_ASLCTRL_DEBUG { \
-    204, \
+    8005, \
     "ASLCTRL_DEBUG", \
     11, \
     {  { "i32_1", NULL, MAVLINK_TYPE_UINT32_T, 0, 0, offsetof(mavlink_aslctrl_debug_t, i32_1) }, \
@@ -124,6 +124,69 @@ static inline uint16_t mavlink_msg_aslctrl_debug_pack(uint8_t system_id, uint8_t
 }
 
 /**
+ * @brief Pack a aslctrl_debug message
+ * @param system_id ID of this system
+ * @param component_id ID of this component (e.g. 200 for IMU)
+ * @param status MAVLink status structure
+ * @param msg The MAVLink message to compress the data into
+ *
+ * @param i32_1   Debug data
+ * @param i8_1   Debug data
+ * @param i8_2   Debug data
+ * @param f_1   Debug data 
+ * @param f_2   Debug data
+ * @param f_3   Debug data
+ * @param f_4   Debug data
+ * @param f_5   Debug data
+ * @param f_6   Debug data
+ * @param f_7   Debug data
+ * @param f_8   Debug data
+ * @return length of the message in bytes (excluding serial stream start sign)
+ */
+static inline uint16_t mavlink_msg_aslctrl_debug_pack_status(uint8_t system_id, uint8_t component_id, mavlink_status_t *_status, mavlink_message_t* msg,
+                               uint32_t i32_1, uint8_t i8_1, uint8_t i8_2, float f_1, float f_2, float f_3, float f_4, float f_5, float f_6, float f_7, float f_8)
+{
+#if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
+    char buf[MAVLINK_MSG_ID_ASLCTRL_DEBUG_LEN];
+    _mav_put_uint32_t(buf, 0, i32_1);
+    _mav_put_float(buf, 4, f_1);
+    _mav_put_float(buf, 8, f_2);
+    _mav_put_float(buf, 12, f_3);
+    _mav_put_float(buf, 16, f_4);
+    _mav_put_float(buf, 20, f_5);
+    _mav_put_float(buf, 24, f_6);
+    _mav_put_float(buf, 28, f_7);
+    _mav_put_float(buf, 32, f_8);
+    _mav_put_uint8_t(buf, 36, i8_1);
+    _mav_put_uint8_t(buf, 37, i8_2);
+
+        memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, MAVLINK_MSG_ID_ASLCTRL_DEBUG_LEN);
+#else
+    mavlink_aslctrl_debug_t packet;
+    packet.i32_1 = i32_1;
+    packet.f_1 = f_1;
+    packet.f_2 = f_2;
+    packet.f_3 = f_3;
+    packet.f_4 = f_4;
+    packet.f_5 = f_5;
+    packet.f_6 = f_6;
+    packet.f_7 = f_7;
+    packet.f_8 = f_8;
+    packet.i8_1 = i8_1;
+    packet.i8_2 = i8_2;
+
+        memcpy(_MAV_PAYLOAD_NON_CONST(msg), &packet, MAVLINK_MSG_ID_ASLCTRL_DEBUG_LEN);
+#endif
+
+    msg->msgid = MAVLINK_MSG_ID_ASLCTRL_DEBUG;
+#if MAVLINK_CRC_EXTRA
+    return mavlink_finalize_message_buffer(msg, system_id, component_id, _status, MAVLINK_MSG_ID_ASLCTRL_DEBUG_MIN_LEN, MAVLINK_MSG_ID_ASLCTRL_DEBUG_LEN, MAVLINK_MSG_ID_ASLCTRL_DEBUG_CRC);
+#else
+    return mavlink_finalize_message_buffer(msg, system_id, component_id, _status, MAVLINK_MSG_ID_ASLCTRL_DEBUG_MIN_LEN, MAVLINK_MSG_ID_ASLCTRL_DEBUG_LEN);
+#endif
+}
+
+/**
  * @brief Pack a aslctrl_debug message on a channel
  * @param system_id ID of this system
  * @param component_id ID of this component (e.g. 200 for IMU)
@@ -210,6 +273,20 @@ static inline uint16_t mavlink_msg_aslctrl_debug_encode_chan(uint8_t system_id, 
 }
 
 /**
+ * @brief Encode a aslctrl_debug struct with provided status structure
+ *
+ * @param system_id ID of this system
+ * @param component_id ID of this component (e.g. 200 for IMU)
+ * @param status MAVLink status structure
+ * @param msg The MAVLink message to compress the data into
+ * @param aslctrl_debug C-struct to read the message contents from
+ */
+static inline uint16_t mavlink_msg_aslctrl_debug_encode_status(uint8_t system_id, uint8_t component_id, mavlink_status_t* _status, mavlink_message_t* msg, const mavlink_aslctrl_debug_t* aslctrl_debug)
+{
+    return mavlink_msg_aslctrl_debug_pack_status(system_id, component_id, _status, msg,  aslctrl_debug->i32_1, aslctrl_debug->i8_1, aslctrl_debug->i8_2, aslctrl_debug->f_1, aslctrl_debug->f_2, aslctrl_debug->f_3, aslctrl_debug->f_4, aslctrl_debug->f_5, aslctrl_debug->f_6, aslctrl_debug->f_7, aslctrl_debug->f_8);
+}
+
+/**
  * @brief Send a aslctrl_debug message
  * @param chan MAVLink channel to send the message
  *
@@ -278,7 +355,7 @@ static inline void mavlink_msg_aslctrl_debug_send_struct(mavlink_channel_t chan,
 
 #if MAVLINK_MSG_ID_ASLCTRL_DEBUG_LEN <= MAVLINK_MAX_PAYLOAD_LEN
 /*
-  This varient of _send() can be used to save stack space by re-using
+  This variant of _send() can be used to save stack space by re-using
   memory from the receive buffer.  The caller provides a
   mavlink_message_t which is the size of a full mavlink message. This
   is usually the receive buffer for the channel, and allows a reply to an

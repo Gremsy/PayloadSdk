@@ -10,8 +10,7 @@
     #error Wrong include order: MAVLINK_MINIMAL.H MUST NOT BE DIRECTLY USED. Include mavlink.h from the same directory instead or set ALL AND EVERY defines from MAVLINK.H manually accordingly, including the #define MAVLINK_H call.
 #endif
 
-#undef MAVLINK_THIS_XML_IDX
-#define MAVLINK_THIS_XML_IDX 2
+#define MAVLINK_MINIMAL_XML_HASH 8944660031489014746
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,7 +58,8 @@ typedef enum MAV_AUTOPILOT
    MAV_AUTOPILOT_ASLUAV=17, /* ASLUAV autopilot -- http://www.asl.ethz.ch | */
    MAV_AUTOPILOT_SMARTAP=18, /* SmartAP Autopilot - http://sky-drones.com | */
    MAV_AUTOPILOT_AIRRAILS=19, /* AirRails - http://uaventure.com | */
-   MAV_AUTOPILOT_ENUM_END=20, /*  | */
+   MAV_AUTOPILOT_REFLEX=20, /* Fusion Reflex - https://fusion.engineering | */
+   MAV_AUTOPILOT_ENUM_END=21, /*  | */
 } MAV_AUTOPILOT;
 #endif
 
@@ -87,12 +87,12 @@ typedef enum MAV_TYPE
    MAV_TYPE_FLAPPING_WING=16, /* Flapping wing | */
    MAV_TYPE_KITE=17, /* Kite | */
    MAV_TYPE_ONBOARD_CONTROLLER=18, /* Onboard companion controller | */
-   MAV_TYPE_VTOL_DUOROTOR=19, /* Two-rotor VTOL using control surfaces in vertical operation in addition. Tailsitter. | */
-   MAV_TYPE_VTOL_QUADROTOR=20, /* Quad-rotor VTOL using a V-shaped quad config in vertical operation. Tailsitter. | */
-   MAV_TYPE_VTOL_TILTROTOR=21, /* Tiltrotor VTOL | */
-   MAV_TYPE_VTOL_RESERVED2=22, /* VTOL reserved 2 | */
-   MAV_TYPE_VTOL_RESERVED3=23, /* VTOL reserved 3 | */
-   MAV_TYPE_VTOL_RESERVED4=24, /* VTOL reserved 4 | */
+   MAV_TYPE_VTOL_TAILSITTER_DUOROTOR=19, /* Two-rotor Tailsitter VTOL that additionally uses control surfaces in vertical operation. Note, value previously named MAV_TYPE_VTOL_DUOROTOR. | */
+   MAV_TYPE_VTOL_TAILSITTER_QUADROTOR=20, /* Quad-rotor Tailsitter VTOL using a V-shaped quad config in vertical operation. Note: value previously named MAV_TYPE_VTOL_QUADROTOR. | */
+   MAV_TYPE_VTOL_TILTROTOR=21, /* Tiltrotor VTOL. Fuselage and wings stay (nominally) horizontal in all flight phases. It able to tilt (some) rotors to provide thrust in cruise flight. | */
+   MAV_TYPE_VTOL_FIXEDROTOR=22, /* VTOL with separate fixed rotors for hover and cruise flight. Fuselage and wings stay (nominally) horizontal in all flight phases. | */
+   MAV_TYPE_VTOL_TAILSITTER=23, /* Tailsitter VTOL. Fuselage and wings orientation changes depending on flight phase: vertical for hover, horizontal for cruise. Use more specific VTOL MAV_TYPE_VTOL_TAILSITTER_DUOROTOR or MAV_TYPE_VTOL_TAILSITTER_QUADROTOR if appropriate. | */
+   MAV_TYPE_VTOL_TILTWING=24, /* Tiltwing VTOL. Fuselage stays horizontal in all flight phases. The whole wing, along with any attached engine, can tilt between vertical and horizontal mode. | */
    MAV_TYPE_VTOL_RESERVED5=25, /* VTOL reserved 5 | */
    MAV_TYPE_GIMBAL=26, /* Gimbal | */
    MAV_TYPE_ADSB=27, /* ADSB system | */
@@ -104,7 +104,16 @@ typedef enum MAV_TYPE
    MAV_TYPE_SERVO=33, /* Servo | */
    MAV_TYPE_ODID=34, /* Open Drone ID. See https://mavlink.io/en/services/opendroneid.html. | */
    MAV_TYPE_DECAROTOR=35, /* Decarotor | */
-   MAV_TYPE_ENUM_END=36, /*  | */
+   MAV_TYPE_BATTERY=36, /* Battery | */
+   MAV_TYPE_PARACHUTE=37, /* Parachute | */
+   MAV_TYPE_LOG=38, /* Log | */
+   MAV_TYPE_OSD=39, /* OSD | */
+   MAV_TYPE_IMU=40, /* IMU | */
+   MAV_TYPE_GPS=41, /* GPS | */
+   MAV_TYPE_WINCH=42, /* Winch | */
+   MAV_TYPE_GENERIC_MULTIROTOR=43, /* Generic multirotor that does not fit into a specific type or whose type is unknown | */
+   MAV_TYPE_ILLUMINATOR=44, /* Illuminator. An illuminator is a light source that is used for lighting up dark areas external to the sytstem: e.g. a torch or searchlight (as opposed to a light source for illuminating the system itself, e.g. an indicator light). | */
+   MAV_TYPE_ENUM_END=45, /*  | */
 } MAV_TYPE;
 #endif
 
@@ -152,10 +161,10 @@ typedef enum MAV_STATE
    MAV_STATE_CALIBRATING=2, /* System is calibrating and not flight-ready. | */
    MAV_STATE_STANDBY=3, /* System is grounded and on standby. It can be launched any time. | */
    MAV_STATE_ACTIVE=4, /* System is active and might be already airborne. Motors are engaged. | */
-   MAV_STATE_CRITICAL=5, /* System is in a non-normal flight mode. It can however still navigate. | */
-   MAV_STATE_EMERGENCY=6, /* System is in a non-normal flight mode. It lost control over parts or over the whole airframe. It is in mayday and going down. | */
+   MAV_STATE_CRITICAL=5, /* System is in a non-normal flight mode (failsafe). It can however still navigate. | */
+   MAV_STATE_EMERGENCY=6, /* System is in a non-normal flight mode (failsafe). It lost control over parts or over the whole airframe. It is in mayday and going down. | */
    MAV_STATE_POWEROFF=7, /* System just initialized its power-down sequence, will shut down now. | */
-   MAV_STATE_FLIGHT_TERMINATION=8, /* System is terminating itself. | */
+   MAV_STATE_FLIGHT_TERMINATION=8, /* System is terminating itself (failsafe or commanded). | */
    MAV_STATE_ENUM_END=9, /*  | */
 } MAV_STATE;
 #endif
@@ -271,13 +280,21 @@ typedef enum MAV_COMPONENT
    MAV_COMP_ID_PERIPHERAL=158, /* Generic autopilot peripheral component ID. Meant for devices that do not implement the parameter microservice. | */
    MAV_COMP_ID_QX1_GIMBAL=159, /* Gimbal ID for QX1. | */
    MAV_COMP_ID_FLARM=160, /* FLARM collision alert component. | */
+   MAV_COMP_ID_PARACHUTE=161, /* Parachute component. | */
+   MAV_COMP_ID_WINCH=169, /* Winch component. | */
    MAV_COMP_ID_GIMBAL2=171, /* Gimbal #2. | */
    MAV_COMP_ID_GIMBAL3=172, /* Gimbal #3. | */
    MAV_COMP_ID_GIMBAL4=173, /* Gimbal #4 | */
    MAV_COMP_ID_GIMBAL5=174, /* Gimbal #5. | */
    MAV_COMP_ID_GIMBAL6=175, /* Gimbal #6. | */
+   MAV_COMP_ID_BATTERY=180, /* Battery #1. | */
+   MAV_COMP_ID_BATTERY2=181, /* Battery #2. | */
+   MAV_COMP_ID_MAVCAN=189, /* CAN over MAVLink client. | */
    MAV_COMP_ID_MISSIONPLANNER=190, /* Component that can generate/supply a mission flight plan (e.g. GCS or developer API). | */
    MAV_COMP_ID_ONBOARD_COMPUTER=191, /* Component that lives on the onboard computer (companion computer) and has some generic functionalities, such as settings system parameters and monitoring the status of some processes that don't directly speak mavlink and so on. | */
+   MAV_COMP_ID_ONBOARD_COMPUTER2=192, /* Component that lives on the onboard computer (companion computer) and has some generic functionalities, such as settings system parameters and monitoring the status of some processes that don't directly speak mavlink and so on. | */
+   MAV_COMP_ID_ONBOARD_COMPUTER3=193, /* Component that lives on the onboard computer (companion computer) and has some generic functionalities, such as settings system parameters and monitoring the status of some processes that don't directly speak mavlink and so on. | */
+   MAV_COMP_ID_ONBOARD_COMPUTER4=194, /* Component that lives on the onboard computer (companion computer) and has some generic functionalities, such as settings system parameters and monitoring the status of some processes that don't directly speak mavlink and so on. | */
    MAV_COMP_ID_PATHPLANNER=195, /* Component that finds an optimal path between points based on a certain constraint (e.g. minimum snap, shortest path, cost, etc.). | */
    MAV_COMP_ID_OBSTACLE_AVOIDANCE=196, /* Component that plans a collision free path between two points. | */
    MAV_COMP_ID_VISUAL_INERTIAL_ODOMETRY=197, /* Component that provides position estimates using VIO techniques. | */
@@ -293,7 +310,8 @@ typedef enum MAV_COMPONENT
    MAV_COMP_ID_UDP_BRIDGE=240, /* Component to bridge MAVLink to UDP (i.e. from a UART). | */
    MAV_COMP_ID_UART_BRIDGE=241, /* Component to bridge to UART (i.e. from UDP). | */
    MAV_COMP_ID_TUNNEL_NODE=242, /* Component handling TUNNEL messages (e.g. vendor specific GUI of a component). | */
-   MAV_COMP_ID_SYSTEM_CONTROL=250, /* Component for handling system messages (e.g. to ARM, takeoff, etc.). | */
+   MAV_COMP_ID_ILLUMINATOR=243, /* Illuminator | */
+   MAV_COMP_ID_SYSTEM_CONTROL=250, /* Deprecated, don't use. Component for handling system messages (e.g. to ARM, takeoff, etc.). | */
    MAV_COMPONENT_ENUM_END=251, /*  | */
 } MAV_COMPONENT;
 #endif
@@ -316,10 +334,8 @@ typedef enum MAV_COMPONENT
 // base include
 
 
-#undef MAVLINK_THIS_XML_IDX
-#define MAVLINK_THIS_XML_IDX 2
 
-#if MAVLINK_THIS_XML_IDX == MAVLINK_PRIMARY_XML_IDX
+#if MAVLINK_MINIMAL_XML_HASH == MAVLINK_PRIMARY_XML_HASH
 # define MAVLINK_MESSAGE_INFO {MAVLINK_MESSAGE_INFO_HEARTBEAT, MAVLINK_MESSAGE_INFO_PROTOCOL_VERSION}
 # define MAVLINK_MESSAGE_NAMES {{ "HEARTBEAT", 0 }, { "PROTOCOL_VERSION", 300 }}
 # if MAVLINK_COMMAND_24BIT

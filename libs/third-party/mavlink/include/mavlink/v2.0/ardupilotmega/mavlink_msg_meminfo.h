@@ -76,6 +76,45 @@ static inline uint16_t mavlink_msg_meminfo_pack(uint8_t system_id, uint8_t compo
 }
 
 /**
+ * @brief Pack a meminfo message
+ * @param system_id ID of this system
+ * @param component_id ID of this component (e.g. 200 for IMU)
+ * @param status MAVLink status structure
+ * @param msg The MAVLink message to compress the data into
+ *
+ * @param brkval  Heap top.
+ * @param freemem [bytes] Free memory.
+ * @param freemem32 [bytes] Free memory (32 bit).
+ * @return length of the message in bytes (excluding serial stream start sign)
+ */
+static inline uint16_t mavlink_msg_meminfo_pack_status(uint8_t system_id, uint8_t component_id, mavlink_status_t *_status, mavlink_message_t* msg,
+                               uint16_t brkval, uint16_t freemem, uint32_t freemem32)
+{
+#if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
+    char buf[MAVLINK_MSG_ID_MEMINFO_LEN];
+    _mav_put_uint16_t(buf, 0, brkval);
+    _mav_put_uint16_t(buf, 2, freemem);
+    _mav_put_uint32_t(buf, 4, freemem32);
+
+        memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, MAVLINK_MSG_ID_MEMINFO_LEN);
+#else
+    mavlink_meminfo_t packet;
+    packet.brkval = brkval;
+    packet.freemem = freemem;
+    packet.freemem32 = freemem32;
+
+        memcpy(_MAV_PAYLOAD_NON_CONST(msg), &packet, MAVLINK_MSG_ID_MEMINFO_LEN);
+#endif
+
+    msg->msgid = MAVLINK_MSG_ID_MEMINFO;
+#if MAVLINK_CRC_EXTRA
+    return mavlink_finalize_message_buffer(msg, system_id, component_id, _status, MAVLINK_MSG_ID_MEMINFO_MIN_LEN, MAVLINK_MSG_ID_MEMINFO_LEN, MAVLINK_MSG_ID_MEMINFO_CRC);
+#else
+    return mavlink_finalize_message_buffer(msg, system_id, component_id, _status, MAVLINK_MSG_ID_MEMINFO_MIN_LEN, MAVLINK_MSG_ID_MEMINFO_LEN);
+#endif
+}
+
+/**
  * @brief Pack a meminfo message on a channel
  * @param system_id ID of this system
  * @param component_id ID of this component (e.g. 200 for IMU)
@@ -138,6 +177,20 @@ static inline uint16_t mavlink_msg_meminfo_encode_chan(uint8_t system_id, uint8_
 }
 
 /**
+ * @brief Encode a meminfo struct with provided status structure
+ *
+ * @param system_id ID of this system
+ * @param component_id ID of this component (e.g. 200 for IMU)
+ * @param status MAVLink status structure
+ * @param msg The MAVLink message to compress the data into
+ * @param meminfo C-struct to read the message contents from
+ */
+static inline uint16_t mavlink_msg_meminfo_encode_status(uint8_t system_id, uint8_t component_id, mavlink_status_t* _status, mavlink_message_t* msg, const mavlink_meminfo_t* meminfo)
+{
+    return mavlink_msg_meminfo_pack_status(system_id, component_id, _status, msg,  meminfo->brkval, meminfo->freemem, meminfo->freemem32);
+}
+
+/**
  * @brief Send a meminfo message
  * @param chan MAVLink channel to send the message
  *
@@ -182,7 +235,7 @@ static inline void mavlink_msg_meminfo_send_struct(mavlink_channel_t chan, const
 
 #if MAVLINK_MSG_ID_MEMINFO_LEN <= MAVLINK_MAX_PAYLOAD_LEN
 /*
-  This varient of _send() can be used to save stack space by re-using
+  This variant of _send() can be used to save stack space by re-using
   memory from the receive buffer.  The caller provides a
   mavlink_message_t which is the size of a full mavlink message. This
   is usually the receive buffer for the channel, and allows a reply to an

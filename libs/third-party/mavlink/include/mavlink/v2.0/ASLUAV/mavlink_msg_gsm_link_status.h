@@ -1,7 +1,7 @@
 #pragma once
 // MESSAGE GSM_LINK_STATUS PACKING
 
-#define MAVLINK_MSG_ID_GSM_LINK_STATUS 213
+#define MAVLINK_MSG_ID_GSM_LINK_STATUS 8014
 
 
 typedef struct __mavlink_gsm_link_status_t {
@@ -16,17 +16,17 @@ typedef struct __mavlink_gsm_link_status_t {
 
 #define MAVLINK_MSG_ID_GSM_LINK_STATUS_LEN 14
 #define MAVLINK_MSG_ID_GSM_LINK_STATUS_MIN_LEN 14
-#define MAVLINK_MSG_ID_213_LEN 14
-#define MAVLINK_MSG_ID_213_MIN_LEN 14
+#define MAVLINK_MSG_ID_8014_LEN 14
+#define MAVLINK_MSG_ID_8014_MIN_LEN 14
 
 #define MAVLINK_MSG_ID_GSM_LINK_STATUS_CRC 200
-#define MAVLINK_MSG_ID_213_CRC 200
+#define MAVLINK_MSG_ID_8014_CRC 200
 
 
 
 #if MAVLINK_COMMAND_24BIT
 #define MAVLINK_MESSAGE_INFO_GSM_LINK_STATUS { \
-    213, \
+    8014, \
     "GSM_LINK_STATUS", \
     7, \
     {  { "timestamp", NULL, MAVLINK_TYPE_UINT64_T, 0, 0, offsetof(mavlink_gsm_link_status_t, timestamp) }, \
@@ -97,6 +97,57 @@ static inline uint16_t mavlink_msg_gsm_link_status_pack(uint8_t system_id, uint8
 
     msg->msgid = MAVLINK_MSG_ID_GSM_LINK_STATUS;
     return mavlink_finalize_message(msg, system_id, component_id, MAVLINK_MSG_ID_GSM_LINK_STATUS_MIN_LEN, MAVLINK_MSG_ID_GSM_LINK_STATUS_LEN, MAVLINK_MSG_ID_GSM_LINK_STATUS_CRC);
+}
+
+/**
+ * @brief Pack a gsm_link_status message
+ * @param system_id ID of this system
+ * @param component_id ID of this component (e.g. 200 for IMU)
+ * @param status MAVLink status structure
+ * @param msg The MAVLink message to compress the data into
+ *
+ * @param timestamp [us] Timestamp (of OBC)
+ * @param gsm_modem_type  GSM modem used
+ * @param gsm_link_type  GSM link type
+ * @param rssi  RSSI as reported by modem (unconverted)
+ * @param rsrp_rscp  RSRP (LTE) or RSCP (WCDMA) as reported by modem (unconverted)
+ * @param sinr_ecio  SINR (LTE) or ECIO (WCDMA) as reported by modem (unconverted)
+ * @param rsrq  RSRQ (LTE only) as reported by modem (unconverted)
+ * @return length of the message in bytes (excluding serial stream start sign)
+ */
+static inline uint16_t mavlink_msg_gsm_link_status_pack_status(uint8_t system_id, uint8_t component_id, mavlink_status_t *_status, mavlink_message_t* msg,
+                               uint64_t timestamp, uint8_t gsm_modem_type, uint8_t gsm_link_type, uint8_t rssi, uint8_t rsrp_rscp, uint8_t sinr_ecio, uint8_t rsrq)
+{
+#if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
+    char buf[MAVLINK_MSG_ID_GSM_LINK_STATUS_LEN];
+    _mav_put_uint64_t(buf, 0, timestamp);
+    _mav_put_uint8_t(buf, 8, gsm_modem_type);
+    _mav_put_uint8_t(buf, 9, gsm_link_type);
+    _mav_put_uint8_t(buf, 10, rssi);
+    _mav_put_uint8_t(buf, 11, rsrp_rscp);
+    _mav_put_uint8_t(buf, 12, sinr_ecio);
+    _mav_put_uint8_t(buf, 13, rsrq);
+
+        memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, MAVLINK_MSG_ID_GSM_LINK_STATUS_LEN);
+#else
+    mavlink_gsm_link_status_t packet;
+    packet.timestamp = timestamp;
+    packet.gsm_modem_type = gsm_modem_type;
+    packet.gsm_link_type = gsm_link_type;
+    packet.rssi = rssi;
+    packet.rsrp_rscp = rsrp_rscp;
+    packet.sinr_ecio = sinr_ecio;
+    packet.rsrq = rsrq;
+
+        memcpy(_MAV_PAYLOAD_NON_CONST(msg), &packet, MAVLINK_MSG_ID_GSM_LINK_STATUS_LEN);
+#endif
+
+    msg->msgid = MAVLINK_MSG_ID_GSM_LINK_STATUS;
+#if MAVLINK_CRC_EXTRA
+    return mavlink_finalize_message_buffer(msg, system_id, component_id, _status, MAVLINK_MSG_ID_GSM_LINK_STATUS_MIN_LEN, MAVLINK_MSG_ID_GSM_LINK_STATUS_LEN, MAVLINK_MSG_ID_GSM_LINK_STATUS_CRC);
+#else
+    return mavlink_finalize_message_buffer(msg, system_id, component_id, _status, MAVLINK_MSG_ID_GSM_LINK_STATUS_MIN_LEN, MAVLINK_MSG_ID_GSM_LINK_STATUS_LEN);
+#endif
 }
 
 /**
@@ -174,6 +225,20 @@ static inline uint16_t mavlink_msg_gsm_link_status_encode_chan(uint8_t system_id
 }
 
 /**
+ * @brief Encode a gsm_link_status struct with provided status structure
+ *
+ * @param system_id ID of this system
+ * @param component_id ID of this component (e.g. 200 for IMU)
+ * @param status MAVLink status structure
+ * @param msg The MAVLink message to compress the data into
+ * @param gsm_link_status C-struct to read the message contents from
+ */
+static inline uint16_t mavlink_msg_gsm_link_status_encode_status(uint8_t system_id, uint8_t component_id, mavlink_status_t* _status, mavlink_message_t* msg, const mavlink_gsm_link_status_t* gsm_link_status)
+{
+    return mavlink_msg_gsm_link_status_pack_status(system_id, component_id, _status, msg,  gsm_link_status->timestamp, gsm_link_status->gsm_modem_type, gsm_link_status->gsm_link_type, gsm_link_status->rssi, gsm_link_status->rsrp_rscp, gsm_link_status->sinr_ecio, gsm_link_status->rsrq);
+}
+
+/**
  * @brief Send a gsm_link_status message
  * @param chan MAVLink channel to send the message
  *
@@ -230,7 +295,7 @@ static inline void mavlink_msg_gsm_link_status_send_struct(mavlink_channel_t cha
 
 #if MAVLINK_MSG_ID_GSM_LINK_STATUS_LEN <= MAVLINK_MAX_PAYLOAD_LEN
 /*
-  This varient of _send() can be used to save stack space by re-using
+  This variant of _send() can be used to save stack space by re-using
   memory from the receive buffer.  The caller provides a
   mavlink_message_t which is the size of a full mavlink message. This
   is usually the receive buffer for the channel, and allows a reply to an

@@ -118,6 +118,66 @@ static inline uint16_t mavlink_msg_ahrs3_pack(uint8_t system_id, uint8_t compone
 }
 
 /**
+ * @brief Pack a ahrs3 message
+ * @param system_id ID of this system
+ * @param component_id ID of this component (e.g. 200 for IMU)
+ * @param status MAVLink status structure
+ * @param msg The MAVLink message to compress the data into
+ *
+ * @param roll [rad] Roll angle.
+ * @param pitch [rad] Pitch angle.
+ * @param yaw [rad] Yaw angle.
+ * @param altitude [m] Altitude (MSL).
+ * @param lat [degE7] Latitude.
+ * @param lng [degE7] Longitude.
+ * @param v1  Test variable1.
+ * @param v2  Test variable2.
+ * @param v3  Test variable3.
+ * @param v4  Test variable4.
+ * @return length of the message in bytes (excluding serial stream start sign)
+ */
+static inline uint16_t mavlink_msg_ahrs3_pack_status(uint8_t system_id, uint8_t component_id, mavlink_status_t *_status, mavlink_message_t* msg,
+                               float roll, float pitch, float yaw, float altitude, int32_t lat, int32_t lng, float v1, float v2, float v3, float v4)
+{
+#if MAVLINK_NEED_BYTE_SWAP || !MAVLINK_ALIGNED_FIELDS
+    char buf[MAVLINK_MSG_ID_AHRS3_LEN];
+    _mav_put_float(buf, 0, roll);
+    _mav_put_float(buf, 4, pitch);
+    _mav_put_float(buf, 8, yaw);
+    _mav_put_float(buf, 12, altitude);
+    _mav_put_int32_t(buf, 16, lat);
+    _mav_put_int32_t(buf, 20, lng);
+    _mav_put_float(buf, 24, v1);
+    _mav_put_float(buf, 28, v2);
+    _mav_put_float(buf, 32, v3);
+    _mav_put_float(buf, 36, v4);
+
+        memcpy(_MAV_PAYLOAD_NON_CONST(msg), buf, MAVLINK_MSG_ID_AHRS3_LEN);
+#else
+    mavlink_ahrs3_t packet;
+    packet.roll = roll;
+    packet.pitch = pitch;
+    packet.yaw = yaw;
+    packet.altitude = altitude;
+    packet.lat = lat;
+    packet.lng = lng;
+    packet.v1 = v1;
+    packet.v2 = v2;
+    packet.v3 = v3;
+    packet.v4 = v4;
+
+        memcpy(_MAV_PAYLOAD_NON_CONST(msg), &packet, MAVLINK_MSG_ID_AHRS3_LEN);
+#endif
+
+    msg->msgid = MAVLINK_MSG_ID_AHRS3;
+#if MAVLINK_CRC_EXTRA
+    return mavlink_finalize_message_buffer(msg, system_id, component_id, _status, MAVLINK_MSG_ID_AHRS3_MIN_LEN, MAVLINK_MSG_ID_AHRS3_LEN, MAVLINK_MSG_ID_AHRS3_CRC);
+#else
+    return mavlink_finalize_message_buffer(msg, system_id, component_id, _status, MAVLINK_MSG_ID_AHRS3_MIN_LEN, MAVLINK_MSG_ID_AHRS3_LEN);
+#endif
+}
+
+/**
  * @brief Pack a ahrs3 message on a channel
  * @param system_id ID of this system
  * @param component_id ID of this component (e.g. 200 for IMU)
@@ -201,6 +261,20 @@ static inline uint16_t mavlink_msg_ahrs3_encode_chan(uint8_t system_id, uint8_t 
 }
 
 /**
+ * @brief Encode a ahrs3 struct with provided status structure
+ *
+ * @param system_id ID of this system
+ * @param component_id ID of this component (e.g. 200 for IMU)
+ * @param status MAVLink status structure
+ * @param msg The MAVLink message to compress the data into
+ * @param ahrs3 C-struct to read the message contents from
+ */
+static inline uint16_t mavlink_msg_ahrs3_encode_status(uint8_t system_id, uint8_t component_id, mavlink_status_t* _status, mavlink_message_t* msg, const mavlink_ahrs3_t* ahrs3)
+{
+    return mavlink_msg_ahrs3_pack_status(system_id, component_id, _status, msg,  ahrs3->roll, ahrs3->pitch, ahrs3->yaw, ahrs3->altitude, ahrs3->lat, ahrs3->lng, ahrs3->v1, ahrs3->v2, ahrs3->v3, ahrs3->v4);
+}
+
+/**
  * @brief Send a ahrs3 message
  * @param chan MAVLink channel to send the message
  *
@@ -266,7 +340,7 @@ static inline void mavlink_msg_ahrs3_send_struct(mavlink_channel_t chan, const m
 
 #if MAVLINK_MSG_ID_AHRS3_LEN <= MAVLINK_MAX_PAYLOAD_LEN
 /*
-  This varient of _send() can be used to save stack space by re-using
+  This variant of _send() can be used to save stack space by re-using
   memory from the receive buffer.  The caller provides a
   mavlink_message_t which is the size of a full mavlink message. This
   is usually the receive buffer for the channel, and allows a reply to an

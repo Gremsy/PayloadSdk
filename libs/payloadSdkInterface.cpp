@@ -91,6 +91,7 @@ sdkQuit(){
     if(port_quit != nullptr){
         port_quit->stop();
     }
+    payload_interface->handle_quit(0);
     time_to_exit = true;
 }
 

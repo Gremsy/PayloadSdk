@@ -52,50 +52,55 @@ enum {
     PARAM_CAM_REC_SOURCE,
     PARAM_CAM_IR_TYPE,
     PARAM_CAM_IR_PALETTE_ID,
+    PARAM_CAM_IR_FFC_MODE,
+
     PARAM_GIMBAL_MODE,
 
     PARAM_COUNT
 };
 
 struct {
-    const uint8_t index;
-    const char *id;
-    float value;
-    uint16_t msg_rate; // in ms
-    uint16_t tick_ms;
+        const uint8_t index;
+        const char *id;
+        float value;
+        uint16_t msg_rate; // in ms
+        uint16_t tick_ms;
 
-} payloadParams[PARAM_COUNT] = {
+    } payloadParams[PARAM_COUNT] = {
 
-    {PARAM_EO_ZOOM_LEVEL,   "EO_ZOOM", 0, 0, 0},
-    {PARAM_IR_ZOOM_LEVEL,   "IR_ZOOM", 0, 0, 0},
-    {PARAM_LRF_RANGE,       "LRF_RANGE", 0, 0, 0},
+        {PARAM_EO_ZOOM_LEVEL,   "EO_ZOOM", 0, 0, 0},
+        {PARAM_IR_ZOOM_LEVEL,   "IR_ZOOM", 0, 0, 0},
+        {PARAM_LRF_RANGE,       "LRF_RANGE", 0, 0, 0},
 
-    {PARAM_TRACK_POS_X,     "TRK_POS_X", 0, 0, 0},
-    {PARAM_TRACK_POS_Y,     "TRK_POS_Y", 0, 0, 0},
-    {PARAM_TRACK_POS_W,     "TRK_POS_W", 0, 0, 0},
-    {PARAM_TRACK_POS_H,     "TRK_POS_H", 0, 0, 0},
-    {PARAM_TRACK_STATUS,    "TRK_STATUS", 0, 0, 0},
+        {PARAM_TRACK_POS_X,     "TRK_POS_X", 0, 0, 0},
+        {PARAM_TRACK_POS_Y,     "TRK_POS_Y", 0, 0, 0},
+        {PARAM_TRACK_POS_W,     "TRK_POS_W", 0, 0, 0},
+        {PARAM_TRACK_POS_H,     "TRK_POS_H", 0, 0, 0},
+        {PARAM_TRACK_STATUS,    "TRK_STATUS", 0, 0, 0},
 
-    {PARAM_LRF_OFSET_X,     "LRF_OFFSET_X", 0, 0, 0},
-    {PARAM_LRF_OFSET_Y,     "LRF_OFFSET_Y", 0, 0, 0},
+        {PARAM_LRF_OFSET_X,     "LRF_OFFSET_X", 0, 0, 0},
+        {PARAM_LRF_OFSET_Y,     "LRF_OFFSET_Y", 0, 0, 0},
 
-    {PARAM_TARGET_COOR_LON, "TARGET_LON", 0, 0, 0},
-    {PARAM_TARGET_COOR_LAT, "TARGET_LAT", 0, 0, 0},
-    {PARAM_TARGET_COOR_ALT, "TARGET_ALT", 0, 0, 0},
-    {PARAM_PAYLOAD_GPS_LON, "PAY_LON", 0, 0, 0},
-    {PARAM_PAYLOAD_GPS_LAT, "PAY_LAT", 0, 0, 0},
-    {PARAM_PAYLOAD_GPS_ALT, "PAY_ALT", 0, 0, 0},
+        {PARAM_TARGET_COOR_LON, "TARGET_LON", 0, 0, 0},
+        {PARAM_TARGET_COOR_LAT, "TARGET_LAT", 0, 0, 0},
+        {PARAM_TARGET_COOR_ALT, "TARGET_ALT", 0, 0, 0},
+        {PARAM_PAYLOAD_GPS_LON, "PAY_LON", 0, 0, 0},
+        {PARAM_PAYLOAD_GPS_LAT, "PAY_LAT", 0, 0, 0},
+        {PARAM_PAYLOAD_GPS_ALT, "PAY_ALT", 0, 0, 0},
 
-    {PARAM_PAYLOAD_APP_VER_X, "APP_VER_X", 0, 0, 0},
-    {PARAM_PAYLOAD_APP_VER_Y, "APP_VER_Y", 0, 0, 0},
-    {PARAM_PAYLOAD_APP_VER_Z, "APP_VER_Z", 0, 0, 0},
+        {PARAM_PAYLOAD_APP_VER_X, "APP_VER_X", 0, 0, 0},
+        {PARAM_PAYLOAD_APP_VER_Y, "APP_VER_Y", 0, 0, 0},
+        {PARAM_PAYLOAD_APP_VER_Z, "APP_VER_Z", 0, 0, 0},
 
-    {PARAM_CAM_VIEW_MODE,       "VIEW_MODE", 0, 0, 0},
-    {PARAM_CAM_REC_SOURCE,      "REC_SRC", 0, 0, 0},
-    {PARAM_CAM_IR_TYPE,         "IR_TYPE", 0, 0, 0},
-    {PARAM_CAM_IR_PALETTE_ID,   "PALETTE_ID", 0, 0, 0},
-    {PARAM_GIMBAL_MODE,         "GB_MODE", 0, 0, 0},
-};
+        {PARAM_CAM_VIEW_MODE,       "VIEW_MODE", 0, 0, 0},
+        {PARAM_CAM_REC_SOURCE,      "REC_SRC", 0, 0, 0},
+        {PARAM_CAM_IR_TYPE,         "IR_TYPE", 0, 0, 0},
+        {PARAM_CAM_IR_PALETTE_ID,   "PALETTE_ID", 0, 0, 0},
+        {PARAM_CAM_IR_FFC_MODE,     "FFC_MODE", 0, 0, 0},
+
+
+        {PARAM_GIMBAL_MODE,         "GB_MODE", 0, 0, 0},
+    };
 
 static std::chrono::time_point<std::chrono::high_resolution_clock> start_time = std::chrono::high_resolution_clock::now();;
 static long long _getElapsedTimeInMs(){

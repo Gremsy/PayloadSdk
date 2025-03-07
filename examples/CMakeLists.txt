@@ -5,80 +5,89 @@ set(PAYLOADSDKLIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../libs)
 
 if (VIO)
 set(EXAMPLES
-    connect.cpp
-    load_payload_settings.cpp
-    change_payload_settings.cpp
-    eo_capture_image.cpp
-    eo_record_video.cpp
-    get_video_streaming.cpp
-    move_gimbal_angle_mode.cpp
-    move_gimbal_speed_mode.cpp
-    get_payload_status.cpp
-    eo_set_camera_zoom_focus.cpp
+    check_connect.cpp
+
+    camera_load_settings.cpp
+    camera_change_settings.cpp
+    camera_eo_capture_image.cpp
+    camera_eo_record_video.cpp
+    camera_ir_do_ffc_control.cpp
+    camera_ir_set_zoom.cpp
+    camera_ir_capture_image.cpp
+    camera_ir_record_video.cpp
+    camera_ir_set_palette.cpp
+    camera_eo_set_zoom_focus.cpp
+    camera_time_lapse_photography.cpp
+    camera_do_setzoom_individual.cpp
+
+    gimbal_move_angle.cpp
+    gimbal_move_speed.cpp
+    gimbal_load_settings.cpp
+    gimbal_change_settings.cpp
+    gimbal_do_calib.cpp
     gimbal_set_mode.cpp
-    ir_set_camera_zoom.cpp
-    ir_capture_image.cpp
-    ir_record_video.cpp
-    ir_set_palette.cpp
-    download_media_files.cpp
-    do_object_tracking.cpp
-    do_object_detection.cpp
-    time_lapse_photography.cpp
-    send_gps.cpp
-    send_system_time.cpp
-    do_setzoom_individual.cpp
-    load_gimbal_settings.cpp
-    change_gimbal_settings.cpp
-    do_calib_gimbal.cpp
-    do_ir_ffc_control.cpp
+    
+    payload_download_media_files.cpp
+    payload_do_object_tracking.cpp
+    payload_do_object_detection.cpp
+    payload_set_gps.cpp
+    payload_set_system_time.cpp
+    payload_get_status.cpp
+    payload_get_video_streaming.cpp
 )
 endif(VIO)
 
 if (ZIO)
 set(EXAMPLES
-    connect.cpp
-    load_payload_settings.cpp
-    change_payload_settings.cpp
-    eo_capture_image.cpp
-    eo_record_video.cpp
-    get_video_streaming.cpp
-    move_gimbal_angle_mode.cpp
-    move_gimbal_speed_mode.cpp
-    get_payload_status.cpp
-    eo_set_camera_zoom_focus.cpp
+    check_connect.cpp
+
+    camera_load_settings.cpp
+    camera_change_settings.cpp
+    camera_eo_capture_image.cpp
+    camera_eo_record_video.cpp
+    # camera_ir_set_zoom.cpp
+    # camera_ir_capture_image.cpp
+    # camera_ir_record_video.cpp
+    # camera_ir_set_palette.cpp
+    camera_time_lapse_photography.cpp
+    camera_eo_set_zoom_focus.cpp
+
+    gimbal_move_angle.cpp
+    gimbal_move_speed.cpp
     gimbal_set_mode.cpp
-    # ir_set_camera_zoom.cpp
-    # ir_capture_image.cpp
-    # ir_record_video.cpp
-    # ir_set_palette.cpp
-    download_media_files.cpp
-    # do_object_tracking.cpp
-    time_lapse_photography.cpp
+    
+    payload_get_status.cpp
+    payload_get_video_streaming.cpp
+    payload_download_media_files.cpp
+    # payload_do_object_tracking.cpp
 )
 endif(ZIO)
 
 if (GHADRON)
 set(EXAMPLES
-    connect.cpp
-    load_payload_settings.cpp
-    change_payload_settings.cpp
-    eo_capture_image.cpp
-    eo_record_video.cpp
-    get_video_streaming.cpp
-    move_gimbal_angle_mode.cpp
-    move_gimbal_speed_mode.cpp
-    get_payload_status.cpp
-    eo_set_camera_zoom_focus.cpp
+    check_connect.cpp
+
+    camera_load_settings.cpp
+    camera_change_settings.cpp
+    camera_eo_capture_image.cpp
+    camera_eo_record_video.cpp
+    camera_eo_set_zoom_focus.cpp
+    camera_ir_set_zoom.cpp
+    camera_ir_capture_image.cpp
+    camera_ir_record_video.cpp
+    camera_ir_set_palette.cpp
+    camera_ir_set_isotherms.cpp
+    camera_time_lapse_photography.cpp
+
+    gimbal_move_angle.cpp
+    gimbal_move_speed.cpp
     gimbal_set_mode.cpp
-    ir_set_camera_zoom.cpp
-    ir_capture_image.cpp
-    ir_record_video.cpp
-    ir_set_palette.cpp
-    download_media_files.cpp
-    do_object_tracking.cpp
-    do_object_detection.cpp
-    time_lapse_photography.cpp
-    ir_set_isotherms.cpp
+    
+    payload_get_status.cpp
+    payload_download_media_files.cpp
+    payload_do_object_tracking.cpp
+    payload_do_object_detection.cpp
+    payload_get_video_streaming.cpp
 )
 endif(GHADRON)
 

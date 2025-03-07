@@ -47,24 +47,26 @@ int main(int argc, char *argv[]){
 	my_payload->setParamRate(PARAM_IR_ZOOM_LEVEL, 1000);
 
     #if defined VIO
-	// set the interval for param update
-	my_payload->setParamRate(PARAM_LRF_RANGE, 100);
-	my_payload->setParamRate(PARAM_LRF_OFSET_X, 100);
-	my_payload->setParamRate(PARAM_LRF_OFSET_Y, 100);
+		// set the interval for param update
+		my_payload->setParamRate(PARAM_LRF_RANGE, 100);
+		my_payload->setParamRate(PARAM_LRF_OFSET_X, 100);
+		my_payload->setParamRate(PARAM_LRF_OFSET_Y, 100);
 
-	my_payload->setParamRate(PARAM_TARGET_COOR_LON, 1000);
-	my_payload->setParamRate(PARAM_TARGET_COOR_LAT, 1000);
-	my_payload->setParamRate(PARAM_TARGET_COOR_ALT, 1000);
+		my_payload->setParamRate(PARAM_TARGET_COOR_LON, 1000);
+		my_payload->setParamRate(PARAM_TARGET_COOR_LAT, 1000);
+		my_payload->setParamRate(PARAM_TARGET_COOR_ALT, 1000);
 
-	my_payload->setParamRate(PARAM_CAM_VIEW_MODE, 1000);
-	my_payload->setParamRate(PARAM_CAM_REC_SOURCE, 1000);
-	my_payload->setParamRate(PARAM_CAM_IR_TYPE, 1000);
-	my_payload->setParamRate(PARAM_CAM_IR_PALETTE_ID, 1000);
-	my_payload->setParamRate(PARAM_GIMBAL_MODE, 1000);
+		my_payload->setParamRate(PARAM_CAM_VIEW_MODE, 1000);
+		my_payload->setParamRate(PARAM_CAM_REC_SOURCE, 1000);
+		my_payload->setParamRate(PARAM_CAM_IR_TYPE, 1000);
+		my_payload->setParamRate(PARAM_CAM_IR_PALETTE_ID, 1000);
+		my_payload->setParamRate(PARAM_GIMBAL_MODE, 1000);
 
-	my_payload->setParamRate(PARAM_PAYLOAD_GPS_LON, 1000);
-	my_payload->setParamRate(PARAM_PAYLOAD_GPS_LAT, 1000);
-	my_payload->setParamRate(PARAM_PAYLOAD_GPS_ALT, 1000);
+		my_payload->setParamRate(PARAM_PAYLOAD_GPS_LON, 1000);
+		my_payload->setParamRate(PARAM_PAYLOAD_GPS_LAT, 1000);
+		my_payload->setParamRate(PARAM_PAYLOAD_GPS_ALT, 1000);
+
+		my_payload->setParamRate(PARAM_CAM_IR_FFC_MODE, 1000);
     #endif /* VIO */
 
 
@@ -156,6 +158,9 @@ void onPayloadStatusChanged(int event, double* param){
 		}
 		else if(param[0] == PARAM_CAM_IR_PALETTE_ID){
 			SDK_LOG("Payload PARAM_CAM_IR_PALETTE_ID: %.2f ", param[1]);
+		}
+		else if(param[0] == PARAM_CAM_IR_FFC_MODE){
+			SDK_LOG("Payload PARAM_CAM_IR_FFC_MODE: %.2f ", param[1]);
 		}
 		else if(param[0] == PARAM_GIMBAL_MODE){
 			SDK_LOG("Payload PARAM_GIMBAL_MODE: %.2f ", param[1]);

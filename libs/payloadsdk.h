@@ -8,6 +8,8 @@
 #include "serial_port.h"
 #include "udp_port.h"
 
+#include "payload_enum.h"
+
 #if defined GHADRON
 #include "ghadron_sdk.h"
 #elif defined VIO
@@ -34,7 +36,7 @@ static uint8_t GIMBAL_COMPONENT_ID = MAV_COMP_ID_GIMBAL;  // auto update when go
 
 static char *payload_uart_port = (char*)"/dev/ttyUSB0";
 static int payload_uart_baud = 115200;
-static char *udp_ip_target = (char*)"192.168.12.244";   // This is an ip address of the payload
+static char *udp_ip_target = (char*)"192.168.55.1";   // This is an ip address of the payload
 static int udp_port_target = 14566;                     // Do not change
 
 typedef struct{
@@ -128,10 +130,5 @@ static float to_rad(float deg) {
     static constexpr float DEG2RAD = M_PI / 180.f;
     return deg * DEG2RAD;
 }
-
-enum input_mode_t {
-    INPUT_ANGLE = 1,
-    INPUT_SPEED = 2
-};
 
 #endif

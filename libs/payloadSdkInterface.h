@@ -272,6 +272,21 @@ public:
      **/
     void setPayloadCameraRecordVideoStop();
 
+    /**
+     * Set IR FFC mode
+     **/
+    void setPayloadCameraFFCMode(uint8_t mode);
+
+    /**
+     * Get IR FFC mode
+     **/
+    void getPayloadCameraFFCMode(uint8_t& mode);
+
+    /**
+     * Set IR FFC trigger
+     **/
+    void setPayloadCameraFFCTrigg();
+
     void requestParamValue(uint8_t pIndex);
     void setParamRate(uint8_t pIndex, uint16_t time_ms);
     void requestMessageStreamInterval();    

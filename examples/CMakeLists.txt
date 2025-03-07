@@ -30,6 +30,7 @@ set(EXAMPLES
     load_gimbal_settings.cpp
     change_gimbal_settings.cpp
     do_calib_gimbal.cpp
+    do_ir_ffc_control.cpp
 )
 endif(VIO)
 

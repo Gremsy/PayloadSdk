@@ -772,6 +772,79 @@ setPayloadCameraRecordVideoStop(){
     payload_interface->push_message_to_queue(message);
 }
 
+/**
+ * Set IR FFC mode
+ * Mode: Manual: 0, Auto: 1
+ **/
+void 
+PayloadSdkInterface::
+setPayloadCameraFFCMode(uint8_t mode){
+    if(mode < 0 || mode >= FFC_MODE_END) return;
+
+    mavlink_command_long_t msg = {0};
+
+    msg.target_system = PAYLOAD_SYSTEM_ID;
+    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.command = MAV_CMD_USER_4;
+    msg.param1 = 2;
+    msg.param2 = 6;
+    msg.param3 = mode;
+    msg.confirmation = 1;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+/**
+ * Get IR FFC mode
+ **/
+void 
+PayloadSdkInterface::
+getPayloadCameraFFCMode(uint8_t& mode){
+
+}
+
+/**
+ * Set IR FFC trigger
+ **/
+void 
+PayloadSdkInterface::
+setPayloadCameraFFCTrigg(){
+    mavlink_command_long_t msg = {0};
+
+    msg.target_system = PAYLOAD_SYSTEM_ID;
+    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.command = MAV_CMD_USER_4;
+    msg.param1 = 2;
+    msg.param2 = 7;
+    msg.confirmation = 1;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
 void
 PayloadSdkInterface::
 requestParamValue(uint8_t pIndex){

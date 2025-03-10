@@ -146,7 +146,12 @@ checkPayloadConnection(){
         mavlink_message_t msg;
         uint8_t msg_cnt = getNewMewssage(msg);
 
-        if(msg_cnt && msg.sysid == PAYLOAD_SYSTEM_ID && msg.compid == PAYLOAD_COMPONENT_ID){
+        if(msg_cnt && msg.sysid == PAYLOAD_SYSTEM_ID && 
+            (msg.compid == PAYLOAD_COMPONENT_ID ||
+             msg.compid == GIMBAL_COMPONENT_ID
+            )
+        )
+        {
             printf("Payload connected! \n");
             break;
         }
@@ -549,6 +554,32 @@ setGimbalSpeed(float spd_pitch, float spd_roll, float spd_yaw, input_mode_t mode
     // --------------------------------------------------------------------------
     mavlink_message_t message = { 0 };
     mavlink_msg_gimbal_device_set_attitude_encode(SYS_ID, COMP_ID, &message, &attitude);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+
+void PayloadSdkInterface::setGimbalAutoTune(bool isStartAutoTune)
+{
+    mavlink_command_long_t cmdlong = {0};
+
+    cmdlong.target_system = GIMBAL_SYSTEM_ID;
+    cmdlong.target_component = GIMBAL_COMPONENT_ID;
+    cmdlong.command = MAV_CMD_USER_3;
+    cmdlong.param7 = static_cast<float>(isStartAutoTune ? 1 : 0);
+    cmdlong.confirmation = 1;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &cmdlong);
 
     // --------------------------------------------------------------------------
     //   WRITE

@@ -2,7 +2,11 @@ cmake_minimum_required(VERSION 3.5)
 
 set(PAYLOADSDKLIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../libs)
 # set(PAYLOADSDKLIB_COMPILED ${CMAKE_CURRENT_SOURCE_DIR}/../build/libs)
-
+if (PIXYSC)
+set(EXAMPLES
+    gimbal_autotune.cpp
+)
+endif(PIXYSC)
 if (VIO)
 set(EXAMPLES
     connect.cpp

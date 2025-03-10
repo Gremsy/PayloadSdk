@@ -164,6 +164,10 @@ public:
      * */
     void setGimbalSpeed(float spd_pitch, float spd_roll, float spd_yaw, input_mode_t mode);
 
+    /*!<@brief: used to auto tune the gimbal
+     * @para1: start or stop auto tune
+     * */
+    void setGimbalAutoTune(bool isStartAutoTune);
     /**
      * Use to send the drone's attitude to the payload for anti-drift function
      **/

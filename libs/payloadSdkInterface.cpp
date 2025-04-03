@@ -81,7 +81,9 @@ sdkInitConnection(){
 
     // init thread to check receive message from payload
     all_threads_init();
-
+    
+    usleep(1000000);
+    
     return true;
 }
 

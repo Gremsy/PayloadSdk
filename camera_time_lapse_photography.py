@@ -107,7 +107,7 @@ def main():
     my_payload.regPayloadStatusChanged(onPayloadStatusChanged)
 
     # Check connection
-    # my_payload.checkPayloadConnection()
+    my_payload.checkPayloadConnection()
 
     # Set payload to IMAGE mode for testing
     my_payload.setPayloadCameraMode(camera_mode.CAMERA_MODE_IMAGE)

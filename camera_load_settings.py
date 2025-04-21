@@ -52,7 +52,7 @@ def main():
     my_payload.regPayloadStatusChanged(onPayloadStatusChanged)
 
     # Check connection
-    # my_payload.checkPayloadConnection()
+    my_payload.checkPayloadConnection()
 
     # Request to read all settings of payload
     my_payload.getPayloadCameraSettingList()

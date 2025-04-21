@@ -37,7 +37,7 @@ def main():
     print("Waiting for payload signal!\n")
 
     # Check payload connection
-    # my_payload.checkPayloadConnection()
+    my_payload.checkPayloadConnection()
 
     # Set view source to EO
     print("Set view source to EO!")

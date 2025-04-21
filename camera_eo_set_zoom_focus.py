@@ -43,7 +43,7 @@ def main():
     my_payload.regPayloadStatusChanged(onPayloadStatusChanged)
     
     # Check connection
-    # my_payload.checkPayloadConnection()
+    my_payload.checkPayloadConnection()
 
     # Set view source to EO
     print("Set view source to EO!")

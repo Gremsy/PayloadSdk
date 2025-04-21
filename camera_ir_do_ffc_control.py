@@ -41,7 +41,7 @@ def main():
     print("Waiting for payload signal!\n")
 
     # Check connection
-    # my_payload.checkPayloadConnection()
+    my_payload.checkPayloadConnection()
 
     # Change FFC mode to Auto
     my_payload.setPayloadCameraFFCMode(ffc_mode_t.FFC_MODE_AUTO)

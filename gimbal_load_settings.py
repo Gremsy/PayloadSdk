@@ -62,7 +62,7 @@ def main():
     my_payload.regPayloadStatusChanged(onPayloadStatusChanged)
 
     # Check connection
-    # my_payload.checkPayloadConnection()
+    my_payload.checkPayloadConnection()
 
     # Request to read all settings from the gimbal
     my_payload.getPayloadGimbalSettingList()

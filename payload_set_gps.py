@@ -36,7 +36,7 @@ def main():
     print("Waiting for payload signal!")
 
     # Check connection
-    # my_payload.checkPayloadConnection()
+    my_payload.checkPayloadConnection()
 
     msg_cnt = 0
     boot_time_ms = 0

@@ -138,7 +138,7 @@ def main():
     my_payload.regPayloadStreamChanged(onPayloadStreamChanged)
 
     # Check connection
-    # my_payload.checkPayloadConnection()
+    my_payload.checkPayloadConnection()
 
     # Set view source to IR/EO
     my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_IREO, param_type.PARAM_TYPE_UINT32)

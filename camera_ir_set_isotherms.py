@@ -34,7 +34,7 @@ def main():
     print("Waiting for payload signal!\n")
 
     # Check connection
-    # my_payload.checkPayloadConnection()
+    my_payload.checkPayloadConnection()
 
     # Set view source to IR
     print("Set view source to IR!")

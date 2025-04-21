@@ -35,7 +35,7 @@ def main():
     print("Waiting for payload signal!\n")
 
     # Check connection
-    # my_payload.checkPayloadConnection()
+    my_payload.checkPayloadConnection()
     time.sleep(0.1)
 
     # Set gimbal RC mode to STANDARD 

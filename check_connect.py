@@ -38,7 +38,7 @@ def main():
     print("Waiting for payload signal!")
 
     # Check connection
-    # my_payload.checkPayloadConnection()
+    my_payload.checkPayloadConnection()
 
     # Keep program running to maintain connection
     while not time_to_exit:

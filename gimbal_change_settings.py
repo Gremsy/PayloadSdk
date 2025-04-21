@@ -63,7 +63,7 @@ def main():
     my_payload.regPayloadParamChanged(onPayloadParamChanged)
     
     # Check connection
-    # my_payload.checkPayloadConnection()
+    my_payload.checkPayloadConnection()
     
     while True:
         if step_num == 0:

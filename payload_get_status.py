@@ -106,7 +106,7 @@ def main():
     my_payload.regPayloadStatusChanged(onPayloadStatusChanged)
 
     # Check connection
-    # my_payload.checkPayloadConnection()
+    my_payload.checkPayloadConnection()
 
     my_payload.setParamRate(payload_param_t.PARAM_EO_ZOOM_LEVEL, 1000)
     my_payload.setParamRate(payload_param_t.PARAM_IR_ZOOM_LEVEL, 1000)

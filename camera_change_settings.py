@@ -1,6 +1,7 @@
 import time
 import signal
 import sys
+
 from libs.payload_sdk import PayloadSdkInterface, param_type, payload_status_event_t, PAYLOAD_TYPE
 from libs.payload_define import *
 
@@ -39,13 +40,13 @@ def main():
 
     # Init payload
     my_payload.sdkInitConnection()
-    time.sleep(1)
+    print("Waiting for payload signal!")
     
     # Register callback function
     my_payload.regPayloadParamChanged(onPayloadParamChanged)
     
     # Check connection
-    # my_payload.checkPayloadConnection()
+    my_payload.checkPayloadConnection()
     
     # Change setting of RC_MODE to STANDARD
     my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_RC_MODE, payload_camera_rc_mode.PAYLOAD_CAMERA_RC_MODE_STANDARD, param_type.PARAM_TYPE_UINT32) 

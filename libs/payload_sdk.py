@@ -351,12 +351,24 @@ class PayloadSdkInterface:
             self.gimbal_component_id = comp_id
 
     def _handle_msg_param_ext_value(self, msg):
+        
         if self._notifyPayloadParamChanged:
-            param_value = struct.unpack('<I', msg.param_value[:4])[0]  # Giả định uint32
-            event = payload_status_event_t.PAYLOAD_CAM_PARAMS
-            param = [msg.param_index, param_value]
-            param_char = msg.param_id.decode().rstrip('\0')
-            self._notifyPayloadParamChanged(event, param_char, param)
+            param_value_bytes = bytearray()
+            for char in msg.param_value:
+                if ord(char) < 256: 
+                    param_value_bytes.append(ord(char))
+                else:
+                    param_value_bytes.append(0)  
+            param_value_bytes = bytes(param_value_bytes[:128]) 
+
+            if len(param_value_bytes) >= 4:
+                param_value = struct.unpack('<I', param_value_bytes[:4])[0]
+            else:
+                param_value = 0 
+
+            params = [float(msg.param_index), float(param_value)] 
+            param_char = msg.param_id.rstrip('\0')
+            self._notifyPayloadParamChanged(payload_status_event_t.PAYLOAD_CAM_PARAMS, param_char, params)
 
     def _handle_msg_param_ext_ack(self, msg):
         if self._notifyPayloadStatusChanged:
@@ -490,6 +502,7 @@ class PayloadSdkInterface:
                 source_system=self.sys_id,
                 source_component=self.comp_id
             )
+            time.sleep(1)
             print("[INFO] Waiting for heartbeat from payload...")
             self.master.wait_heartbeat(timeout=0)
             print(f"[INFO] Heartbeat received from system {self.master.target_system}, component {self.master.target_component}")
@@ -503,6 +516,60 @@ class PayloadSdkInterface:
             print(f"[ERROR] SDK connection failed: {e}")
             self.master = None
             return False
+
+    def checkPayloadConnection(self, timeout: float = 10.0) -> bool:
+        if not self.master:
+            print("Error: Connection not initialized")
+            return False
+
+        start_time = time.time()
+        result = False
+
+        print("[INFO] Checking payload connection...")
+        while self.running and (time.time() - start_time) < timeout:
+            msg = self.master.recv_match(blocking=True, timeout=0.1)
+            if msg is None:
+                continue
+
+            comp_id = msg.get_srcComponent()
+            sys_id = msg.get_srcSystem()
+
+            # Check for camera
+            if comp_id in range(mavutil.mavlink.MAV_COMP_ID_CAMERA, mavutil.mavlink.MAV_COMP_ID_CAMERA6 + 1):
+                self.camera_system_id = sys_id
+                self.camera_component_id = comp_id
+                if not self.camera_detected:
+                    self.camera_detected = True
+                    print(f"[INFO] Camera detected with sys_id: {sys_id}, comp_id: {comp_id}")
+                    if self._notifyCameraDetected:
+                        self._notifyCameraDetected(True)
+                result = True
+
+            # Check for gimbal
+            elif comp_id in range(mavutil.mavlink.MAV_COMP_ID_GIMBAL, mavutil.mavlink.MAV_COMP_ID_GIMBAL6 + 1):
+                self.gimbal_system_id = sys_id
+                self.gimbal_component_id = comp_id
+                print(f"[INFO] Gimbal detected with sys_id: {sys_id}, comp_id: {comp_id}")
+                result = True
+
+            # Check for payload
+            elif comp_id == mavutil.mavlink.MAV_COMP_ID_USER2:
+                self.payload_system_id = sys_id
+                self.payload_component_id = comp_id
+                print(f"[INFO] Payload detected with sys_id: {sys_id}, comp_id: {comp_id}")
+                if not self.is_stream_requested:
+                    self.requestMessageStreamInterval()
+                    self.is_stream_requested = True
+                result = True
+
+            if result:
+                print("[INFO] Payload connected!")
+                return True
+
+            time.sleep(0.0001)
+
+        print("[ERROR] No payload detected within timeout period")
+        return False
 
     # Interface terminator
     def sdkQuit(self):
@@ -548,7 +615,7 @@ class PayloadSdkInterface:
         if not self.master:
             print("Error: Connection not initialized")
             return
-        self.master.mav.param_request_list_send(
+        self.master.mav.param_ext_request_list_send(
             self.camera_system_id,
             self.camera_component_id
         )

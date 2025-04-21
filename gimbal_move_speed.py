@@ -48,7 +48,7 @@ def main():
     my_payload.regPayloadStatusChanged(onPayloadStatusChanged)
 
     # Check connection
-    # my_payload.checkPayloadConnection()
+    my_payload.checkPayloadConnection()
     time.sleep(0.1)  
 
     # Set gimbal RC mode to STANDARD 

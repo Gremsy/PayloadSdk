@@ -23,7 +23,7 @@ def quit_handler(sig, frame):
 
 def main():
     global my_payload
-
+    print("Starting set palette example...")
     signal.signal(signal.SIGINT, quit_handler)
 
     # Create payloadsdk object
@@ -34,8 +34,7 @@ def main():
     print("Waiting for payload signal!\n")
 
     # Check connection
-    # my_payload.checkPayloadConnection()
-    print("Starting set palette example...")
+    my_payload.checkPayloadConnection()
 
     # Set view source to IR
     print("Set view source to IR!")

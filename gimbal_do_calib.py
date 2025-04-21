@@ -149,7 +149,7 @@ def main():
     my_payload.regPayloadStatusChanged(on_payload_status_changed)
 
     # Check connection
-    # my_payload.checkPayloadConnection()
+    my_payload.checkPayloadConnection()
 
     if my_calib == calib_type_t.CALIB_GYRO:
         is_calibration_running = False

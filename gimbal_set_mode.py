@@ -37,7 +37,7 @@ def main():
     print("Waiting for payload signal!\n")
 
     # Check connection
-    # my_payload.checkPayloadConnection()
+    my_payload.checkPayloadConnection()
 
     # Set gimbal to LOCK mode
     print("Gimbal set LOCK mode, delay in 5 secs")

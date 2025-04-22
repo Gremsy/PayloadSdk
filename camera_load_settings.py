@@ -1,7 +1,7 @@
 import time
 import signal
 import sys
-import os
+from pymavlink import mavutil
 from libs.payload_sdk import PayloadSdkInterface, payload_status_event_t
 from libs.payload_define import *
 
@@ -44,7 +44,6 @@ def main():
 
     # Init payload
     my_payload.sdkInitConnection()
-    time.sleep(1)
     print("Waiting for payload signal!\n")
 
     # Register callback functions

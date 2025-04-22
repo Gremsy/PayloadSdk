@@ -1,9 +1,8 @@
 import time
 import signal
 import sys
-from enum import Enum
-import os
-from libs.payload_sdk import PayloadSdkInterface, param_type, payload_status_event_t, capture_sequence_t, camera_mode
+from pymavlink import mavutil
+from libs.payload_sdk import PayloadSdkInterface, payload_status_event_t, capture_sequence_t
 from libs.payload_define import *   
 
 my_payload = None
@@ -112,8 +111,8 @@ def main():
     my_payload.checkPayloadConnection()
     
     # Set payload to IMAGE mode for testing
-    my_payload.setPayloadCameraMode(camera_mode.CAMERA_MODE_IMAGE)  
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_RECORD_SRC, payload_camera_record_src.PAYLOAD_CAMERA_RECORD_IR, param_type.PARAM_TYPE_UINT32)
+    my_payload.setPayloadCameraMode(mavutil.mavlink.CAMERA_MODE_IMAGE)  
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_RECORD_SRC, payload_camera_record_src.PAYLOAD_CAMERA_RECORD_IR, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
 
     while not time_to_exit:
 
@@ -131,7 +130,7 @@ def main():
             my_payload.getPayloadCameraMode()
 
         elif my_capture == capture_sequence_t.CHANGE_CAMERA_MODE:
-            my_payload.setPayloadCameraMode(camera_mode.CAMERA_MODE_IMAGE)  
+            my_payload.setPayloadCameraMode(mavutil.mavlink.CAMERA_MODE_IMAGE)  
             my_capture = capture_sequence_t.CHECK_CAMERA_MODE
 
         elif my_capture == capture_sequence_t.DO_CAPTURE:

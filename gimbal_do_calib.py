@@ -1,17 +1,9 @@
 import time
 import signal
 import sys
-from enum import Enum
-import os
+from pymavlink import mavutil
 from libs.payload_sdk import PayloadSdkInterface, payload_status_event_t, calib_type_t
 from libs.payload_define import *
-
-# Define constants for MAVLink commands
-MAV_CMD_GIMBAL_REQUEST_AXIS_CALIBRATION = 42503  
-MAV_CMD_DO_SET_HOME = 179                     
-MAV_CMD_USER_3 = 300                       
-MAV_RESULT_ACCEPTED = 0
-MAV_RESULT_IN_PROGRESS = 5
 
 my_payload = None
 is_calibration_running = False
@@ -19,7 +11,7 @@ is_exit = False
 start_time = time.time() * 1000000 
 
 # Set the calibration type
-my_calib = calib_type_t.CALIB_GYRO
+my_calib = calib_type_t.AUTO_TUNE
 
 # SDK log function
 def sdk_log(func_name, message):
@@ -51,76 +43,76 @@ def on_payload_status_changed(event: int, param: list):
         # sdk_log("onPayloadStatusChanged", f"Got ack from {cmd_id:.0f}, result {result:.0f}, progress: {progress:.0f}")
 
         if my_calib == calib_type_t.CALIB_GYRO:
-            if cmd_id == MAV_CMD_GIMBAL_REQUEST_AXIS_CALIBRATION:
+            if cmd_id == mavutil.mavlink.MAV_CMD_GIMBAL_REQUEST_AXIS_CALIBRATION:
 
-                if result == MAV_RESULT_ACCEPTED:
+                if result == mavutil.mavlink.MAV_RESULT_ACCEPTED:
                     is_calibration_running = True
 
-                if progress == MAV_RESULT_ACCEPTED and is_calibration_running:
+                if progress == mavutil.mavlink.MAV_RESULT_ACCEPTED and is_calibration_running:
                     sdk_log("onPayloadStatusChanged", "The gyro calibration done!")
                     is_exit = True
 
-                elif progress == MAV_RESULT_IN_PROGRESS:
+                elif progress == mavutil.mavlink.MAV_RESULT_IN_PROGRESS:
                     is_calibration_running = True
                     sdk_log("onPayloadStatusChanged", "The gyro calibration is processing...")
 
         elif my_calib == calib_type_t.CALIB_ACCEL:
-            if cmd_id == MAV_CMD_GIMBAL_REQUEST_AXIS_CALIBRATION:
+            if cmd_id == mavutil.mavlink.MAV_CMD_GIMBAL_REQUEST_AXIS_CALIBRATION:
 
-                if result == MAV_RESULT_ACCEPTED:
+                if result == mavutil.mavlink.MAV_RESULT_ACCEPTED:
                     is_calibration_running = True
 
-                if progress == MAV_RESULT_ACCEPTED and is_calibration_running:
+                if progress == mavutil.mavlink.MAV_RESULT_ACCEPTED and is_calibration_running:
                     sdk_log("onPayloadStatusChanged", "The accel calibration done!")
                     is_exit = True
 
-                elif progress == MAV_RESULT_IN_PROGRESS:
+                elif progress == mavutil.mavlink.MAV_RESULT_IN_PROGRESS:
                     is_calibration_running = True
                     sdk_log("onPayloadStatusChanged", "The accel calibration is processing...")
 
         elif my_calib == calib_type_t.CALIB_MOTOR:
-            if cmd_id == MAV_CMD_DO_SET_HOME:
+            if cmd_id == mavutil.mavlink.MAV_CMD_DO_SET_HOME:
 
-                if result == MAV_RESULT_ACCEPTED:
+                if result == mavutil.mavlink.MAV_RESULT_ACCEPTED:
                     is_calibration_running = True
                     time.sleep(1)
 
-                if progress == MAV_RESULT_ACCEPTED and is_calibration_running:
+                if progress == mavutil.mavlink.MAV_RESULT_ACCEPTED and is_calibration_running:
                     sdk_log("onPayloadStatusChanged", "The motor calibration done!")
                     is_exit = True
 
-                elif progress == MAV_RESULT_IN_PROGRESS:
+                elif progress == mavutil.mavlink.MAV_RESULT_IN_PROGRESS:
                     is_calibration_running = True
                     sdk_log("onPayloadStatusChanged", "The motor calibration is processing...")
 
         elif my_calib == calib_type_t.AUTO_TUNE:
-            if cmd_id == MAV_CMD_USER_3:
+            if cmd_id == mavutil.mavlink.MAV_CMD_USER_3:
 
-                if result == MAV_RESULT_ACCEPTED:
+                if result == mavutil.mavlink.MAV_RESULT_ACCEPTED:
                     is_calibration_running = True
                     time.sleep(1)
 
-                if progress == MAV_RESULT_ACCEPTED and is_calibration_running:
+                if progress == mavutil.mavlink.MAV_RESULT_ACCEPTED and is_calibration_running:
                     sdk_log("onPayloadStatusChanged", "The Auto tune done!")
                     time.sleep(1)
                     is_exit = True
 
-                elif progress == MAV_RESULT_IN_PROGRESS:
+                elif progress == mavutil.mavlink.MAV_RESULT_IN_PROGRESS:
                     is_calibration_running = True
                     sdk_log("onPayloadStatusChanged", "The Auto tune is processing...")
 
         elif my_calib == calib_type_t.SEARCH_HOME:
-            if cmd_id == MAV_CMD_DO_SET_HOME:
+            if cmd_id == mavutil.mavlink.MAV_CMD_DO_SET_HOME:
 
-                if result == MAV_RESULT_ACCEPTED:
+                if result == mavutil.mavlink.MAV_RESULT_ACCEPTED:
                     is_calibration_running = True
                     time.sleep(1)
 
-                if progress == MAV_RESULT_ACCEPTED and is_calibration_running:
+                if progress == mavutil.mavlink.MAV_RESULT_ACCEPTED and is_calibration_running:
                     sdk_log("onPayloadStatusChanged", "The SearchHome done!")
                     is_exit = True
 
-                elif progress == MAV_RESULT_IN_PROGRESS:
+                elif progress == mavutil.mavlink.MAV_RESULT_IN_PROGRESS:
                     is_calibration_running = True
                     sdk_log("onPayloadStatusChanged", "The SearchHome is processing...")
 

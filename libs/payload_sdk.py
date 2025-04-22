@@ -4,14 +4,14 @@ import threading
 import time
 import struct
 import ctypes
-from enum import IntEnum
 from .payload_define import *
 from .enum_base import *
 
 # Default connection parameters
 CONNECTION_TYPE = "udp"
-IP = "192.168.12.248"
+IP = "192.168.12.230"
 PORT = 14566
+
 SERIAL_PORT = "/dev/ttyUSB0"
 BAUDRATE = 115200
 
@@ -20,16 +20,9 @@ PAYLOAD_TYPE = "VIO"
 
 # Define Mavlink Component
 SYS_ID = 1
-MAV_COMP_ID_ONBOARD_COMPUTER3 = 193
-
 PAYLOAD_SYSTEM_ID = 1
-MAV_COMP_ID_USER2 = 26
-
 CAMERA_SYSTEM_ID = 1
-MAV_COMP_ID_CAMERA = 100
-
 GIMBAL_SYSTEM_ID = 1
-MAV_COMP_ID_GIMBAL = 154
 
 # Connection info structures
 class T_ConnInfo_Uart(ctypes.Structure):
@@ -51,190 +44,153 @@ class T_ConnInfoStruct(ctypes.Structure):
 
 # Param type enum
 class param_type(IntEnumBase):
-    PARAM_TYPE_UINT8 = 1
-    PARAM_TYPE_INT8 = 2
-    PARAM_TYPE_UINT16 = 3
-    PARAM_TYPE_INT16 = 4
-    PARAM_TYPE_UINT32 = 5
-    PARAM_TYPE_INT32 = 6
-    PARAM_TYPE_UINT64 = 7
-    PARAM_TYPE_INT64 = 8
-    PARAM_TYPE_REAL32 = 9
-    PARAM_TYPE_REAL64 = 10
+    PARAM_TYPE_UINT8  =                                                    1
+    PARAM_TYPE_INT8   =                                                    2
+    PARAM_TYPE_UINT16 =                                                    3
+    PARAM_TYPE_INT16  =                                                    4
+    PARAM_TYPE_UINT32 =                                                    5
+    PARAM_TYPE_INT32  =                                                    6
+    PARAM_TYPE_UINT64 =                                                    7
+    PARAM_TYPE_INT64  =                                                    8
+    PARAM_TYPE_REAL32 =                                                    9
+    PARAM_TYPE_REAL64 =                                                    10
 
 # Payload status event enum
 class payload_status_event_t(IntEnumBase):
-    PAYLOAD_CAM_CAPTURE_STATUS = 0
-    PAYLOAD_CAM_STORAGE_INFO = 1
-    PAYLOAD_CAM_SETTINGS = 2
-    PAYLOAD_CAM_PARAMS = 3
-    PAYLOAD_GB_ATTITUDE = 4
-    PAYLOAD_GB_PARAMS = 5
-    PAYLOAD_ACK = 6
-    PAYLOAD_CAM_INFO = 7
-    PAYLOAD_CAM_STREAMINFO = 8
-    PAYLOAD_PARAMS = 9
-    PAYLOAD_PARAM_EXT_ACK = 10
+    PAYLOAD_CAM_CAPTURE_STATUS =                                           0
+    PAYLOAD_CAM_STORAGE_INFO   =                                           1
+    PAYLOAD_CAM_SETTINGS       =                                           2
+    PAYLOAD_CAM_PARAMS         =                                           3
+    PAYLOAD_GB_ATTITUDE        =                                           4
+    PAYLOAD_GB_PARAMS          =                                           5
+    PAYLOAD_ACK                =                                           6
+    PAYLOAD_CAM_INFO           =                                           7
+    PAYLOAD_CAM_STREAMINFO     =                                           8
+    PAYLOAD_PARAMS             =                                           9
+    PAYLOAD_PARAM_EXT_ACK      =                                           10
 
 # Payload param enum
 class payload_param_t(IntEnumBase):
-    PARAM_EO_ZOOM_LEVEL = 0
-    PARAM_IR_ZOOM_LEVEL = 1
-    PARAM_LRF_RANGE = 2
-    PARAM_TRACK_POS_X = 3
-    PARAM_TRACK_POS_Y = 4
-    PARAM_TRACK_POS_W = 5
-    PARAM_TRACK_POS_H = 6
-    PARAM_TRACK_STATUS = 7
-    PARAM_LRF_OFSET_X = 8
-    PARAM_LRF_OFSET_Y = 9
-    PARAM_TARGET_COOR_LON = 10
-    PARAM_TARGET_COOR_LAT = 11
-    PARAM_TARGET_COOR_ALT = 12
-    PARAM_PAYLOAD_GPS_LON = 13
-    PARAM_PAYLOAD_GPS_LAT = 14
-    PARAM_PAYLOAD_GPS_ALT = 15
-    PARAM_PAYLOAD_APP_VER_X = 16
-    PARAM_PAYLOAD_APP_VER_Y = 17
-    PARAM_PAYLOAD_APP_VER_Z = 18
-    PARAM_CAM_VIEW_MODE = 19
-    PARAM_CAM_REC_SOURCE = 20
-    PARAM_CAM_IR_TYPE = 21
-    PARAM_CAM_IR_PALETTE_ID = 22
-    PARAM_CAM_IR_FFC_MODE = 23
-    PARAM_GIMBAL_MODE = 24
-    PARAM_COUNT = 25
-
-PAYLOAD_PARAMS = [
-    {"index": payload_param_t.PARAM_EO_ZOOM_LEVEL, "id": "EO_ZOOM", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_IR_ZOOM_LEVEL, "id": "IR_ZOOM", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_LRF_RANGE, "id": "LRF_RANGE", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_TRACK_POS_X, "id": "TRK_POS_X", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_TRACK_POS_Y, "id": "TRK_POS_Y", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_TRACK_POS_W, "id": "TRK_POS_W", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_TRACK_POS_H, "id": "TRK_POS_H", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_TRACK_STATUS, "id": "TRK_STATUS", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_LRF_OFSET_X, "id": "LRF_OFFSET_X", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_LRF_OFSET_Y, "id": "LRF_OFFSET_Y", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_TARGET_COOR_LON, "id": "TARGET_LON", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_TARGET_COOR_LAT, "id": "TARGET_LAT", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_TARGET_COOR_ALT, "id": "TARGET_ALT", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_PAYLOAD_GPS_LON, "id": "PAY_LON", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_PAYLOAD_GPS_LAT, "id": "PAY_LAT", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_PAYLOAD_GPS_ALT, "id": "PAY_ALT", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_PAYLOAD_APP_VER_X, "id": "APP_VER_X", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_PAYLOAD_APP_VER_Y, "id": "APP_VER_Y", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_PAYLOAD_APP_VER_Z, "id": "APP_VER_Z", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_CAM_VIEW_MODE, "id": "VIEW_MODE", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_CAM_REC_SOURCE, "id": "REC_SRC", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_CAM_IR_TYPE, "id": "IR_TYPE", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_CAM_IR_PALETTE_ID, "id": "PALETTE_ID", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_CAM_IR_FFC_MODE, "id": "FFC_MODE", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_GIMBAL_MODE, "id": "GB_MODE", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-]
+    PARAM_EO_ZOOM_LEVEL     =                                              0
+    PARAM_IR_ZOOM_LEVEL     =                                              1
+    PARAM_LRF_RANGE         =                                              2
+    PARAM_TRACK_POS_X       =                                              3
+    PARAM_TRACK_POS_Y       =                                              4
+    PARAM_TRACK_POS_W       =                                              5
+    PARAM_TRACK_POS_H       =                                              6
+    PARAM_TRACK_STATUS      =                                              7
+    PARAM_LRF_OFSET_X       =                                              8
+    PARAM_LRF_OFSET_Y       =                                              9
+    PARAM_TARGET_COOR_LON   =                                              10
+    PARAM_TARGET_COOR_LAT   =                                              11
+    PARAM_TARGET_COOR_ALT   =                                              12
+    PARAM_PAYLOAD_GPS_LON   =                                              13
+    PARAM_PAYLOAD_GPS_LAT   =                                              14
+    PARAM_PAYLOAD_GPS_ALT   =                                              15
+    PARAM_PAYLOAD_APP_VER_X =                                              16
+    PARAM_PAYLOAD_APP_VER_Y =                                              17
+    PARAM_PAYLOAD_APP_VER_Z =                                              18
+    PARAM_CAM_VIEW_MODE     =                                              19
+    PARAM_CAM_REC_SOURCE    =                                              20
+    PARAM_CAM_IR_TYPE       =                                              21
+    PARAM_CAM_IR_PALETTE_ID =                                              22
+    PARAM_CAM_IR_FFC_MODE   =                                              23
+    PARAM_GIMBAL_MODE       =                                              24
+    PARAM_COUNT             =                                              25
 
 # Input mode enum
 class input_mode_t(IntEnumBase):
-    INPUT_ANGLE = 1
-    INPUT_SPEED = 2
+    INPUT_ANGLE =                                                          1
+    INPUT_SPEED =                                                          2
 
 # FFC mode enum
 class ffc_mode_t(IntEnumBase):
-    FFC_MODE_MANUAL = 0
-    FFC_MODE_AUTO = 1
-    FFC_MODE_END = 2
+    FFC_MODE_MANUAL =                                                      0
+    FFC_MODE_AUTO   =                                                      1
+    FFC_MODE_END    =                                                      2
 
 # Capture sequence enum
 class capture_sequence_t(IntEnumBase):
-    IDLE = 0
-    CHECK_STORAGE = 1
-    CHECK_CAPTURE_STATUS = 2
-    CHECK_CAMERA_MODE = 3
-    CHANGE_CAMERA_MODE = 4
-    DO_CAPTURE = 5
-    WAIT_CAPTURE_DONE = 6
+    IDLE                 =                                                 0
+    CHECK_STORAGE        =                                                 1
+    CHECK_CAPTURE_STATUS =                                                 2
+    CHECK_CAMERA_MODE    =                                                 3
+    CHANGE_CAMERA_MODE   =                                                 4
+    DO_CAPTURE           =                                                 5
+    WAIT_CAPTURE_DONE    =                                                 6
 
 # Time lapse capture sequence enum
 class time_lapse_capture_sequence_t(IntEnumBase):
-    IDLE = 0
-    CHECK_STORAGE = 1
-    CHECK_CAPTURE_STATUS = 2
-    CHECK_CAMERA_MODE = 3
-    CHANGE_CAMERA_MODE = 4
-    DO_CAPTURE = 5
-    IMAGE_IN_CAPTURING = 6
-    STOP_CAPTURING_IMAGE = 7
+    IDLE                 =                                                 0
+    CHECK_STORAGE        =                                                 1
+    CHECK_CAPTURE_STATUS =                                                 2
+    CHECK_CAMERA_MODE    =                                                 3
+    CHANGE_CAMERA_MODE   =                                                 4
+    DO_CAPTURE           =                                                 5
+    IMAGE_IN_CAPTURING   =                                                 6
+    STOP_CAPTURING_IMAGE =                                                 7
 
 # Record sequence enum
 class record_sequence_t(IntEnumBase):
-    IDLE = 0
-    CHECK_STORAGE = 1
-    CHECK_CAPTURE_STATUS = 2
-    CHECK_CAMERA_MODE = 3
-    CHANGE_CAMERA_MODE = 4
-    DO_RECORD_VIDEO = 5
-    VIDEO_IN_RECORDING = 6
-    STOP_RECORD_VIDEO = 7
-    WAIT_RECORD_DONE = 8
+    IDLE                 =                                                 0
+    CHECK_STORAGE        =                                                 1
+    CHECK_CAPTURE_STATUS =                                                 2
+    CHECK_CAMERA_MODE    =                                                 3
+    CHANGE_CAMERA_MODE   =                                                 4
+    DO_RECORD_VIDEO      =                                                 5
+    VIDEO_IN_RECORDING   =                                                 6
+    STOP_RECORD_VIDEO    =                                                 7
+    WAIT_RECORD_DONE     =                                                 8
 
 # Calib type enum
 class calib_type_t(IntEnumBase):
-    CALIB_GYRO = 0
-    CALIB_ACCEL = 1
-    AUTO_TUNE = 2
-    CALIB_MOTOR = 3
-    SEARCH_HOME = 4
+    CALIB_GYRO  =                                                          0
+    CALIB_ACCEL =                                                          1
+    AUTO_TUNE   =                                                          2
+    CALIB_MOTOR =                                                          3
+    SEARCH_HOME =                                                          4
 
 # Tracking cmd enum
 class tracking_cmd_t(FloatEnumBase):
-    TRACK_IDLE = 0
-    TRACK_ACT = 1
-    TRACK_LOST = 2
+    TRACK_IDLE =                                                           0
+    TRACK_ACT  =                                                           1
+    TRACK_LOST =                                                           2
 
 # Stream sequence enum
 class get_stream_sequence_t(IntEnumBase):
-    IDLE = 0
-    CHECK_CAMERA_INFO = 1
-    CHECK_STREAMING_URI = 2
-    START_PIPELINE = 3
-    PIPELINE_RUNNING = 4
+    IDLE                =                                                  0
+    CHECK_CAMERA_INFO   =                                                  1
+    CHECK_STREAMING_URI =                                                  2
+    START_PIPELINE      =                                                  3
+    PIPELINE_RUNNING    =                                                  4
 
-class camera_zoom_type(FloatEnumBase):
-   ZOOM_TYPE_STEP            =                                             0 
-   ZOOM_TYPE_CONTINUOUS      =                                             1 
-   ZOOM_TYPE_RANGE           =                                             2 
-   ZOOM_TYPE_FOCAL_LENGTH    =                                             3
-   ZOOM_TYPE_HORIZONTAL_FOV  =                                             4 
-   CAMERA_ZOOM_TYPE_ENUM_END =                                             5
-
-class camera_mode(IntEnumBase):
-   CAMERA_MODE_IMAGE        =                                              0
-   CAMERA_MODE_VIDEO        =                                              1
-   CAMERA_MODE_IMAGE_SURVEY =                                              2
-   CAMERA_MODE_ENUM_END     =                                              3
-
-class camera_cap_flags(IntEnumBase):
-   CAMERA_CAP_FLAGS_CAPTURE_VIDEO                   =                      1
-   CAMERA_CAP_FLAGS_CAPTURE_IMAGE                   =                      2
-   CAMERA_CAP_FLAGS_HAS_MODES                       =                      4
-   CAMERA_CAP_FLAGS_CAN_CAPTURE_IMAGE_IN_VIDEO_MODE =                      8
-   CAMERA_CAP_FLAGS_CAN_CAPTURE_VIDEO_IN_IMAGE_MODE =                      16
-   CAMERA_CAP_FLAGS_HAS_IMAGE_SURVEY_MODE           =                      32
-   CAMERA_CAP_FLAGS_HAS_BASIC_ZOOM                  =                      64
-   CAMERA_CAP_FLAGS_HAS_BASIC_FOCUS                 =                      128
-   CAMERA_CAP_FLAGS_HAS_VIDEO_STREAM                =                      256
-   CAMERA_CAP_FLAGS_HAS_TRACKING_POINT              =                      512
-   CAMERA_CAP_FLAGS_HAS_TRACKING_RECTANGLE          =                      1024
-   CAMERA_CAP_FLAGS_HAS_TRACKING_GEO_STATUS         =                      2048
-   CAMERA_CAP_FLAGS_HAS_THERMAL_RANGE               =                      4096
-   CAMERA_CAP_FLAGS_ENUM_END                        =                      4097
-
-class video_stream_type(IntEnumBase):
-   VIDEO_STREAM_TYPE_RTSP     =                                            0
-   VIDEO_STREAM_TYPE_RTPUDP   =                                            1
-   VIDEO_STREAM_TYPE_TCP_MPEG =                                            2
-   VIDEO_STREAM_TYPE_MPEG_TS  =                                            3
-   VIDEO_STREAM_TYPE_ENUM_END =                                            4 
+PAYLOAD_PARAMS = [
+    {"index": payload_param_t.PARAM_EO_ZOOM_LEVEL,     "id": "EO_ZOOM",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_IR_ZOOM_LEVEL,     "id": "IR_ZOOM",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_LRF_RANGE,         "id": "LRF_RANGE",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_TRACK_POS_X,       "id": "TRK_POS_X",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_TRACK_POS_Y,       "id": "TRK_POS_Y",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_TRACK_POS_W,       "id": "TRK_POS_W",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_TRACK_POS_H,       "id": "TRK_POS_H",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_TRACK_STATUS,      "id": "TRK_STATUS",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_LRF_OFSET_X,       "id": "LRF_OFFSET_X", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_LRF_OFSET_Y,       "id": "LRF_OFFSET_Y", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_TARGET_COOR_LON,   "id": "TARGET_LON",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_TARGET_COOR_LAT,   "id": "TARGET_LAT",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_TARGET_COOR_ALT,   "id": "TARGET_ALT",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_PAYLOAD_GPS_LON,   "id": "PAY_LON",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_PAYLOAD_GPS_LAT,   "id": "PAY_LAT",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_PAYLOAD_GPS_ALT,   "id": "PAY_ALT",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_PAYLOAD_APP_VER_X, "id": "APP_VER_X",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_PAYLOAD_APP_VER_Y, "id": "APP_VER_Y",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_PAYLOAD_APP_VER_Z, "id": "APP_VER_Z",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_CAM_VIEW_MODE,     "id": "VIEW_MODE",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_CAM_REC_SOURCE,    "id": "REC_SRC",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_CAM_IR_TYPE,       "id": "IR_TYPE",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_CAM_IR_PALETTE_ID, "id": "PALETTE_ID",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_CAM_IR_FFC_MODE,   "id": "FFC_MODE",     "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_GIMBAL_MODE,       "id": "GB_MODE",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+]
 
 # MAVLink message structures
 class mavlink_message_t(ctypes.Structure):
@@ -276,22 +232,22 @@ class mavlink_system_time_t(ctypes.Structure):
     ]
 
 class PayloadSdkInterface:
-    def __init__(self, connection_type=None, ip=None, port=None, serial_port=None, baudrate=None, sys_id=1, comp_id=MAV_COMP_ID_ONBOARD_COMPUTER3):
+    def __init__(self):
         print(f"Starting Gremsy PayloadSdk {SDK_VERSION}")
-        self.connection_type = connection_type.lower() if connection_type else CONNECTION_TYPE
-        self.ip = ip if ip else IP
-        self.port = port if port else PORT
-        self.serial_port = serial_port if serial_port else SERIAL_PORT
-        self.baudrate = baudrate if baudrate else BAUDRATE
-        self.sys_id = sys_id
-        self.comp_id = comp_id
+        self.connection_type = CONNECTION_TYPE
+        self.ip = IP
+        self.port = PORT
+        self.serial_port = SERIAL_PORT
+        self.baudrate = BAUDRATE
+        self.sys_id = SYS_ID
+        self.comp_id = mavutil.mavlink.MAV_COMP_ID_ONBOARD_COMPUTER3
         self.master = None
         self.payload_system_id = PAYLOAD_SYSTEM_ID
-        self.payload_component_id = MAV_COMP_ID_USER2
+        self.payload_component_id = mavutil.mavlink.MAV_COMP_ID_USER2
         self.camera_system_id = CAMERA_SYSTEM_ID
-        self.camera_component_id = MAV_COMP_ID_CAMERA
+        self.camera_component_id = mavutil.mavlink.MAV_COMP_ID_CAMERA
         self.gimbal_system_id = GIMBAL_SYSTEM_ID
-        self.gimbal_component_id = MAV_COMP_ID_GIMBAL
+        self.gimbal_component_id = mavutil.mavlink.MAV_COMP_ID_GIMBAL
         self._notifyPayloadStatusChanged = None
         self._notifyPayloadParamChanged = None
         self._notifyPayloadStreamChanged = None
@@ -334,151 +290,6 @@ class PayloadSdkInterface:
     def regPayloadStreamChanged(self, callback):
         self._notifyPayloadStreamChanged = callback
 
-    # Message handling methods
-    def _handle_msg_heartbeat(self, msg):
-        comp_id = msg.get_srcComponent()
-        if comp_id == mavutil.mavlink.MAV_COMP_ID_USER2:
-            self.payload_system_id = msg.get_srcSystem()
-            self.payload_component_id = comp_id
-            if not self.is_stream_requested:
-                self.requestMessageStreamInterval()
-                self.is_stream_requested = True
-        elif comp_id in range(mavutil.mavlink.MAV_COMP_ID_CAMERA, mavutil.mavlink.MAV_COMP_ID_CAMERA6 + 1):
-            self.camera_system_id = msg.get_srcSystem()
-            self.camera_component_id = comp_id
-        elif comp_id in range(mavutil.mavlink.MAV_COMP_ID_GIMBAL, mavutil.mavlink.MAV_COMP_ID_GIMBAL6 + 1):
-            self.gimbal_system_id = msg.get_srcSystem()
-            self.gimbal_component_id = comp_id
-
-    def _handle_msg_param_ext_value(self, msg):
-        
-        if self._notifyPayloadParamChanged:
-            param_value_bytes = bytearray()
-            for char in msg.param_value:
-                if ord(char) < 256: 
-                    param_value_bytes.append(ord(char))
-                else:
-                    param_value_bytes.append(0)  
-            param_value_bytes = bytes(param_value_bytes[:128]) 
-
-            if len(param_value_bytes) >= 4:
-                param_value = struct.unpack('<I', param_value_bytes[:4])[0]
-            else:
-                param_value = 0 
-
-            params = [float(msg.param_index), float(param_value)] 
-            param_char = msg.param_id.rstrip('\0')
-            self._notifyPayloadParamChanged(payload_status_event_t.PAYLOAD_CAM_PARAMS, param_char, params)
-
-    def _handle_msg_param_ext_ack(self, msg):
-        if self._notifyPayloadStatusChanged:
-            event = payload_status_event_t.PAYLOAD_PARAM_EXT_ACK
-            param = [msg.param_result]
-            self._notifyPayloadStatusChanged(event, param)
-
-    def _handle_msg_command_ack(self, msg):
-        if self._notifyPayloadStatusChanged:
-            event = payload_status_event_t.PAYLOAD_ACK
-            param = [msg.command, msg.result, msg.progress]
-            self._notifyPayloadStatusChanged(event, param)
-
-    def _handle_msg_camera_information(self, msg):
-        if self._notifyPayloadStatusChanged:
-            event = payload_status_event_t.PAYLOAD_CAM_INFO
-            param = [msg.flags]
-            self._notifyPayloadStatusChanged(event, param)
-
-    def _handle_msg_video_stream_information(self, msg):
-        if self._notifyPayloadStreamChanged:
-            event = payload_status_event_t.PAYLOAD_CAM_STREAMINFO
-            param = [msg.type, msg.resolution_v, msg.resolution_h]
-            param_char = msg.uri.rstrip('\0')
-            self._notifyPayloadStreamChanged(event, param_char, param)
-
-    def _handle_msg_storage_information(self, msg):
-        if self._notifyPayloadStatusChanged:
-            event = payload_status_event_t.PAYLOAD_CAM_STORAGE_INFO
-            param = [msg.total_capacity, msg.used_capacity, msg.available_capacity, msg.status]
-            self._notifyPayloadStatusChanged(event, param)
-
-    def _handle_msg_camera_capture_status(self, msg):
-        if self._notifyPayloadStatusChanged:
-            event = payload_status_event_t.PAYLOAD_CAM_CAPTURE_STATUS
-            param = [msg.image_status, msg.video_status, msg.image_count, msg.recording_time_ms]
-            self._notifyPayloadStatusChanged(event, param)
-
-    def _handle_msg_camera_settings(self, msg):
-        if self._notifyPayloadStatusChanged:
-            event = payload_status_event_t.PAYLOAD_CAM_SETTINGS
-            param = [msg.mode_id, msg.zoomLevel, msg.focusLevel]
-            self._notifyPayloadStatusChanged(event, param)
-
-    def _handle_msg_mount_orientation(self, msg):
-        if self._notifyPayloadStatusChanged:
-            event = payload_status_event_t.PAYLOAD_GB_ATTITUDE
-            param = [msg.pitch, msg.roll, msg.yaw]
-            self._notifyPayloadStatusChanged(event, param)
-
-    def _handle_msg_param_value(self, msg):
-        if msg.get_srcComponent() == self.gimbal_component_id and self._notifyPayloadParamChanged:
-            event = payload_status_event_t.PAYLOAD_GB_PARAMS
-            param = [msg.param_index, msg.param_value]
-            param_char = msg.param_id.rstrip('\0')
-            self._notifyPayloadParamChanged(event, param_char, param)
-        elif msg.get_srcComponent() == self.payload_component_id and self._notifyPayloadStatusChanged:
-            event = payload_status_event_t.PAYLOAD_PARAMS
-            param = [msg.param_index, msg.param_value]
-            self._notifyPayloadStatusChanged(event, param)
-
-    # Core message receiving loop
-    def _receive_messages(self):
-            while self.running:
-                if not self.master:
-                    time.sleep(0.1)
-                    continue
-                
-                # Gửi PING định kỳ nếu chưa tìm thấy camera
-                current_time = time.time()
-                if not self.camera_detected and current_time - self.last_ping_time >= 1:
-                    self.master.mav.ping_send(
-                        int(current_time * 1000),
-                        self.ping_seq,
-                        self.sys_id,
-                        1  # TARGET_COMP_ID
-                    )
-                    self.ping_seq += 1
-                    self.last_ping_time = current_time
-
-                msg = self.master.recv_match(blocking=True, timeout=0.1)
-                if msg is None:
-                    continue
-                msg_type = msg.get_type()
-                # print(f"Received message: {msg_type}, sysid: {msg.get_srcSystem()}, compid: {msg.get_srcComponent()}")
-
-                if msg_type == 'HEARTBEAT':
-                    self._handle_msg_heartbeat(msg)
-                elif msg_type == 'PARAM_EXT_VALUE':
-                    self._handle_msg_param_ext_value(msg)
-                elif msg_type == 'PARAM_EXT_ACK':
-                    self._handle_msg_param_ext_ack(msg)
-                elif msg_type == 'COMMAND_ACK':
-                    self._handle_msg_command_ack(msg)
-                elif msg_type == 'CAMERA_INFORMATION':
-                    self._handle_msg_camera_information(msg)
-                elif msg_type == 'VIDEO_STREAM_INFORMATION':
-                    self._handle_msg_video_stream_information(msg)
-                elif msg_type == 'STORAGE_INFORMATION':
-                    self._handle_msg_storage_information(msg)
-                elif msg_type == 'CAMERA_CAPTURE_STATUS':
-                    self._handle_msg_camera_capture_status(msg)
-                elif msg_type == 'CAMERA_SETTINGS':
-                    self._handle_msg_camera_settings(msg)
-                elif msg_type == 'MOUNT_ORIENTATION':
-                    self._handle_msg_mount_orientation(msg)
-                elif msg_type == 'PARAM_VALUE':
-                    self._handle_msg_param_value(msg)
-                time.sleep(0.0001)
-
     # Init connection to payload
     def sdkInitConnection(self):
         if self.connection_type == 'udp':
@@ -486,11 +297,13 @@ class PayloadSdkInterface:
                 print("Error: IP and port must be provided for UDP connection")
                 return False
             connection_str = f'udpout:{self.ip}:{self.port}'
+
         elif self.connection_type == 'serial':
             if not self.serial_port or not self.baudrate:
                 print("Error: Serial port and baudrate must be provided for serial connection")
                 return False
             connection_str = f'{self.serial_port}:{self.baudrate}'
+
         else:
             print("Error: Invalid connection type. Use 'udp' or 'serial'")
             return False
@@ -512,6 +325,7 @@ class PayloadSdkInterface:
             self.receive_thread.start()
             time.sleep(1)
             return True
+        
         except Exception as e:
             print(f"[ERROR] SDK connection failed: {e}")
             self.master = None
@@ -590,9 +404,9 @@ class PayloadSdkInterface:
             print("Error: Connection not initialized")
             return
         param_value_bytes = bytearray(128)
-        if param_type == param_type.PARAM_TYPE_UINT32:
+        if param_type == mavutil.mavlink.MAV_PARAM_TYPE_UINT32:
             struct.pack_into('<I', param_value_bytes, 0, param_value)
-        elif param_type == param_type.PARAM_TYPE_REAL32:
+        elif param_type == mavutil.mavlink.MAV_PARAM_TYPE_REAL32:
             struct.pack_into('<f', param_value_bytes, 0, param_value)
         try:
             self.master.mav.param_ext_set_send(
@@ -975,6 +789,40 @@ class PayloadSdkInterface:
             int(time.time() * 1e3)
         )
 
+    # FormatSDCard method
+    def setFormatSDCard(self, timeout: float = 10.0):
+        if not self.master:
+            print("[ERROR] Connection not initialized")
+            return
+
+        # Send MAVLink command
+        self.master.mav.command_long_send(
+            self.camera_system_id,
+            self.camera_component_id,
+            mavutil.mavlink.MAV_CMD_STORAGE_FORMAT,
+            1,  # confirmation
+            1,  # param1: Storage ID (SD card)
+            0,  # param2: Format type (default)
+            0, 0, 0, 0, 0  # param3 to param7: Not used
+        )
+        time.usleep(1)
+        print("[INFO] Sent command to format SD card")
+
+        # Wait for COMMAND_ACK
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            msg = self.master.recv_match(type='COMMAND_ACK', blocking=True, timeout=0.1)
+            if msg and msg.command == mavutil.mavlink.MAV_CMD_STORAGE_FORMAT:
+                if msg.result == mavutil.mavlink.MAV_RESULT_ACCEPTED:
+                    print("[INFO] SD card formatted successfully")
+                    return
+                else:
+                    print(f"[ERROR] Failed to format SD card, result: {msg.result}")
+                    return
+            time.sleep(0.01)
+        
+        print("[ERROR] Timeout waiting for COMMAND_ACK")
+
     # Tracking method
     def setPayloadObjectTrackingParams(self, cmd: float, pos_x: float=960, pos_y: float=540):
         if not self.master:
@@ -1047,3 +895,148 @@ class PayloadSdkInterface:
         elif comp_id in range(mavutil.mavlink.MAV_COMP_ID_GIMBAL, mavutil.mavlink.MAV_COMP_ID_GIMBAL6 + 1):
             self.gimbal_system_id = msg.get_srcSystem()
             self.gimbal_component_id = comp_id
+
+    # Message handling methods
+    def _handle_msg_heartbeat(self, msg):
+        comp_id = msg.get_srcComponent()
+        if comp_id == mavutil.mavlink.MAV_COMP_ID_USER2:
+            self.payload_system_id = msg.get_srcSystem()
+            self.payload_component_id = comp_id
+            if not self.is_stream_requested:
+                self.requestMessageStreamInterval()
+                self.is_stream_requested = True
+        elif comp_id in range(mavutil.mavlink.MAV_COMP_ID_CAMERA, mavutil.mavlink.MAV_COMP_ID_CAMERA6 + 1):
+            self.camera_system_id = msg.get_srcSystem()
+            self.camera_component_id = comp_id
+        elif comp_id in range(mavutil.mavlink.MAV_COMP_ID_GIMBAL, mavutil.mavlink.MAV_COMP_ID_GIMBAL6 + 1):
+            self.gimbal_system_id = msg.get_srcSystem()
+            self.gimbal_component_id = comp_id
+
+    def _handle_msg_param_ext_value(self, msg):
+        
+        if self._notifyPayloadParamChanged:
+            param_value_bytes = bytearray()
+            for char in msg.param_value:
+                if ord(char) < 256: 
+                    param_value_bytes.append(ord(char))
+                else:
+                    param_value_bytes.append(0)  
+            param_value_bytes = bytes(param_value_bytes[:128]) 
+
+            if len(param_value_bytes) >= 4:
+                param_value = struct.unpack('<I', param_value_bytes[:4])[0]
+            else:
+                param_value = 0 
+
+            params = [float(msg.param_index), float(param_value)] 
+            param_char = msg.param_id.rstrip('\0')
+            self._notifyPayloadParamChanged(payload_status_event_t.PAYLOAD_CAM_PARAMS, param_char, params)
+
+    def _handle_msg_param_ext_ack(self, msg):
+        if self._notifyPayloadStatusChanged:
+            event = payload_status_event_t.PAYLOAD_PARAM_EXT_ACK
+            param = [msg.param_result]
+            self._notifyPayloadStatusChanged(event, param)
+
+    def _handle_msg_command_ack(self, msg):
+        if self._notifyPayloadStatusChanged:
+            event = payload_status_event_t.PAYLOAD_ACK
+            param = [msg.command, msg.result, msg.progress]
+            self._notifyPayloadStatusChanged(event, param)
+
+    def _handle_msg_camera_information(self, msg):
+        if self._notifyPayloadStatusChanged:
+            event = payload_status_event_t.PAYLOAD_CAM_INFO
+            param = [msg.flags]
+            self._notifyPayloadStatusChanged(event, param)
+
+    def _handle_msg_video_stream_information(self, msg):
+        if self._notifyPayloadStreamChanged:
+            event = payload_status_event_t.PAYLOAD_CAM_STREAMINFO
+            param = [msg.type, msg.resolution_v, msg.resolution_h]
+            param_char = msg.uri.rstrip('\0')
+            self._notifyPayloadStreamChanged(event, param_char, param)
+
+    def _handle_msg_storage_information(self, msg):
+        if self._notifyPayloadStatusChanged:
+            event = payload_status_event_t.PAYLOAD_CAM_STORAGE_INFO
+            param = [msg.total_capacity, msg.used_capacity, msg.available_capacity, msg.status]
+            self._notifyPayloadStatusChanged(event, param)
+
+    def _handle_msg_camera_capture_status(self, msg):
+        if self._notifyPayloadStatusChanged:
+            event = payload_status_event_t.PAYLOAD_CAM_CAPTURE_STATUS
+            param = [msg.image_status, msg.video_status, msg.image_count, msg.recording_time_ms]
+            self._notifyPayloadStatusChanged(event, param)
+
+    def _handle_msg_camera_settings(self, msg):
+        if self._notifyPayloadStatusChanged:
+            event = payload_status_event_t.PAYLOAD_CAM_SETTINGS
+            param = [msg.mode_id, msg.zoomLevel, msg.focusLevel]
+            self._notifyPayloadStatusChanged(event, param)
+
+    def _handle_msg_mount_orientation(self, msg):
+        if self._notifyPayloadStatusChanged:
+            event = payload_status_event_t.PAYLOAD_GB_ATTITUDE
+            param = [msg.pitch, msg.roll, msg.yaw]
+            self._notifyPayloadStatusChanged(event, param)
+
+    def _handle_msg_param_value(self, msg):
+        if msg.get_srcComponent() == self.gimbal_component_id and self._notifyPayloadParamChanged:
+            event = payload_status_event_t.PAYLOAD_GB_PARAMS
+            param = [msg.param_index, msg.param_value]
+            param_char = msg.param_id.rstrip('\0')
+            self._notifyPayloadParamChanged(event, param_char, param)
+        elif msg.get_srcComponent() == self.payload_component_id and self._notifyPayloadStatusChanged:
+            event = payload_status_event_t.PAYLOAD_PARAMS
+            param = [msg.param_index, msg.param_value]
+            self._notifyPayloadStatusChanged(event, param)
+
+    # Core message receiving loop
+    def _receive_messages(self):
+            while self.running:
+                if not self.master:
+                    time.sleep(0.1)
+                    continue
+                
+                # Gửi PING định kỳ nếu chưa tìm thấy camera
+                current_time = time.time()
+                if not self.camera_detected and current_time - self.last_ping_time >= 1:
+                    self.master.mav.ping_send(
+                        int(current_time * 1000),
+                        self.ping_seq,
+                        self.sys_id,
+                        1  # TARGET_COMP_ID
+                    )
+                    self.ping_seq += 1
+                    self.last_ping_time = current_time
+
+                msg = self.master.recv_match(blocking=True, timeout=0.1)
+                if msg is None:
+                    continue
+                msg_type = msg.get_type()
+                # print(f"Received message: {msg_type}, sysid: {msg.get_srcSystem()}, compid: {msg.get_srcComponent()}")
+
+                if msg_type == 'HEARTBEAT':
+                    self._handle_msg_heartbeat(msg)
+                elif msg_type == 'PARAM_EXT_VALUE':
+                    self._handle_msg_param_ext_value(msg)
+                elif msg_type == 'PARAM_EXT_ACK':
+                    self._handle_msg_param_ext_ack(msg)
+                elif msg_type == 'COMMAND_ACK':
+                    self._handle_msg_command_ack(msg)
+                elif msg_type == 'CAMERA_INFORMATION':
+                    self._handle_msg_camera_information(msg)
+                elif msg_type == 'VIDEO_STREAM_INFORMATION':
+                    self._handle_msg_video_stream_information(msg)
+                elif msg_type == 'STORAGE_INFORMATION':
+                    self._handle_msg_storage_information(msg)
+                elif msg_type == 'CAMERA_CAPTURE_STATUS':
+                    self._handle_msg_camera_capture_status(msg)
+                elif msg_type == 'CAMERA_SETTINGS':
+                    self._handle_msg_camera_settings(msg)
+                elif msg_type == 'MOUNT_ORIENTATION':
+                    self._handle_msg_mount_orientation(msg)
+                elif msg_type == 'PARAM_VALUE':
+                    self._handle_msg_param_value(msg)
+                time.sleep(0.0001)

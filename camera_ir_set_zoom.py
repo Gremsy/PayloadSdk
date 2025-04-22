@@ -1,8 +1,8 @@
 import time
 import signal
 import sys
-import os
-from libs.payload_sdk import PayloadSdkInterface, param_type, payload_status_event_t, camera_zoom_type
+from pymavlink import mavutil
+from libs.payload_sdk import PayloadSdkInterface, payload_status_event_t
 from libs.payload_define import *
 
 my_payload = None
@@ -47,57 +47,57 @@ def main():
 
     # Set view source to IR
     print("Set view source to IR!")
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_IR, param_type.PARAM_TYPE_UINT32)
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_IR, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(1) 
 
     # Set initial IR zoom level
     print("Set zoom level to 1x!")
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, payload_camera_ir_zoom_factor.ZOOM_IR_1X, param_type.PARAM_TYPE_UINT32)
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, payload_camera_ir_zoom_factor.ZOOM_IR_1X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(3) 
 
     # Zoom step
     print("Zoom In 4 times!")
     for _ in range(4):
-        my_payload.setCameraZoom(camera_zoom_type.ZOOM_TYPE_STEP, camera_zoom_value.ZOOM_IN)  # Zoom in
+        my_payload.setCameraZoom(mavutil.mavlink.ZOOM_TYPE_STEP, camera_zoom_value.ZOOM_IN)  # Zoom in
         time.sleep(1)
 
     print("Zoom Out 2 times!")
     for _ in range(2):
-        my_payload.setCameraZoom(camera_zoom_type.ZOOM_TYPE_STEP, camera_zoom_value.ZOOM_OUT)  # Zoom out
+        my_payload.setCameraZoom(mavutil.mavlink.ZOOM_TYPE_STEP, camera_zoom_value.ZOOM_OUT)  # Zoom out
         time.sleep(1)
 
     # Zoom continuous
     print("Start Zoom In!")
-    my_payload.setCameraZoom(camera_zoom_type.ZOOM_TYPE_CONTINUOUS, camera_zoom_value.ZOOM_IN) # Zoom in
+    my_payload.setCameraZoom(mavutil.mavlink.ZOOM_TYPE_CONTINUOUS, camera_zoom_value.ZOOM_IN) # Zoom in
     time.sleep(5)  
 
     print("Stop Zoom!")
-    my_payload.setCameraZoom(camera_zoom_type.ZOOM_TYPE_CONTINUOUS, camera_zoom_value.ZOOM_STOP)  # Stop zoom
+    my_payload.setCameraZoom(mavutil.mavlink.ZOOM_TYPE_CONTINUOUS, camera_zoom_value.ZOOM_STOP)  # Stop zoom
     time.sleep(2)  
 
     print("Start Zoom Out!")
-    my_payload.setCameraZoom(camera_zoom_type.ZOOM_TYPE_CONTINUOUS, camera_zoom_value.ZOOM_OUT)  # Zoom out
+    my_payload.setCameraZoom(mavutil.mavlink.ZOOM_TYPE_CONTINUOUS, camera_zoom_value.ZOOM_OUT)  # Zoom out
     time.sleep(7)  
 
     print("Stop Zoom!")
-    my_payload.setCameraZoom(camera_zoom_type.ZOOM_TYPE_CONTINUOUS, camera_zoom_value.ZOOM_STOP)  # Stop zoom
+    my_payload.setCameraZoom(mavutil.mavlink.ZOOM_TYPE_CONTINUOUS, camera_zoom_value.ZOOM_STOP)  # Stop zoom
     time.sleep(2)
 
     # Zoom range
     print("Zoom Range 50%!")
-    my_payload.setCameraZoom(camera_zoom_type.ZOOM_TYPE_RANGE, 50.0) # Zoom 50%
+    my_payload.setCameraZoom(mavutil.mavlink.ZOOM_TYPE_RANGE, 50.0) # Zoom 50%
     time.sleep(3) 
 
     print("Zoom Range 70%!")
-    my_payload.setCameraZoom(camera_zoom_type.ZOOM_TYPE_RANGE, 70.0)  # Zoom 70%
+    my_payload.setCameraZoom(mavutil.mavlink.ZOOM_TYPE_RANGE, 70.0)  # Zoom 70%
     time.sleep(3)
 
     print("Zoom Range 100%!")
-    my_payload.setCameraZoom(camera_zoom_type.ZOOM_TYPE_RANGE, 100.0) # Zoom 100%
+    my_payload.setCameraZoom(mavutil.mavlink.ZOOM_TYPE_RANGE, 100.0) # Zoom 100%
     time.sleep(3)
     
     print("Zoom Range 0%!")
-    my_payload.setCameraZoom(camera_zoom_type.ZOOM_TYPE_RANGE, 0.0) # Zoom 0%
+    my_payload.setCameraZoom(mavutil.mavlink.ZOOM_TYPE_RANGE, 0.0) # Zoom 0%
     time.sleep(5)
     print("!--------------------!")
 

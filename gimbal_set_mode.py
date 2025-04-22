@@ -1,9 +1,8 @@
 import time
 import signal
 import sys
-import os
-
-from libs.payload_sdk import PayloadSdkInterface, param_type
+from pymavlink import mavutil
+from libs.payload_sdk import PayloadSdkInterface
 from libs.payload_define import *
 
 my_payload = None
@@ -33,7 +32,6 @@ def main():
 
     # Init payload
     my_payload.sdkInitConnection()
-    time.sleep(1)
     print("Waiting for payload signal!\n")
 
     # Check connection
@@ -41,27 +39,27 @@ def main():
 
     # Set gimbal to LOCK mode
     print("Gimbal set LOCK mode, delay in 5 secs")
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, payload_camera_gimbal_mode.PAYLOAD_CAMERA_GIMBAL_MODE_LOCK, param_type.PARAM_TYPE_UINT32)
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, payload_camera_gimbal_mode.PAYLOAD_CAMERA_GIMBAL_MODE_LOCK, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(5) 
 
     # Set gimbal to FOLLOW mode
     print("Gimbal set FOLLOW mode, delay in 5 secs")
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, payload_camera_gimbal_mode.PAYLOAD_CAMERA_GIMBAL_MODE_FOLLOW, param_type.PARAM_TYPE_UINT32)
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, payload_camera_gimbal_mode.PAYLOAD_CAMERA_GIMBAL_MODE_FOLLOW, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(5)
 
     # Set gimbal to MAPPING mode
     print("Gimbal set MAPPING mode, delay in 5 secs")
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, payload_camera_gimbal_mode.PAYLOAD_CAMERA_GIMBAL_MODE_MAPPING, param_type.PARAM_TYPE_UINT32)
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, payload_camera_gimbal_mode.PAYLOAD_CAMERA_GIMBAL_MODE_MAPPING, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(5)
 
     # Set gimbal to OFF mode
     print("Gimbal set OFF mode, delay in 5 secs")
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, payload_camera_gimbal_mode.PAYLOAD_CAMERA_GIMBAL_MODE_OFF, param_type.PARAM_TYPE_UINT32)
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, payload_camera_gimbal_mode.PAYLOAD_CAMERA_GIMBAL_MODE_OFF, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(5)
 
     # Set gimbal to RESET mode
     print("Gimbal set RESET mode, delay in 5 secs")
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, payload_camera_gimbal_mode.PAYLOAD_CAMERA_GIMBAL_MODE_RESET, param_type.PARAM_TYPE_UINT32)
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, payload_camera_gimbal_mode.PAYLOAD_CAMERA_GIMBAL_MODE_RESET, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(5)
 
     # Close payload interface

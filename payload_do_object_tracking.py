@@ -3,10 +3,8 @@ import signal
 import sys
 import threading
 import random
-from enum import Enum
-import os
-
-from libs.payload_sdk import PayloadSdkInterface, payload_status_event_t, payload_param_t, param_type, tracking_cmd_t, PAYLOAD_TYPE
+from pymavlink import mavutil
+from libs.payload_sdk import PayloadSdkInterface, payload_status_event_t, payload_param_t, tracking_cmd_t, PAYLOAD_TYPE
 from libs.payload_define import *
 
 # Global variables
@@ -109,14 +107,14 @@ def main():
 
     # Initialize environment for object tracking
 	# Change view mode to EO
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_EO, param_type.PARAM_TYPE_UINT32)
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_EO, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
 
     if PAYLOAD_TYPE in ["VIO", "ZIO"]:
         # Change tracking mode to Object tracking
-        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE, payload_camera_tracking_mode.PAYLOAD_CAMERA_TRACKING_OBJ_TRACKING, param_type.PARAM_TYPE_UINT32)
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE, payload_camera_tracking_mode.PAYLOAD_CAMERA_TRACKING_OBJ_TRACKING, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
 
     # Change OSD mode to Status
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_OSD_MODE, payload_camera_osd_mode.PAYLOAD_CAMERA_VIDEO_OSD_MODE_STATUS, param_type.PARAM_TYPE_UINT32)
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_OSD_MODE, payload_camera_osd_mode.PAYLOAD_CAMERA_VIDEO_OSD_MODE_STATUS, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
 
 	# Set status message rate
 	# If you do not want to receive the message anymore, need to set rate to 0

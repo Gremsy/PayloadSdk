@@ -1,8 +1,8 @@
 import time
 import signal
 import sys
-import os
-from libs.payload_sdk import PayloadSdkInterface, param_type
+from pymavlink import mavutil
+from libs.payload_sdk import PayloadSdkInterface
 from libs.payload_define import *
 
 my_payload = None
@@ -38,24 +38,24 @@ def main():
 
     # Set view source to IR
     print("Set view source to IR!")
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_IR, param_type.PARAM_TYPE_UINT32)
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_IR, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(1) 
 
     # Enable IR isotherms with high gain
     print("Enable IR Isotherms with high GAIN, sleep 5s ...")
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_IR_ISOTHERMS, payload_camera_ir_isotherms.PAYLOAD_CAMERA_IR_ISOTHERMS_ENABLE, param_type.PARAM_TYPE_UINT32)
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_IR_ISOTHERMS, payload_camera_ir_isotherms.PAYLOAD_CAMERA_IR_ISOTHERMS_ENABLE, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(0.1) 
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_IR_ISOTHERMS_GAIN, payload_camera_ir_isotherms_gain.PAYLOAD_CAMERA_IR_ISOTHERMS_HIGH_GAIN, param_type.PARAM_TYPE_UINT32)
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_IR_ISOTHERMS_GAIN, payload_camera_ir_isotherms_gain.PAYLOAD_CAMERA_IR_ISOTHERMS_HIGH_GAIN, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(5)  
 
     # Switch to low gain
     print("Switch low GAIN, sleep 5s ...")
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_IR_ISOTHERMS_GAIN, payload_camera_ir_isotherms_gain.PAYLOAD_CAMERA_IR_ISOTHERMS_LOW_GAIN, param_type.PARAM_TYPE_UINT32)
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_IR_ISOTHERMS_GAIN, payload_camera_ir_isotherms_gain.PAYLOAD_CAMERA_IR_ISOTHERMS_LOW_GAIN, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(5) 
 
     # Disable IR Isotherms
     print("Disable IR Isotherms.")
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_IR_ISOTHERMS, payload_camera_ir_isotherms.PAYLOAD_CAMERA_IR_ISOTHERMS_DISABLE, param_type.PARAM_TYPE_UINT32)
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_IR_ISOTHERMS, payload_camera_ir_isotherms.PAYLOAD_CAMERA_IR_ISOTHERMS_DISABLE, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(0.1) 
 
     # Close payload interface

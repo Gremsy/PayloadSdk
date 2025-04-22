@@ -2,10 +2,8 @@ import time
 import signal
 import sys
 import threading
-from enum import Enum
-import os
-
-from libs.payload_sdk import PayloadSdkInterface, payload_status_event_t, param_type, get_stream_sequence_t, camera_cap_flags, video_stream_type
+from pymavlink import mavutil
+from libs.payload_sdk import PayloadSdkInterface, payload_status_event_t, get_stream_sequence_t
 from libs.payload_define import *
 
 import gi
@@ -43,7 +41,7 @@ def quit_handler(sig, frame):
 def onPayloadStatusChanged(event: int, param: list):
     global my_job
     if payload_status_event_t(event) == payload_status_event_t.PAYLOAD_CAM_INFO:
-        if int(param[0]) & int(camera_cap_flags.CAMERA_CAP_FLAGS_HAS_VIDEO_STREAM):
+        if int(param[0]) & int(mavutil.mavlink.CAMERA_CAP_FLAGS_HAS_VIDEO_STREAM):
             print("   ---> Got payload has streaming video, Check streaming URI")
             my_job = get_stream_sequence_t.CHECK_STREAMING_URI
         else:
@@ -64,7 +62,7 @@ def onPayloadStreamChanged(event: int, param_char: str, param_double: list):
 
         if my_job == get_stream_sequence_t.CHECK_STREAMING_URI:
             my_job = get_stream_sequence_t.START_PIPELINE
-            is_rtsp_stream = (video_stream_type(param_double[0]) == video_stream_type.VIDEO_STREAM_TYPE_RTSP)
+            is_rtsp_stream = (param_double[0] == mavutil.mavlink.VIDEO_STREAM_TYPE_RTSP)
             stream_uri = param_char
 
 def run_video_stream():
@@ -141,7 +139,7 @@ def main():
     my_payload.checkPayloadConnection()
 
     # Set view source to IR/EO
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_IREO, param_type.PARAM_TYPE_UINT32)
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_IREO, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(0.5)
 
     while not time_to_exit:

@@ -1,4 +1,3 @@
-from enum import Enum
 from .enum_base import IntEnumBase, FloatEnumBase
 
 PAYLOAD_CAMERA_TRACKING_MODE =                                          "TRACK_MODE"

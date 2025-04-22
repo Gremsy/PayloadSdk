@@ -1,8 +1,7 @@
 import time
 import signal
 import sys
-import os
-
+from pymavlink import mavutil
 from libs.payload_sdk import PayloadSdkInterface, payload_status_event_t, payload_param_t, PAYLOAD_TYPE
 from libs.payload_define import *
 

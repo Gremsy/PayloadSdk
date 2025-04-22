@@ -2,7 +2,7 @@ import time
 import signal
 import sys
 from pymavlink import mavutil
-from libs.payload_sdk import PayloadSdkInterface, input_mode_t
+from libs.payload_sdk import PayloadSdkInterface
 from libs.payload_define import *
 
 my_payload = None
@@ -36,27 +36,10 @@ def main():
 
     # Check connection
     my_payload.checkPayloadConnection()
-    time.sleep(0.1)
 
-    # Set gimbal RC mode to STANDARD 
-    print("Set gimbal RC mode")
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_RC_MODE, payload_camera_rc_mode.PAYLOAD_CAMERA_RC_MODE_STANDARD, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
-    time.sleep(0.1)  
-
-    # Move gimbal yaw to 90 deg
-    print("Move gimbal yaw to 90 deg, delay in 5secs")
-    my_payload.setGimbalSpeed(0, 0, 90, input_mode_t.INPUT_ANGLE)
-    time.sleep(5)  
-
-    # Move gimbal yaw to -90 deg
-    print("Move gimbal yaw to -90 deg, delay in 5secs")
-    my_payload.setGimbalSpeed(0, 0, -90, input_mode_t.INPUT_ANGLE)
-    time.sleep(5)  
-
-    # Move gimbal yaw to 0 deg
-    print("Move gimbal yaw to 0 deg, delay in 5secs")
-    my_payload.setGimbalSpeed(0, 0, 0, input_mode_t.INPUT_ANGLE)
-    time.sleep(0.5) 
+    # Format SD card
+    print("Formatting SD card...\n")
+    my_payload.setFormatSDCard()
 
     # Close payload interface
     try:

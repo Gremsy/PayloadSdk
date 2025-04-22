@@ -1,8 +1,8 @@
 import time
 import signal
 import sys
-
-from libs.payload_sdk import PayloadSdkInterface, param_type, payload_status_event_t, PAYLOAD_TYPE
+from pymavlink import mavutil
+from libs.payload_sdk import PayloadSdkInterface, payload_status_event_t, PAYLOAD_TYPE
 from libs.payload_define import *
 
 my_payload = None
@@ -49,10 +49,10 @@ def main():
     my_payload.checkPayloadConnection()
     
     # Change setting of RC_MODE to STANDARD
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_RC_MODE, payload_camera_rc_mode.PAYLOAD_CAMERA_RC_MODE_STANDARD, param_type.PARAM_TYPE_UINT32) 
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_RC_MODE, payload_camera_rc_mode.PAYLOAD_CAMERA_RC_MODE_STANDARD, mavutil.mavlink.MAV_PARAM_TYPE_UINT32) 
     
     # Change setting of OSD_MODE to STATUS to enable viewing of the zoom factor
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_OSD_MODE , payload_camera_osd_mode.PAYLOAD_CAMERA_VIDEO_OSD_MODE_STATUS, param_type.PARAM_TYPE_UINT32)  
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_OSD_MODE , payload_camera_osd_mode.PAYLOAD_CAMERA_VIDEO_OSD_MODE_STATUS, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)  
     
     print("------------------------> Init values \n")
     # Request to read all settings of the payload and then check the RC_MODE setting
@@ -62,7 +62,7 @@ def main():
     print("\nChange some params\n")
     # Change zoom mode to SuperResolution
     if PAYLOAD_TYPE in ["VIO", "ZIO"]:
-        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_MODE, payload_camera_video_zoom_mode.PAYLOAD_CAMERA_VIDEO_ZOOM_MODE_SUPER_RESOLUTION, param_type.PARAM_TYPE_UINT32) 
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_MODE, payload_camera_video_zoom_mode.PAYLOAD_CAMERA_VIDEO_ZOOM_MODE_SUPER_RESOLUTION, mavutil.mavlink.MAV_PARAM_TYPE_UINT32) 
         time.sleep(3)  
 
     # Request to read all settings of the payload to verify the changes

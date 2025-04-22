@@ -1,8 +1,8 @@
 import time
 import signal
 import sys
-import os
-from libs.payload_sdk import PayloadSdkInterface, payload_status_event_t, input_mode_t, param_type
+from pymavlink import mavutil
+from libs.payload_sdk import PayloadSdkInterface, payload_status_event_t, input_mode_t
 from libs.payload_define import *
 
 my_payload = None
@@ -41,7 +41,6 @@ def main():
 
     # Init payload
     my_payload.sdkInitConnection()
-    time.sleep(1) 
     print("Waiting for payload signal!\n")
 
     # Register callback function
@@ -53,7 +52,7 @@ def main():
 
     # Set gimbal RC mode to STANDARD 
     print("Set gimbal RC mode")
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_RC_MODE, payload_camera_rc_mode.PAYLOAD_CAMERA_RC_MODE_STANDARD, param_type.PARAM_TYPE_UINT32)
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_RC_MODE, payload_camera_rc_mode.PAYLOAD_CAMERA_RC_MODE_STANDARD, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(0.1)  
 
     # Move gimbal yaw to the right 20 deg/s

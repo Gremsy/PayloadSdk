@@ -34,6 +34,7 @@ set(EXAMPLES
     payload_set_system_time.cpp
     payload_get_status.cpp
     payload_get_video_streaming.cpp
+    payload_extract_tiff_file.cpp
 )
 endif(VIO)
 
@@ -88,6 +89,7 @@ set(EXAMPLES
     payload_do_object_tracking.cpp
     payload_do_object_detection.cpp
     payload_get_video_streaming.cpp
+    payload_extract_tiff_file.cpp
 )
 endif(GHADRON)
 
@@ -96,6 +98,7 @@ find_package( Threads )
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(JSONCPP jsoncpp)
 find_package(CURL REQUIRED)
+find_package(OpenCV REQUIRED)
 
 #include 
 include_directories(${PAYLOADSDKLIB_DIR}
@@ -104,6 +107,7 @@ include_directories(${PAYLOADSDKLIB_DIR}
                     ${PAYLOADSDKLIB_DIR}/gSDK/src
                     ${GST_INCLUDE_DIRS}
                     ${CURL_INCLUDE_DIR}
+                    ${OpenCV_INCLUDE_DIRS}
                     )
 
 # build examples 
@@ -118,6 +122,7 @@ foreach(entry ${EXAMPLES})
                      ${JSONCPP_LIBRARIES}
                      ${CURL_LIBRARIES}
                      stdc++fs
+                     ${OpenCV_LIBS}
                      )
 #   install(TARGETS
 #           ${target}

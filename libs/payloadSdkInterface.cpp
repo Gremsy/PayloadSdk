@@ -122,8 +122,9 @@ checkPayloadConnection(){
         result = false;
 
         if(msg_cnt){ // got the message
-            if(msg.compid == MAV_COMP_ID_CAMERA
-                && msg.compid == MAV_COMP_ID_CAMERA6){ // got the message from the camera
+
+            if(msg.compid >= MAV_COMP_ID_CAMERA
+                && msg.compid <= MAV_COMP_ID_CAMERA6){ // got the message from the camera
                 // update the camera id
                 CAMERA_SYSTEM_ID = msg.sysid;
                 CAMERA_COMPONENT_ID = msg.compid;

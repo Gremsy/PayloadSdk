@@ -28,6 +28,7 @@ def onPayloadParamChanged(event: int, param_char: str, param: list):
         # param[0]: param_index
 		# param[1]: value
         print(f" --> Param_id: {param_char}, value: {param[1]:.2f}")
+        # print("hahahahahahahah: ", param)
 
 def main():
     global my_payload

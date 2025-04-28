@@ -9,7 +9,7 @@ from .enum_base import *
 
 # Default connection parameters
 CONNECTION_TYPE = "udp"
-IP = "192.168.12.230"
+IP = "192.168.12.238"
 PORT = 14566
 
 SERIAL_PORT = "/dev/ttyUSB0"
@@ -168,27 +168,33 @@ PAYLOAD_PARAMS = [
     {"index": payload_param_t.PARAM_EO_ZOOM_LEVEL,     "id": "EO_ZOOM",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_IR_ZOOM_LEVEL,     "id": "IR_ZOOM",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_LRF_RANGE,         "id": "LRF_RANGE",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+
     {"index": payload_param_t.PARAM_TRACK_POS_X,       "id": "TRK_POS_X",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_TRACK_POS_Y,       "id": "TRK_POS_Y",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_TRACK_POS_W,       "id": "TRK_POS_W",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_TRACK_POS_H,       "id": "TRK_POS_H",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_TRACK_STATUS,      "id": "TRK_STATUS",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+
     {"index": payload_param_t.PARAM_LRF_OFSET_X,       "id": "LRF_OFFSET_X", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_LRF_OFSET_Y,       "id": "LRF_OFFSET_Y", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+
     {"index": payload_param_t.PARAM_TARGET_COOR_LON,   "id": "TARGET_LON",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_TARGET_COOR_LAT,   "id": "TARGET_LAT",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_TARGET_COOR_ALT,   "id": "TARGET_ALT",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_PAYLOAD_GPS_LON,   "id": "PAY_LON",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_PAYLOAD_GPS_LAT,   "id": "PAY_LAT",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_PAYLOAD_GPS_ALT,   "id": "PAY_ALT",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+
     {"index": payload_param_t.PARAM_PAYLOAD_APP_VER_X, "id": "APP_VER_X",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_PAYLOAD_APP_VER_Y, "id": "APP_VER_Y",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_PAYLOAD_APP_VER_Z, "id": "APP_VER_Z",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+
     {"index": payload_param_t.PARAM_CAM_VIEW_MODE,     "id": "VIEW_MODE",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_CAM_REC_SOURCE,    "id": "REC_SRC",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_CAM_IR_TYPE,       "id": "IR_TYPE",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_CAM_IR_PALETTE_ID, "id": "PALETTE_ID",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_CAM_IR_FFC_MODE,   "id": "FFC_MODE",     "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    
     {"index": payload_param_t.PARAM_GIMBAL_MODE,       "id": "GB_MODE",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
 ]
 
@@ -309,14 +315,14 @@ class PayloadSdkInterface:
             return False
 
         try:
-            print(f"[INFO] Connecting to {connection_str}...")
+            print(f"[INFO] Connecting to {connection_str}")
             self.master = mavutil.mavlink_connection(
                 connection_str,
                 source_system=self.sys_id,
                 source_component=self.comp_id
             )
             time.sleep(1)
-            print("[INFO] Waiting for heartbeat from payload...")
+            print("[INFO] Waiting for heartbeat from payload")
             self.master.wait_heartbeat(timeout=0)
             print(f"[INFO] Heartbeat received from system {self.master.target_system}, component {self.master.target_component}")
             self.running = True
@@ -339,7 +345,7 @@ class PayloadSdkInterface:
         start_time = time.time()
         result = False
 
-        print("[INFO] Checking payload connection...")
+        print("[INFO] Checking payload connection")
         while self.running and (time.time() - start_time) < timeout:
             msg = self.master.recv_match(blocking=True, timeout=0.1)
             if msg is None:
@@ -347,6 +353,10 @@ class PayloadSdkInterface:
 
             comp_id = msg.get_srcComponent()
             sys_id = msg.get_srcSystem()
+
+            # comp_id = mavutil.mavlink.MAV_COMP_ID_ONBOARD_COMPUTER3
+            # sys_id = 1
+            print(f"[INFO] Received message from sys_id: {sys_id}, comp_id: {comp_id}")
 
             # Check for camera
             if comp_id in range(mavutil.mavlink.MAV_COMP_ID_CAMERA, mavutil.mavlink.MAV_COMP_ID_CAMERA6 + 1):
@@ -360,21 +370,21 @@ class PayloadSdkInterface:
                 result = True
 
             # Check for gimbal
-            elif comp_id in range(mavutil.mavlink.MAV_COMP_ID_GIMBAL, mavutil.mavlink.MAV_COMP_ID_GIMBAL6 + 1):
+            if comp_id in range(mavutil.mavlink.MAV_COMP_ID_GIMBAL, mavutil.mavlink.MAV_COMP_ID_GIMBAL6 + 1):
                 self.gimbal_system_id = sys_id
                 self.gimbal_component_id = comp_id
-                print(f"[INFO] Gimbal detected with sys_id: {sys_id}, comp_id: {comp_id}")
+                print(f"[INFO] Gimbal detected with system id: {sys_id}, component id: {comp_id}")
                 result = True
 
-            # Check for payload
-            elif comp_id == mavutil.mavlink.MAV_COMP_ID_USER2:
-                self.payload_system_id = sys_id
-                self.payload_component_id = comp_id
-                print(f"[INFO] Payload detected with sys_id: {sys_id}, comp_id: {comp_id}")
-                if not self.is_stream_requested:
-                    self.requestMessageStreamInterval()
-                    self.is_stream_requested = True
-                result = True
+            # # Check for payload
+            # elif comp_id == mavutil.mavlink.MAV_COMP_ID_USER2:
+            #     self.payload_system_id = sys_id
+            #     self.payload_component_id = comp_id
+            #     print(f"[INFO] Payload detected with sys_id: {sys_id}, component id: {comp_id}")
+            #     if not self.is_stream_requested:
+            #         self.requestMessageStreamInterval()
+            #         self.is_stream_requested = True
+            #     result = True
 
             if result:
                 print("[INFO] Payload connected!")
@@ -430,9 +440,10 @@ class PayloadSdkInterface:
             print("Error: Connection not initialized")
             return
         self.master.mav.param_ext_request_list_send(
-            self.camera_system_id,
+            self.camera_system_id ,
             self.camera_component_id
         )
+        
 
     def getPayloadCameraSettingByID(self, param_id: str):
         if not self.master:
@@ -764,33 +775,33 @@ class PayloadSdkInterface:
         raise NotImplementedError("getPayloadCameraFFCMode is not implemented yet.")
 
     # GPS and system time methods
-    def sendPayloadGPSPosition(self, lat, lon, alt, alt_rel, heading, vx, vy, vz):
+    def sendPayloadGPSPosition(self, gps_data: mavlink_global_position_int_t):
         if not self.master:
             print("Error: Connection not initialized")
             return
         self.master.mav.global_position_int_send(
-            int(time.time() * 1e3),
-            lat,
-            lon,
-            alt,
-            alt_rel,
-            vx,
-            vy,
-            vz,
-            heading
+            gps_data.time_boot_ms,
+            gps_data.lat,
+            gps_data.lon,
+            gps_data.alt,
+            gps_data.relative_alt,
+            gps_data.vx,
+            gps_data.vy,
+            gps_data.vz,
+            gps_data.hdg
         )
 
-    def sendPayloadSystemTime(self, unix_time_us):
+    def sendPayloadSystemTime(self, sys_time_data: mavlink_system_time_t):
         if not self.master:
             print("Error: Connection not initialized")
             return
         self.master.mav.system_time_send(
-            unix_time_us,
-            int(time.time() * 1e3)
+            sys_time_data.time_unix_usec,
+            sys_time_data.time_boot_ms
         )
 
     # FormatSDCard method
-    def setFormatSDCard(self, timeout: float = 10.0):
+    def setFormatSDCard(self, timeout: float = 20.0):
         if not self.master:
             print("[ERROR] Connection not initialized")
             return
@@ -805,7 +816,6 @@ class PayloadSdkInterface:
             0,  # param2: Format type (default)
             0, 0, 0, 0, 0  # param3 to param7: Not used
         )
-        time.usleep(1)
         print("[INFO] Sent command to format SD card")
 
         # Wait for COMMAND_ACK

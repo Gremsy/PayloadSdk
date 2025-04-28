@@ -119,7 +119,7 @@ def main():
         
         # Auto focus
         print("Auto Focus!")
-        my_payload.setCameraFocus(1)
+        my_payload.setCameraFocus(mavutil.mavlink.FOCUS_TYPE_AUTO)
     
     print("!--------------------!\n")
     

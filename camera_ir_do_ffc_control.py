@@ -1,7 +1,6 @@
 import time
 import signal
 import sys
-from pymavlink import mavutil
 from libs.payload_sdk import PayloadSdkInterface, ffc_mode_t
 from libs.payload_define import *
 

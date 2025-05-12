@@ -1181,6 +1181,11 @@ payload_recv_handle()
                 _handle_msg_param_value(&msg);
                 break;
             }
+            case MAVLINK_MSG_ID_DEBUG:{
+                // for update params from the payload
+                _handle_msg_debug(&msg);
+                break;
+            }
             case MAVLINK_MSG_ID_PARAM_EXT_ACK:{
                 _handle_msg_command_ext_ack(&msg);
                 break;
@@ -1321,10 +1326,18 @@ _handle_msg_param_value(mavlink_message_t* msg){
             __notifyPayloadParamChanged(PAYLOAD_GB_PARAMS, value.param_id, params);
         }
     }
-    else if(msg->compid == PAYLOAD_COMPONENT_ID){
+}
+
+void 
+PayloadSdkInterface::
+_handle_msg_debug(mavlink_message_t* msg){
+    mavlink_debug_t value = {0};
+    mavlink_msg_debug_decode(msg, &value);
+
+    if(msg->compid == PAYLOAD_COMPONENT_ID){
         // params value from the payload
         if(__notifyPayloadStatusChanged != NULL){
-            double params[2] = {value.param_index, value.param_value};
+            double params[2] = {value.ind, value.value};
             __notifyPayloadStatusChanged(PAYLOAD_PARAMS, params);
         }
     }

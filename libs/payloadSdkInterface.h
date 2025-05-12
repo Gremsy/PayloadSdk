@@ -364,6 +364,7 @@ public:
 
     void _handle_msg_mount_orientation(mavlink_message_t* msg);
     void _handle_msg_param_value(mavlink_message_t* msg);
+    void _handle_msg_debug(mavlink_message_t* msg);
 
     void _handle_msg_camera_stream_information(mavlink_message_t* msg);
     void _handle_msg_camera_information(mavlink_message_t* msg);

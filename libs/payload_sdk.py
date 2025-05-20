@@ -14,31 +14,31 @@ from typing import Callable, List, Optional
 from .payload_define import *
 from .enum_base import *
 
-SDK_VERSION = "3.0.0_build.20052025"
+SDK_VERSION  = "3.0.0_build.20052025"
 PAYLOAD_TYPE = "VIO"
 
 # Default connection parameters
-CONTROL_UART = 0
-CONTROL_UDP  = 1
+CONTROL_UART   = 0
+CONTROL_UDP    = 1
 CONTROL_METHOD = CONTROL_UDP
 
-udp_ip_target = "192.168.12.238"    # This is an ip address of the payload
-udp_port_target = 14566             # Do not change
+udp_ip_target     = "192.168.12.238"    # This is an ip address of the payload
+udp_port_target   = 14566               # Do not change
 payload_uart_port = "/dev/ttyUSB0"
 payload_uart_baud = 115200
 
 # Define Mavlink Component
-SYS_ID = 1
-COMP_ID = mavutil.mavlink.MAV_COMP_ID_ONBOARD_COMPUTER3
+SYS_ID               = 1
+COMP_ID              = mavutil.mavlink.MAV_COMP_ID_ONBOARD_COMPUTER3
 
-PAYLOAD_SYSTEM_ID = 1
-PAYLOAD_COMPONENT_ID = mavutil.mavlink.MAV_COMP_ID_USER2    # Do not change
+PAYLOAD_SYSTEM_ID    = 1
+PAYLOAD_COMPONENT_ID = mavutil.mavlink.MAV_COMP_ID_USER2     # Do not change
 
-CAMERA_SYSTEM_ID = 1
-CAMERA_COMPONENT_ID = mavutil.mavlink.MAV_COMP_ID_CAMERA    # Auto update when got the message from the payload
+CAMERA_SYSTEM_ID     = 1
+CAMERA_COMPONENT_ID  = mavutil.mavlink.MAV_COMP_ID_CAMERA    # Auto update when got the message from the payload
 
-GIMBAL_SYSTEM_ID = 1
-GIMBAL_COMPONENT_ID = mavutil.mavlink.MAV_COMP_ID_GIMBAL    # Auto update when got the message from the payload
+GIMBAL_SYSTEM_ID     = 1
+GIMBAL_COMPONENT_ID  = mavutil.mavlink.MAV_COMP_ID_GIMBAL    # Auto update when got the message from the payload
 
 # Param type enum
 class param_type(IntEnumBase):
@@ -243,34 +243,34 @@ class PayloadSdkInterface:
         print(f"Starting Gremsy PayloadSdk {SDK_VERSION}")
 
         self.connection_type = CONTROL_METHOD
-        self.ip = udp_ip_target
-        self.port = udp_port_target
-        self.serial_port = payload_uart_port
-        self.baudrate = payload_uart_port
+        self.ip              = udp_ip_target
+        self.port            = udp_port_target
+        self.serial_port     = payload_uart_port
+        self.baudrate        = payload_uart_port
 
-        self.master = None
+        self.master  = None
 
-        self.sys_id = SYS_ID
-        self.comp_id = COMP_ID
+        self.sys_id               = SYS_ID
+        self.comp_id              = COMP_ID
 
-        self.payload_system_id = PAYLOAD_SYSTEM_ID
+        self.payload_system_id    = PAYLOAD_SYSTEM_ID
         self.payload_component_id = PAYLOAD_COMPONENT_ID
 
-        self.camera_system_id = CAMERA_SYSTEM_ID
-        self.camera_component_id = CAMERA_COMPONENT_ID
+        self.camera_system_id     = CAMERA_SYSTEM_ID
+        self.camera_component_id  = CAMERA_COMPONENT_ID
 
-        self.gimbal_system_id = GIMBAL_SYSTEM_ID
-        self.gimbal_component_id = GIMBAL_COMPONENT_ID
+        self.gimbal_system_id     = GIMBAL_SYSTEM_ID
+        self.gimbal_component_id  = GIMBAL_COMPONENT_ID
 
-        self._notifyPayloadStatusChanged: Optional[Callable[[payload_status_event_t, List[float]], None]]      = None
+        self._notifyPayloadStatusChanged: Optional[Callable[[payload_status_event_t, List[float]],      None]] = None
         self._notifyPayloadParamChanged : Optional[Callable[[payload_status_event_t, str, List[float]], None]] = None
         self._notifyPayloadStreamChanged: Optional[Callable[[payload_status_event_t, str, List[float]], None]] = None
 
         self.is_send_stream_request = False
-        self.receive_thread = None
-        self.last_heartbeat_time = 0  
-        self.time_to_exit = False
-        self.ping_seq = 0
+        self.receive_thread         = None
+        self.last_heartbeat_time    = 0  
+        self.time_to_exit           = False
+        self.ping_seq               = 0
 
     # Helper functions
     def to_rad(self, deg: float) -> float:
@@ -589,7 +589,7 @@ class PayloadSdkInterface:
             self.gimbal_system_id,
             self.gimbal_component_id,
             mavutil.mavlink.MAV_CMD_GIMBAL_REQUEST_AXIS_CALIBRATION,
-            1,
+            1, 
             0, 0, 0, 0, 0, 0, 1
         )
 

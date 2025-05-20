@@ -1,7 +1,7 @@
-# PayloadSDK Python requirements
+# PayloadSDK PyMavLink requirements
 # Usage: pip3 install -r requirements.txt
 
 # Base ------------------------------------------------------------------------
 requests>=2.32.2
 PyGObject==3.50.0
-pymavlink==2.4.43
+pymavlink>=2.4.43

@@ -97,7 +97,6 @@ class payload_param_t(IntEnumBase):
     PARAM_COUNT             =                                              25
 
 PAYLOAD_PARAMS = [
-
     {"index": payload_param_t.PARAM_EO_ZOOM_LEVEL,     "id": "EO_ZOOM",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_IR_ZOOM_LEVEL,     "id": "IR_ZOOM",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
     {"index": payload_param_t.PARAM_LRF_RANGE,         "id": "LRF_RANGE",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
@@ -237,9 +236,7 @@ class mavlink_system_time_t(ctypes.Structure):
     ]
 
 class PayloadSdkInterface:
-
     def __init__(self):
-
         print(f"Starting Gremsy PayloadSdk {SDK_VERSION}")
 
         self.connection_type = CONTROL_METHOD
@@ -280,7 +277,6 @@ class PayloadSdkInterface:
         return rad * 180.0 / math.pi
 
     def _euler_to_quaternion(self, roll: float, pitch: float, yaw: float) -> list:
-
         cy = math.cos(yaw * 0.5)
         sy = math.sin(yaw * 0.5)
         cp = math.cos(pitch * 0.5)
@@ -300,27 +296,25 @@ class PayloadSdkInterface:
     # Callback registration methods
     def regPayloadStatusChanged(self, callback: Callable[[payload_status_event_t, List[float]], None]) -> None:
         if not callable(callback):
-
             raise ValueError("Callback must be a callable object")
+        
         self._notifyPayloadStatusChanged = callback
 
     def regPayloadParamChanged(self, callback: Callable[[payload_status_event_t, str, List[float]], None]) -> None:
         if not callable(callback):
-
             raise ValueError("Callback must be a callable object")
+        
         self._notifyPayloadParamChanged = callback
 
     def regPayloadStreamChanged(self, callback: Callable[[payload_status_event_t, str, List[float]], None]) -> None:
         if not callable(callback):
-
             raise ValueError("Callback must be a callable object")
+        
         self._notifyPayloadStreamChanged = callback
 
     # Init connection to payload
     def sdkInitConnection(self) -> bool:
-
         if self.connection_type == CONTROL_UDP:
-
             if not self.ip or not self.port:
                 print("Error: IP and port must be provided for UDP connection")
                 return False
@@ -328,7 +322,6 @@ class PayloadSdkInterface:
             connection_str = f"udpout:{self.ip}:{self.port}"
 
         elif self.connection_type == CONTROL_UART:
-
             if not self.serial_port or not self.baudrate:
                 print("Error: Serial port and baudrate must be provided for serial connection")
 
@@ -366,13 +359,11 @@ class PayloadSdkInterface:
             return False
 
     def checkPayloadConnection(self, timeout: float = 5.0) -> bool:
-
         result = False
         start_time = time.time()
         print("[INFO] Checking payload connection")
 
         while not self.time_to_exit:
-
             if time.time() - start_time > timeout:
                 print(f"[ERROR] No payload detected after {timeout} seconds")
                 self.sdkQuit()  
@@ -652,9 +643,7 @@ class PayloadSdkInterface:
         )
 
     def setGimbalSpeed(self, spd_pitch: float, spd_roll: float, spd_yaw: float, mode: input_mode_t) -> None:
-
         if mode == input_mode_t.INPUT_ANGLE:
-
             if spd_yaw > 180 or spd_yaw < -180:
                 print("ERROR: Gimbal Protocol V2 only supports yaw axis from -180 degrees to 180 degrees!")
                 return
@@ -696,7 +685,6 @@ class PayloadSdkInterface:
 
     # FFC methods
     def setPayloadCameraFFCMode(self, mode: int) -> None:
-
         if mode >= ffc_mode_t.FFC_MODE_END:
             print("Invalid FFC mode")
             return
@@ -747,14 +735,7 @@ class PayloadSdkInterface:
             self.camera_system_id,
             self.camera_component_id,
             mavutil.mavlink.MAV_CMD_STORAGE_FORMAT,
-            1,  
-            1,  
-            0, 
-            0,  
-            0, 
-            0,  
-            0, 
-            0   
+            1, 1, 0, 0, 0, 0, 0, 0   
         )
 
         while True:
@@ -764,7 +745,6 @@ class PayloadSdkInterface:
                 continue
 
             if msg.command == mavutil.mavlink.MAV_CMD_STORAGE_FORMAT:
-
                 if msg.result == mavutil.mavlink.MAV_RESULT_ACCEPTED:
                     
                     print("[INFO] SD card formatted successfully")
@@ -772,6 +752,7 @@ class PayloadSdkInterface:
                 else:
                     print(f"[ERROR] SD card format failed with result: {msg.result}")
                 break  
+
             time.sleep(0.01)
 
     # Tracking method
@@ -808,7 +789,6 @@ class PayloadSdkInterface:
     def _handle_msg_param_ext_value(self, msg) -> None:
             if self._notifyPayloadParamChanged:
                 param_value_bytes = msg.param_value.encode('utf-8')[:128]
-                
                 if len(param_value_bytes) < 4:
                     param_value_bytes = param_value_bytes.ljust(4, b'\0')
                 
@@ -882,7 +862,7 @@ class PayloadSdkInterface:
     # Core message receiving loop
     def payload_recv_handle(self) -> None:
         self.last_heartbeat_time = time.time()
-
+        
         while self.time_to_exit == False:
             current_time = time.time()
 

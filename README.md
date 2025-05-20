@@ -1,4 +1,4 @@
-# PayloadSdk Python
+# PayloadSdk PyMavLink
 This repo is officially SDK for all Gremsy's Payloads using PyMavLink.
 
 ## Hardware

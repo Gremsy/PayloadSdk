@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+import os
+os.environ['MAVLINK20'] = "1"
+os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+
 import time
 import signal
 import sys

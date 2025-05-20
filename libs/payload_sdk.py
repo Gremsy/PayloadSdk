@@ -1,46 +1,44 @@
+#!/usr/bin/env python
+import os
+os.environ['MAVLINK20'] = "1"
+os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+
 from pymavlink import mavutil
 import math
 import threading
 import time
 import struct
 import ctypes
+import sys
+from typing import Callable, List, Optional
 from .payload_define import *
 from .enum_base import *
 
-# Default connection parameters
-CONNECTION_TYPE = "udp"
-IP = "192.168.12.238"
-PORT = 14566
-
-SERIAL_PORT = "/dev/ttyUSB0"
-BAUDRATE = 115200
-
-SDK_VERSION = "3.0.0_build.04022025"
+SDK_VERSION = "3.0.0_build.20052025"
 PAYLOAD_TYPE = "VIO"
+
+# Default connection parameters
+CONTROL_UART = 0
+CONTROL_UDP  = 1
+CONTROL_METHOD = CONTROL_UDP
+
+udp_ip_target = "192.168.12.238"    # This is an ip address of the payload
+udp_port_target = 14566             # Do not change
+payload_uart_port = "/dev/ttyUSB0"
+payload_uart_baud = 115200
 
 # Define Mavlink Component
 SYS_ID = 1
+COMP_ID = mavutil.mavlink.MAV_COMP_ID_ONBOARD_COMPUTER3
+
 PAYLOAD_SYSTEM_ID = 1
+PAYLOAD_COMPONENT_ID = mavutil.mavlink.MAV_COMP_ID_USER2    # Do not change
+
 CAMERA_SYSTEM_ID = 1
+CAMERA_COMPONENT_ID = mavutil.mavlink.MAV_COMP_ID_CAMERA    # Auto update when got the message from the payload
+
 GIMBAL_SYSTEM_ID = 1
-
-# Connection info structures
-class T_ConnInfo_Uart(ctypes.Structure):
-    _fields_ = [("name", ctypes.c_char_p),
-                ("baudrate", ctypes.c_int)]
-
-class T_ConnInfo_UDP(ctypes.Structure):
-    _fields_ = [("ip", ctypes.c_char_p),
-                ("port", ctypes.c_int)]
-
-class T_ConnInfo(ctypes.Union):
-    _fields_ = [("uart", T_ConnInfo_Uart),
-                ("udp", T_ConnInfo_UDP)]
-
-class T_ConnInfoStruct(ctypes.Structure):
-    _anonymous_ = ("device",)
-    _fields_ = [("type", ctypes.c_uint8),
-                ("device", T_ConnInfo)]
+GIMBAL_COMPONENT_ID = mavutil.mavlink.MAV_COMP_ID_GIMBAL    # Auto update when got the message from the payload
 
 # Param type enum
 class param_type(IntEnumBase):
@@ -97,6 +95,41 @@ class payload_param_t(IntEnumBase):
     PARAM_CAM_IR_FFC_MODE   =                                              23
     PARAM_GIMBAL_MODE       =                                              24
     PARAM_COUNT             =                                              25
+
+PAYLOAD_PARAMS = [
+
+    {"index": payload_param_t.PARAM_EO_ZOOM_LEVEL,     "id": "EO_ZOOM",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_IR_ZOOM_LEVEL,     "id": "IR_ZOOM",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_LRF_RANGE,         "id": "LRF_RANGE",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+
+    {"index": payload_param_t.PARAM_TRACK_POS_X,       "id": "TRK_POS_X",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_TRACK_POS_Y,       "id": "TRK_POS_Y",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_TRACK_POS_W,       "id": "TRK_POS_W",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_TRACK_POS_H,       "id": "TRK_POS_H",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_TRACK_STATUS,      "id": "TRK_STATUS",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+
+    {"index": payload_param_t.PARAM_LRF_OFSET_X,       "id": "LRF_OFFSET_X", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_LRF_OFSET_Y,       "id": "LRF_OFFSET_Y", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+
+    {"index": payload_param_t.PARAM_TARGET_COOR_LON,   "id": "TARGET_LON",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_TARGET_COOR_LAT,   "id": "TARGET_LAT",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_TARGET_COOR_ALT,   "id": "TARGET_ALT",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_PAYLOAD_GPS_LON,   "id": "PAY_LON",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_PAYLOAD_GPS_LAT,   "id": "PAY_LAT",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_PAYLOAD_GPS_ALT,   "id": "PAY_ALT",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+
+    {"index": payload_param_t.PARAM_PAYLOAD_APP_VER_X, "id": "APP_VER_X",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_PAYLOAD_APP_VER_Y, "id": "APP_VER_Y",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_PAYLOAD_APP_VER_Z, "id": "APP_VER_Z",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+
+    {"index": payload_param_t.PARAM_CAM_VIEW_MODE,     "id": "VIEW_MODE",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_CAM_REC_SOURCE,    "id": "REC_SRC",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_CAM_IR_TYPE,       "id": "IR_TYPE",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_CAM_IR_PALETTE_ID, "id": "PALETTE_ID",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    {"index": payload_param_t.PARAM_CAM_IR_FFC_MODE,   "id": "FFC_MODE",     "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+    
+    {"index": payload_param_t.PARAM_GIMBAL_MODE,       "id": "GB_MODE",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
+]
 
 # Input mode enum
 class input_mode_t(IntEnumBase):
@@ -164,40 +197,6 @@ class get_stream_sequence_t(IntEnumBase):
     START_PIPELINE      =                                                  3
     PIPELINE_RUNNING    =                                                  4
 
-PAYLOAD_PARAMS = [
-    {"index": payload_param_t.PARAM_EO_ZOOM_LEVEL,     "id": "EO_ZOOM",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_IR_ZOOM_LEVEL,     "id": "IR_ZOOM",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_LRF_RANGE,         "id": "LRF_RANGE",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-
-    {"index": payload_param_t.PARAM_TRACK_POS_X,       "id": "TRK_POS_X",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_TRACK_POS_Y,       "id": "TRK_POS_Y",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_TRACK_POS_W,       "id": "TRK_POS_W",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_TRACK_POS_H,       "id": "TRK_POS_H",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_TRACK_STATUS,      "id": "TRK_STATUS",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-
-    {"index": payload_param_t.PARAM_LRF_OFSET_X,       "id": "LRF_OFFSET_X", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_LRF_OFSET_Y,       "id": "LRF_OFFSET_Y", "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-
-    {"index": payload_param_t.PARAM_TARGET_COOR_LON,   "id": "TARGET_LON",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_TARGET_COOR_LAT,   "id": "TARGET_LAT",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_TARGET_COOR_ALT,   "id": "TARGET_ALT",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_PAYLOAD_GPS_LON,   "id": "PAY_LON",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_PAYLOAD_GPS_LAT,   "id": "PAY_LAT",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_PAYLOAD_GPS_ALT,   "id": "PAY_ALT",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-
-    {"index": payload_param_t.PARAM_PAYLOAD_APP_VER_X, "id": "APP_VER_X",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_PAYLOAD_APP_VER_Y, "id": "APP_VER_Y",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_PAYLOAD_APP_VER_Z, "id": "APP_VER_Z",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-
-    {"index": payload_param_t.PARAM_CAM_VIEW_MODE,     "id": "VIEW_MODE",    "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_CAM_REC_SOURCE,    "id": "REC_SRC",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_CAM_IR_TYPE,       "id": "IR_TYPE",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_CAM_IR_PALETTE_ID, "id": "PALETTE_ID",   "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    {"index": payload_param_t.PARAM_CAM_IR_FFC_MODE,   "id": "FFC_MODE",     "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-    
-    {"index": payload_param_t.PARAM_GIMBAL_MODE,       "id": "GB_MODE",      "value": 0.0, "msg_rate": 0, "tick_ms": 0},
-]
-
 # MAVLink message structures
 class mavlink_message_t(ctypes.Structure):
     _pack_ = 1
@@ -238,217 +237,228 @@ class mavlink_system_time_t(ctypes.Structure):
     ]
 
 class PayloadSdkInterface:
+
     def __init__(self):
+
         print(f"Starting Gremsy PayloadSdk {SDK_VERSION}")
-        self.connection_type = CONNECTION_TYPE
-        self.ip = IP
-        self.port = PORT
-        self.serial_port = SERIAL_PORT
-        self.baudrate = BAUDRATE
-        self.sys_id = SYS_ID
-        self.comp_id = mavutil.mavlink.MAV_COMP_ID_ONBOARD_COMPUTER3
+
+        self.connection_type = CONTROL_METHOD
+        self.ip = udp_ip_target
+        self.port = udp_port_target
+        self.serial_port = payload_uart_port
+        self.baudrate = payload_uart_port
+
         self.master = None
+
+        self.sys_id = SYS_ID
+        self.comp_id = COMP_ID
+
         self.payload_system_id = PAYLOAD_SYSTEM_ID
-        self.payload_component_id = mavutil.mavlink.MAV_COMP_ID_USER2
+        self.payload_component_id = PAYLOAD_COMPONENT_ID
+
         self.camera_system_id = CAMERA_SYSTEM_ID
-        self.camera_component_id = mavutil.mavlink.MAV_COMP_ID_CAMERA
+        self.camera_component_id = CAMERA_COMPONENT_ID
+
         self.gimbal_system_id = GIMBAL_SYSTEM_ID
-        self.gimbal_component_id = mavutil.mavlink.MAV_COMP_ID_GIMBAL
-        self._notifyPayloadStatusChanged = None
-        self._notifyPayloadParamChanged = None
-        self._notifyPayloadStreamChanged = None
-        self._notifyCameraDetected = None  
-        self.camera_detected = False  
-        self.running = False
-        self.is_stream_requested = False
+        self.gimbal_component_id = GIMBAL_COMPONENT_ID
+
+        self._notifyPayloadStatusChanged: Optional[Callable[[payload_status_event_t, List[float]], None]]      = None
+        self._notifyPayloadParamChanged : Optional[Callable[[payload_status_event_t, str, List[float]], None]] = None
+        self._notifyPayloadStreamChanged: Optional[Callable[[payload_status_event_t, str, List[float]], None]] = None
+
+        self.is_send_stream_request = False
         self.receive_thread = None
-        self.last_ping_time = 0  
+        self.last_heartbeat_time = 0  
+        self.time_to_exit = False
         self.ping_seq = 0
 
     # Helper functions
-    def to_rad(self, deg):
+    def to_rad(self, deg: float) -> float:
         return deg * math.pi / 180.0
 
-    def to_deg(self, rad):
+    def to_deg(self, rad: float) -> float:
         return rad * 180.0 / math.pi
 
-    def _euler_to_quaternion(self, roll, pitch, yaw):
+    def _euler_to_quaternion(self, roll: float, pitch: float, yaw: float) -> list:
+
         cy = math.cos(yaw * 0.5)
         sy = math.sin(yaw * 0.5)
         cp = math.cos(pitch * 0.5)
         sp = math.sin(pitch * 0.5)
         cr = math.cos(roll * 0.5)
         sr = math.sin(roll * 0.5)
+
         q = [0] * 4
+
         q[0] = cy * cp * cr + sy * sp * sr  # w
         q[1] = cy * cp * sr - sy * sp * cr  # x
         q[2] = sy * cp * sr + cy * sp * cr  # y
         q[3] = sy * cp * cr - cy * sp * sr  # z
+
         return q
 
     # Callback registration methods
-    def regPayloadStatusChanged(self, callback):
+    def regPayloadStatusChanged(self, callback: Callable[[payload_status_event_t, List[float]], None]) -> None:
+        if not callable(callback):
+
+            raise ValueError("Callback must be a callable object")
         self._notifyPayloadStatusChanged = callback
 
-    def regPayloadParamChanged(self, callback):
+    def regPayloadParamChanged(self, callback: Callable[[payload_status_event_t, str, List[float]], None]) -> None:
+        if not callable(callback):
+
+            raise ValueError("Callback must be a callable object")
         self._notifyPayloadParamChanged = callback
 
-    def regPayloadStreamChanged(self, callback):
+    def regPayloadStreamChanged(self, callback: Callable[[payload_status_event_t, str, List[float]], None]) -> None:
+        if not callable(callback):
+
+            raise ValueError("Callback must be a callable object")
         self._notifyPayloadStreamChanged = callback
 
     # Init connection to payload
-    def sdkInitConnection(self):
-        if self.connection_type == 'udp':
+    def sdkInitConnection(self) -> bool:
+
+        if self.connection_type == CONTROL_UDP:
+
             if not self.ip or not self.port:
                 print("Error: IP and port must be provided for UDP connection")
                 return False
-            connection_str = f'udpout:{self.ip}:{self.port}'
+            
+            connection_str = f"udpout:{self.ip}:{self.port}"
 
-        elif self.connection_type == 'serial':
+        elif self.connection_type == CONTROL_UART:
+
             if not self.serial_port or not self.baudrate:
                 print("Error: Serial port and baudrate must be provided for serial connection")
+
                 return False
-            connection_str = f'{self.serial_port}:{self.baudrate}'
+            
+            connection_str = f"{self.serial_port}:{self.baudrate}"
 
         else:
             print("Error: Invalid connection type. Use 'udp' or 'serial'")
+
             return False
 
         try:
             print(f"[INFO] Connecting to {connection_str}")
+
             self.master = mavutil.mavlink_connection(
                 connection_str,
                 source_system=self.sys_id,
                 source_component=self.comp_id
             )
-            time.sleep(1)
-            print("[INFO] Waiting for heartbeat from payload")
-            self.master.wait_heartbeat(timeout=0)
-            print(f"[INFO] Heartbeat received from system {self.master.target_system}, component {self.master.target_component}")
-            self.running = True
-            self.receive_thread = threading.Thread(target=self._receive_messages)
+
+            time.sleep(1)  # Allow time for connection to establish
+
+            self.receive_thread = threading.Thread(target=self.payload_recv_handle)
             self.receive_thread.daemon = True
             self.receive_thread.start()
-            time.sleep(1)
+
             return True
-        
+
         except Exception as e:
+
             print(f"[ERROR] SDK connection failed: {e}")
             self.master = None
+
             return False
 
-    def checkPayloadConnection(self, timeout: float = 10.0) -> bool:
-        if not self.master:
-            print("Error: Connection not initialized")
-            return False
+    def checkPayloadConnection(self, timeout: float = 5.0) -> bool:
 
-        start_time = time.time()
         result = False
-
+        start_time = time.time()
         print("[INFO] Checking payload connection")
-        while self.running and (time.time() - start_time) < timeout:
+
+        while not self.time_to_exit:
+
+            if time.time() - start_time > timeout:
+                print(f"[ERROR] No payload detected after {timeout} seconds")
+                self.sdkQuit()  
+                sys.exit(1)  
+
             msg = self.master.recv_match(blocking=True, timeout=0.1)
+
             if msg is None:
                 continue
 
             comp_id = msg.get_srcComponent()
             sys_id = msg.get_srcSystem()
 
-            # comp_id = mavutil.mavlink.MAV_COMP_ID_ONBOARD_COMPUTER3
-            # sys_id = 1
-            print(f"[INFO] Received message from sys_id: {sys_id}, comp_id: {comp_id}")
+            if (comp_id >= mavutil.mavlink.MAV_COMP_ID_CAMERA and
+                comp_id <= mavutil.mavlink.MAV_COMP_ID_CAMERA6):
 
-            # Check for camera
-            if comp_id in range(mavutil.mavlink.MAV_COMP_ID_CAMERA, mavutil.mavlink.MAV_COMP_ID_CAMERA6 + 1):
                 self.camera_system_id = sys_id
                 self.camera_component_id = comp_id
-                if not self.camera_detected:
-                    self.camera_detected = True
-                    print(f"[INFO] Camera detected with sys_id: {sys_id}, comp_id: {comp_id}")
-                    if self._notifyCameraDetected:
-                        self._notifyCameraDetected(True)
                 result = True
 
-            # Check for gimbal
-            if comp_id in range(mavutil.mavlink.MAV_COMP_ID_GIMBAL, mavutil.mavlink.MAV_COMP_ID_GIMBAL6 + 1):
+            if (comp_id == mavutil.mavlink.MAV_COMP_ID_GIMBAL  or
+                comp_id == mavutil.mavlink.MAV_COMP_ID_GIMBAL2 or
+                comp_id == mavutil.mavlink.MAV_COMP_ID_GIMBAL3 or
+                comp_id == mavutil.mavlink.MAV_COMP_ID_GIMBAL4 or
+                comp_id == mavutil.mavlink.MAV_COMP_ID_GIMBAL5 or
+                comp_id == mavutil.mavlink.MAV_COMP_ID_GIMBAL6):
+
                 self.gimbal_system_id = sys_id
                 self.gimbal_component_id = comp_id
-                print(f"[INFO] Gimbal detected with system id: {sys_id}, component id: {comp_id}")
                 result = True
-
-            # # Check for payload
-            # elif comp_id == mavutil.mavlink.MAV_COMP_ID_USER2:
-            #     self.payload_system_id = sys_id
-            #     self.payload_component_id = comp_id
-            #     print(f"[INFO] Payload detected with sys_id: {sys_id}, component id: {comp_id}")
-            #     if not self.is_stream_requested:
-            #         self.requestMessageStreamInterval()
-            #         self.is_stream_requested = True
-            #     result = True
 
             if result:
                 print("[INFO] Payload connected!")
                 return True
 
-            time.sleep(0.0001)
+        if not result:
+            print(f"[ERROR] No payload detected!")
+            self.sdkQuit()
+            sys.exit(1)
 
-        print("[ERROR] No payload detected within timeout period")
         return False
 
     # Interface terminator
-    def sdkQuit(self):
-            self.running = False
-            if self.receive_thread:
-                self.receive_thread.join()
-            if self.master:
-                self.master.close()
-                self.master = None
-            if self.camera_detected and self._notifyCameraDetected:
-                self.camera_detected = False
-                self._notifyCameraDetected(False)
-            print("[INFO] Connection closed.")
+    def sdkQuit(self) -> None:
+        self.time_to_exit = True
+
+        if self.receive_thread:
+            self.receive_thread.join()
+            
+        if self.master:
+            self.master.close()
+            self.master = None
+
+        print("[INFO] Connection closed.")
 
     # Camera methods
-    def setPayloadCameraParam(self, param_id: str, param_value, param_type: param_type):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
-        param_value_bytes = bytearray(128)
-        if param_type == mavutil.mavlink.MAV_PARAM_TYPE_UINT32:
-            struct.pack_into('<I', param_value_bytes, 0, param_value)
-        elif param_type == mavutil.mavlink.MAV_PARAM_TYPE_REAL32:
-            struct.pack_into('<f', param_value_bytes, 0, param_value)
-        try:
-            self.master.mav.param_ext_set_send(
-                self.camera_system_id,
-                self.camera_component_id,
-                param_id.encode(),
-                param_value_bytes,
-                param_type
-            )
-        except AttributeError:
-            self.master.mav.param_set_send(
-                self.camera_system_id,
-                self.camera_component_id,
-                param_id.encode(),
-                param_value,
-                param_type
-            )
+    def setPayloadCameraParam(self, param_id: str, param_value: int, param_type: int) -> None:
+        msg = {
+            'param_id': bytearray(16),  
+            'param_value': bytearray(128),  
+            'param_type': param_type,
+            'target_system': self.camera_system_id,
+            'target_component': self.camera_component_id
+        }
 
-    def getPayloadCameraSettingList(self):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+        param_id_bytes = param_id.encode('utf-8')[:15]  
+
+        msg['param_id'][:len(param_id_bytes)] = param_id_bytes
+
+        struct.pack_into('<I', msg['param_value'], 0, param_value)  
+
+        self.master.mav.param_ext_set_send(
+            msg['target_system'],
+            msg['target_component'],
+            msg['param_id'],
+            msg['param_value'],
+            msg['param_type']
+        )
+    
+    def getPayloadCameraSettingList(self) -> None:
         self.master.mav.param_ext_request_list_send(
             self.camera_system_id ,
             self.camera_component_id
-        )
+        )  
         
-
-    def getPayloadCameraSettingByID(self, param_id: str):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def getPayloadCameraSettingByID(self, param_id: str) -> None:
         self.master.mav.param_request_read_send(
             self.camera_system_id,
             self.camera_component_id,
@@ -456,10 +466,7 @@ class PayloadSdkInterface:
             -1
         )
 
-    def getPayloadCameraSettingByIndex(self, idx: int):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def getPayloadCameraSettingByIndex(self, idx: int) -> None:
         self.master.mav.param_request_read_send(
             self.camera_system_id,
             self.camera_component_id,
@@ -467,10 +474,7 @@ class PayloadSdkInterface:
             idx
         )
 
-    def getPayloadStorage(self):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def getPayloadStorage(self) -> None:
         self.master.mav.command_long_send(
             self.camera_system_id,
             self.camera_component_id,
@@ -478,10 +482,7 @@ class PayloadSdkInterface:
             0, 0, 0, 0, 0, 0, 0, 0
         )
 
-    def getPayloadCaptureStatus(self):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def getPayloadCaptureStatus(self) -> None:
         self.master.mav.command_long_send(
             self.camera_system_id,
             self.camera_component_id,
@@ -489,10 +490,7 @@ class PayloadSdkInterface:
             0, 0, 0, 0, 0, 0, 0, 0
         )
 
-    def getPayloadCameraMode(self):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def getPayloadCameraMode(self) -> None:
         self.master.mav.command_long_send(
             self.camera_system_id,
             self.camera_component_id,
@@ -500,10 +498,7 @@ class PayloadSdkInterface:
             0, 0, 0, 0, 0, 0, 0, 0
         )
 
-    def getPayloadCameraInformation(self):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def getPayloadCameraInformation(self) -> None:
         self.master.mav.command_long_send(
             self.camera_system_id,
             self.camera_component_id,
@@ -511,10 +506,7 @@ class PayloadSdkInterface:
             0, 0, 0, 0, 0, 0, 0, 0
         )
 
-    def getPayloadCameraStreamingInformation(self):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def getPayloadCameraStreamingInformation(self) -> None:
         self.master.mav.command_long_send(
             self.camera_system_id,
             self.camera_component_id,
@@ -522,10 +514,7 @@ class PayloadSdkInterface:
             0, 0, 0, 0, 0, 0, 0, 0
         )
 
-    def setPayloadCameraMode(self, mode: int):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def setPayloadCameraMode(self, mode: int) -> None:
         self.master.mav.command_long_send(
             self.camera_system_id,
             self.camera_component_id,
@@ -533,10 +522,7 @@ class PayloadSdkInterface:
             0, 0, mode, 0, 0, 0, 0, 0
         )
 
-    def setPayloadCameraCaptureImage(self, interval_s: int=0):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def setPayloadCameraCaptureImage(self, interval_s: int=0) -> None:
         self.master.mav.command_long_send(
             self.camera_system_id,
             self.camera_component_id,
@@ -544,10 +530,7 @@ class PayloadSdkInterface:
             0, 0, interval_s, 1, 0, 0, 0, 0
         )
 
-    def setPayloadCameraStopImage(self):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def setPayloadCameraStopImage(self) -> None:
         self.master.mav.command_long_send(
             self.camera_system_id,
             self.camera_component_id,
@@ -555,10 +538,7 @@ class PayloadSdkInterface:
             0, 0, 0, 0, 0, 0, 0, 0
         )
 
-    def setPayloadCameraRecordVideoStart(self):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def setPayloadCameraRecordVideoStart(self) -> None:
         self.master.mav.command_long_send(
             self.camera_system_id,
             self.camera_component_id,
@@ -566,10 +546,7 @@ class PayloadSdkInterface:
             0, 0, 0, 0, 0, 0, 0, 0
         )
 
-    def setPayloadCameraRecordVideoStop(self):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def setPayloadCameraRecordVideoStop(self) -> None:
         self.master.mav.command_long_send(
             self.camera_system_id,
             self.camera_component_id,
@@ -577,17 +554,11 @@ class PayloadSdkInterface:
             0, 0, 0, 0, 0, 0, 0, 0
         )
 
-    def setParamRate(self, param_index: int, time_ms: int):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def setParamRate(self, param_index: int, time_ms: int) -> None:
         PAYLOAD_PARAMS[param_index]["msg_rate"] = time_ms
         self.sendPayloadRequestStreamRate(param_index, time_ms)
 
-    def setCameraZoom(self, zoom_type: float, zoom_value: float):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def setCameraZoom(self, zoom_type: float, zoom_value: float) -> None:
         self.master.mav.command_long_send(
             self.camera_system_id,
             self.camera_component_id,
@@ -595,10 +566,7 @@ class PayloadSdkInterface:
             0, zoom_type, zoom_value, 0, 0, 0, 0, 0
         )
 
-    def setCameraFocus(self, focus_type: float, focus_value: float=0):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def setCameraFocus(self, focus_type: float, focus_value: float=0) -> None:
         self.master.mav.command_long_send(
             self.camera_system_id,
             self.camera_component_id,
@@ -607,10 +575,7 @@ class PayloadSdkInterface:
         )
 
     # Gimbal methods
-    def setPayloadGimbalParamByID(self, param_id: str, param_value: float):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def setPayloadGimbalParamByID(self, param_id: str, param_value: float) -> None:
         self.master.mav.param_set_send(
             self.gimbal_system_id,
             self.gimbal_component_id,
@@ -619,74 +584,58 @@ class PayloadSdkInterface:
             mavutil.mavlink.MAV_PARAM_TYPE_REAL32
         )
 
-    def sendPayloadGimbalCalibGyro(self):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def sendPayloadGimbalCalibGyro(self) -> None:
         self.master.mav.command_long_send(
             self.gimbal_system_id,
             self.gimbal_component_id,
             mavutil.mavlink.MAV_CMD_GIMBAL_REQUEST_AXIS_CALIBRATION,
-            0, 0, 0, 0, 0, 0, 0, 1
+            1,
+            0, 0, 0, 0, 0, 0, 1
         )
 
-    def sendPayloadGimbalCalibAccel(self):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def sendPayloadGimbalCalibAccel(self) -> None:
         self.master.mav.command_long_send(
             self.gimbal_system_id,
             self.gimbal_component_id,
             mavutil.mavlink.MAV_CMD_GIMBAL_REQUEST_AXIS_CALIBRATION,
-            0, 0, 0, 0, 0, 0, 0, 2
+            1, 
+            0, 0, 0, 0, 0, 0, 2 
         )
 
-    def sendPayloadGimbalCalibMotor(self):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def sendPayloadGimbalCalibMotor(self) -> None:
         self.master.mav.command_long_send(
             self.gimbal_system_id,
             self.gimbal_component_id,
             mavutil.mavlink.MAV_CMD_DO_SET_HOME,
-            0, 0, 0, 0, 0, 0, 0, 1
+            1,  
+            0, 0, 0, 0, 0, 0, 1 
         )
 
-    def sendPayloadGimbalSearchHome(self):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def sendPayloadGimbalSearchHome(self) -> None:
         self.master.mav.command_long_send(
             self.gimbal_system_id,
             self.gimbal_component_id,
             mavutil.mavlink.MAV_CMD_DO_SET_HOME,
-            0, 0, 0, 0, 0, 0, 0, 2
+            1,  
+            0, 0, 0, 0, 0, 0, 2  
         )
 
-    def sendPayloadGimbalAutoTune(self, status: bool):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def sendPayloadGimbalAutoTune(self, status: bool) -> None:
         self.master.mav.command_long_send(
             self.gimbal_system_id,
             self.gimbal_component_id,
             mavutil.mavlink.MAV_CMD_USER_3,
-            0, 0, 0, 0, 0, 0, 0, 1 if status else 0
+            1, 
+            0, 0, 0, 0, 0, 0, 1 if status else 0  
         )
 
-    def getPayloadGimbalSettingList(self):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def getPayloadGimbalSettingList(self) -> None:
         self.master.mav.param_request_list_send(
             self.gimbal_system_id,
             self.gimbal_component_id
         )
 
-    def getPayloadGimbalSettingByID(self, param_id: str):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def getPayloadGimbalSettingByID(self, param_id: str) -> None:
         self.master.mav.param_request_read_send(
             self.gimbal_system_id,
             self.gimbal_component_id,
@@ -694,10 +643,7 @@ class PayloadSdkInterface:
             -1
         )
 
-    def getPayloadGimbalSettingByIndex(self, idx: int):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def getPayloadGimbalSettingByIndex(self, idx: int) -> None:
         self.master.mav.param_request_read_send(
             self.gimbal_system_id,
             self.gimbal_component_id,
@@ -705,29 +651,34 @@ class PayloadSdkInterface:
             idx
         )
 
-    def setGimbalSpeed(self, spd_pitch: float, spd_roll: float, spd_yaw: float, mode: input_mode_t):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def setGimbalSpeed(self, spd_pitch: float, spd_roll: float, spd_yaw: float, mode: input_mode_t) -> None:
+
         if mode == input_mode_t.INPUT_ANGLE:
+
             if spd_yaw > 180 or spd_yaw < -180:
                 print("ERROR: Gimbal Protocol V2 only supports yaw axis from -180 degrees to 180 degrees!")
                 return
+            
             if spd_roll > 180 or spd_roll < -180:
                 print("ERROR: Gimbal Protocol V2 only supports roll axis from -180 degrees to 180 degrees!")
                 return
+            
             if spd_pitch > 90 or spd_pitch < -90:
                 print("ERROR: Gimbal Protocol V2 only supports pitch axis from -90 degrees to 90 degrees!")
                 return
+            
             q = self._euler_to_quaternion(self.to_rad(spd_roll), self.to_rad(spd_pitch), self.to_rad(spd_yaw))
+
             angular_velocity_x = float('nan')
             angular_velocity_y = float('nan')
             angular_velocity_z = float('nan')
+
         else:
             q = [float('nan')] * 4
             angular_velocity_x = self.to_rad(spd_roll)
             angular_velocity_y = self.to_rad(spd_pitch)
             angular_velocity_z = self.to_rad(spd_yaw)
+
         try:
             self.master.mav.gimbal_device_set_attitude_send(
                 self.gimbal_system_id,
@@ -738,18 +689,18 @@ class PayloadSdkInterface:
                 angular_velocity_y,
                 angular_velocity_z
             )
+
         except TypeError as e:
             print(f"Error in gimbal_device_set_attitude_send: {e}")
             print("Ensure pymavlink is updated and supports GIMBAL_DEVICE_SET_ATTITUDE correctly.")
 
     # FFC methods
-    def setPayloadCameraFFCMode(self, mode: int):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def setPayloadCameraFFCMode(self, mode: int) -> None:
+
         if mode >= ffc_mode_t.FFC_MODE_END:
             print("Invalid FFC mode")
             return
+        
         self.master.mav.command_long_send(
             self.payload_system_id,
             self.payload_component_id,
@@ -757,10 +708,7 @@ class PayloadSdkInterface:
             0, 2, 6, mode, 0, 0, 0, 0
         )
 
-    def setPayloadCameraFFCTrigg(self):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def setPayloadCameraFFCTrigg(self) -> None:
         self.master.mav.command_long_send(
             self.payload_system_id,
             self.payload_component_id,
@@ -768,17 +716,11 @@ class PayloadSdkInterface:
             0, 2, 7, 0, 0, 0, 0, 0
         )
 
-    def getPayloadCameraFFCMode(self):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def getPayloadCameraFFCMode(self) -> None:
         raise NotImplementedError("getPayloadCameraFFCMode is not implemented yet.")
 
     # GPS and system time methods
-    def sendPayloadGPSPosition(self, gps_data: mavlink_global_position_int_t):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def sendPayloadGPSPosition(self, gps_data: mavlink_global_position_int_t) -> None:
         self.master.mav.global_position_int_send(
             gps_data.time_boot_ms,
             gps_data.lat,
@@ -791,53 +733,49 @@ class PayloadSdkInterface:
             gps_data.hdg
         )
 
-    def sendPayloadSystemTime(self, sys_time_data: mavlink_system_time_t):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def sendPayloadSystemTime(self, sys_time_data: mavlink_system_time_t) -> None:
         self.master.mav.system_time_send(
             sys_time_data.time_unix_usec,
             sys_time_data.time_boot_ms
         )
 
     # FormatSDCard method
-    def setFormatSDCard(self, timeout: float = 20.0):
-        if not self.master:
-            print("[ERROR] Connection not initialized")
-            return
+    def setFormatSDCard(self) -> None:
+        print("[INFO] Sending SD card format command")
 
-        # Send MAVLink command
         self.master.mav.command_long_send(
             self.camera_system_id,
             self.camera_component_id,
             mavutil.mavlink.MAV_CMD_STORAGE_FORMAT,
-            1,  # confirmation
-            1,  # param1: Storage ID (SD card)
-            0,  # param2: Format type (default)
-            0, 0, 0, 0, 0  # param3 to param7: Not used
+            1,  
+            1,  
+            0, 
+            0,  
+            0, 
+            0,  
+            0, 
+            0   
         )
-        print("[INFO] Sent command to format SD card")
 
-        # Wait for COMMAND_ACK
-        start_time = time.time()
-        while time.time() - start_time < timeout:
-            msg = self.master.recv_match(type='COMMAND_ACK', blocking=True, timeout=0.1)
-            if msg and msg.command == mavutil.mavlink.MAV_CMD_STORAGE_FORMAT:
+        while True:
+            msg = self.master.recv_match(type='COMMAND_ACK', blocking=False, timeout=0.1)
+
+            if msg is None:
+                continue
+
+            if msg.command == mavutil.mavlink.MAV_CMD_STORAGE_FORMAT:
+
                 if msg.result == mavutil.mavlink.MAV_RESULT_ACCEPTED:
+                    
                     print("[INFO] SD card formatted successfully")
-                    return
+
                 else:
-                    print(f"[ERROR] Failed to format SD card, result: {msg.result}")
-                    return
+                    print(f"[ERROR] SD card format failed with result: {msg.result}")
+                break  
             time.sleep(0.01)
-        
-        print("[ERROR] Timeout waiting for COMMAND_ACK")
 
     # Tracking method
-    def setPayloadObjectTrackingParams(self, cmd: float, pos_x: float=960, pos_y: float=540):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def setPayloadObjectTrackingParams(self, cmd: float, pos_x: float=960, pos_y: float=540) -> None:
         self.master.mav.command_long_send(
             self.payload_system_id,
             self.payload_component_id,
@@ -845,10 +783,7 @@ class PayloadSdkInterface:
             0, 4, 0, cmd, pos_x, pos_y, 0, 0
         )
 
-    def requestParamValue(self, param_index):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def requestParamValue(self, param_index) -> None:
         param_id = PAYLOAD_PARAMS[param_index]["id"]
         self.master.mav.param_request_read_send(
             self.payload_system_id,
@@ -857,10 +792,7 @@ class PayloadSdkInterface:
             -1
         )
 
-    def sendPayloadRequestStreamRate(self, index, time_ms):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def sendPayloadRequestStreamRate(self, index, time_ms) -> None:
         self.master.mav.command_long_send(
             self.payload_system_id,
             self.payload_component_id,
@@ -868,185 +800,167 @@ class PayloadSdkInterface:
             0, index, time_ms * 1000, 0, 0, 0, 0, 1
         )
 
-    def requestMessageStreamInterval(self):
-        if not self.master:
-            print("Error: Connection not initialized")
-            return
+    def requestMessageStreamInterval(self) -> None:
         for param in PAYLOAD_PARAMS:
-            if param["msg_rate"] > 0:
+            if param["msg_rate"] >= 0:
                 self.sendPayloadRequestStreamRate(param["index"], param["msg_rate"])
 
-    def regCameraDetected(self, callback):
-        self._notifyCameraDetected = callback
+    def _handle_msg_param_ext_value(self, msg) -> None:
+            if self._notifyPayloadParamChanged:
+                param_value_bytes = msg.param_value.encode('utf-8')[:128]
+                
+                if len(param_value_bytes) < 4:
+                    param_value_bytes = param_value_bytes.ljust(4, b'\0')
+                
+                param_uint32 = struct.unpack('<I', param_value_bytes[:4])[0]
+                params = [float(msg.param_index), float(param_uint32)]
+                param_id = msg.param_id
+                self._notifyPayloadParamChanged(payload_status_event_t.PAYLOAD_CAM_PARAMS, param_id, params)
 
-    def _handle_msg_heartbeat(self, msg):
-        comp_id = msg.get_srcComponent()
-        if comp_id == mavutil.mavlink.MAV_COMP_ID_USER2:
-            self.payload_system_id = msg.get_srcSystem()
-            self.payload_component_id = comp_id
-            if not self.is_stream_requested:
-                self.requestMessageStreamInterval()
-                self.is_stream_requested = True
-        elif comp_id in [
-            mavutil.mavlink.MAV_COMP_ID_CAMERA,
-            mavutil.mavlink.MAV_COMP_ID_CAMERA2,
-            mavutil.mavlink.MAV_COMP_ID_CAMERA3,
-            mavutil.mavlink.MAV_COMP_ID_CAMERA4,
-            mavutil.mavlink.MAV_COMP_ID_CAMERA5,
-            mavutil.mavlink.MAV_COMP_ID_CAMERA6,
-        ]:
-            self.camera_system_id = msg.get_srcSystem()
-            self.camera_component_id = comp_id
-            if not self.camera_detected:
-                self.camera_detected = True
-                print(f"[INFO] Camera detected with component ID: {comp_id}")
-                if self._notifyCameraDetected:
-                    self._notifyCameraDetected(True)
-        elif comp_id in range(mavutil.mavlink.MAV_COMP_ID_GIMBAL, mavutil.mavlink.MAV_COMP_ID_GIMBAL6 + 1):
-            self.gimbal_system_id = msg.get_srcSystem()
-            self.gimbal_component_id = comp_id
-
-    # Message handling methods
-    def _handle_msg_heartbeat(self, msg):
-        comp_id = msg.get_srcComponent()
-        if comp_id == mavutil.mavlink.MAV_COMP_ID_USER2:
-            self.payload_system_id = msg.get_srcSystem()
-            self.payload_component_id = comp_id
-            if not self.is_stream_requested:
-                self.requestMessageStreamInterval()
-                self.is_stream_requested = True
-        elif comp_id in range(mavutil.mavlink.MAV_COMP_ID_CAMERA, mavutil.mavlink.MAV_COMP_ID_CAMERA6 + 1):
-            self.camera_system_id = msg.get_srcSystem()
-            self.camera_component_id = comp_id
-        elif comp_id in range(mavutil.mavlink.MAV_COMP_ID_GIMBAL, mavutil.mavlink.MAV_COMP_ID_GIMBAL6 + 1):
-            self.gimbal_system_id = msg.get_srcSystem()
-            self.gimbal_component_id = comp_id
-
-    def _handle_msg_param_ext_value(self, msg):
-        
-        if self._notifyPayloadParamChanged:
-            param_value_bytes = bytearray()
-            for char in msg.param_value:
-                if ord(char) < 256: 
-                    param_value_bytes.append(ord(char))
-                else:
-                    param_value_bytes.append(0)  
-            param_value_bytes = bytes(param_value_bytes[:128]) 
-
-            if len(param_value_bytes) >= 4:
-                param_value = struct.unpack('<I', param_value_bytes[:4])[0]
-            else:
-                param_value = 0 
-
-            params = [float(msg.param_index), float(param_value)] 
-            param_char = msg.param_id.rstrip('\0')
-            self._notifyPayloadParamChanged(payload_status_event_t.PAYLOAD_CAM_PARAMS, param_char, params)
-
-    def _handle_msg_param_ext_ack(self, msg):
+    def _handle_msg_param_ext_ack(self, msg) -> None:
         if self._notifyPayloadStatusChanged:
             event = payload_status_event_t.PAYLOAD_PARAM_EXT_ACK
             param = [msg.param_result]
             self._notifyPayloadStatusChanged(event, param)
 
-    def _handle_msg_command_ack(self, msg):
+    def _handle_msg_command_ack(self, msg) -> None:
         if self._notifyPayloadStatusChanged:
             event = payload_status_event_t.PAYLOAD_ACK
             param = [msg.command, msg.result, msg.progress]
             self._notifyPayloadStatusChanged(event, param)
 
-    def _handle_msg_camera_information(self, msg):
+    def _handle_msg_camera_information(self, msg) -> None:
         if self._notifyPayloadStatusChanged:
             event = payload_status_event_t.PAYLOAD_CAM_INFO
             param = [msg.flags]
             self._notifyPayloadStatusChanged(event, param)
 
-    def _handle_msg_video_stream_information(self, msg):
+    def _handle_msg_video_stream_information(self, msg) -> None:
         if self._notifyPayloadStreamChanged:
             event = payload_status_event_t.PAYLOAD_CAM_STREAMINFO
             param = [msg.type, msg.resolution_v, msg.resolution_h]
             param_char = msg.uri.rstrip('\0')
             self._notifyPayloadStreamChanged(event, param_char, param)
 
-    def _handle_msg_storage_information(self, msg):
+    def _handle_msg_storage_information(self, msg) -> None:
         if self._notifyPayloadStatusChanged:
             event = payload_status_event_t.PAYLOAD_CAM_STORAGE_INFO
             param = [msg.total_capacity, msg.used_capacity, msg.available_capacity, msg.status]
             self._notifyPayloadStatusChanged(event, param)
 
-    def _handle_msg_camera_capture_status(self, msg):
+    def _handle_msg_camera_capture_status(self, msg) -> None:
         if self._notifyPayloadStatusChanged:
             event = payload_status_event_t.PAYLOAD_CAM_CAPTURE_STATUS
             param = [msg.image_status, msg.video_status, msg.image_count, msg.recording_time_ms]
             self._notifyPayloadStatusChanged(event, param)
 
-    def _handle_msg_camera_settings(self, msg):
+    def _handle_msg_camera_settings(self, msg) -> None:
         if self._notifyPayloadStatusChanged:
             event = payload_status_event_t.PAYLOAD_CAM_SETTINGS
             param = [msg.mode_id, msg.zoomLevel, msg.focusLevel]
             self._notifyPayloadStatusChanged(event, param)
 
-    def _handle_msg_mount_orientation(self, msg):
+    def _handle_msg_mount_orientation(self, msg) -> None:
         if self._notifyPayloadStatusChanged:
             event = payload_status_event_t.PAYLOAD_GB_ATTITUDE
             param = [msg.pitch, msg.roll, msg.yaw]
             self._notifyPayloadStatusChanged(event, param)
 
-    def _handle_msg_param_value(self, msg):
+    def _handle_msg_param_value(self, msg) -> None:
+
         if msg.get_srcComponent() == self.gimbal_component_id and self._notifyPayloadParamChanged:
             event = payload_status_event_t.PAYLOAD_GB_PARAMS
             param = [msg.param_index, msg.param_value]
             param_char = msg.param_id.rstrip('\0')
             self._notifyPayloadParamChanged(event, param_char, param)
+
         elif msg.get_srcComponent() == self.payload_component_id and self._notifyPayloadStatusChanged:
             event = payload_status_event_t.PAYLOAD_PARAMS
             param = [msg.param_index, msg.param_value]
             self._notifyPayloadStatusChanged(event, param)
 
     # Core message receiving loop
-    def _receive_messages(self):
-            while self.running:
-                if not self.master:
-                    time.sleep(0.1)
-                    continue
+    def payload_recv_handle(self) -> None:
+        self.last_heartbeat_time = time.time()
+
+        while self.time_to_exit == False:
+            current_time = time.time()
+
+            if current_time - self.last_heartbeat_time >= 1:
+                self.master.mav.ping_send(
+                    int(time.time() * 1e6),
+                    self.ping_seq,
+                    0,
+                    0  
+                )
+                self.ping_seq += 1
+
+            msg = self.master.recv_match(blocking=True, timeout=0.1)
+
+            if msg is None:
+                continue
+
+            msgid = msg.get_msgId()
+            sysid = msg.get_srcSystem()
+            compid = msg.get_srcComponent()
+
+            if compid == self.payload_component_id:
+                self.payload_system_id = sysid
+
+                if not self.is_send_stream_request:
+                    # Only need to send 1 time, after get the sys_id of the payload
+                    self.requestMessageStreamInterval()
+                    self.is_send_stream_request = True
+
+            # Update gimbal id
+            if compid == mavutil.mavlink.MAV_COMP_ID_GIMBAL  or \
+               compid == mavutil.mavlink.MAV_COMP_ID_GIMBAL2 or \
+               compid == mavutil.mavlink.MAV_COMP_ID_GIMBAL3 or \
+               compid == mavutil.mavlink.MAV_COMP_ID_GIMBAL4 or \
+               compid == mavutil.mavlink.MAV_COMP_ID_GIMBAL5 or \
+               compid == mavutil.mavlink.MAV_COMP_ID_GIMBAL6:
                 
-                # Gửi PING định kỳ nếu chưa tìm thấy camera
-                current_time = time.time()
-                if not self.camera_detected and current_time - self.last_ping_time >= 1:
-                    self.master.mav.ping_send(
-                        int(current_time * 1000),
-                        self.ping_seq,
-                        self.sys_id,
-                        1  # TARGET_COMP_ID
-                    )
-                    self.ping_seq += 1
-                    self.last_ping_time = current_time
+                self.gimbal_system_id = sysid
+                self.gimbal_component_id = compid
+            
+            # Update camera id
+            if compid >= mavutil.mavlink.MAV_COMP_ID_CAMERA and \
+               compid <= mavutil.mavlink.MAV_COMP_ID_CAMERA6:
+                
+                self.camera_system_id = sysid
+                self.camera_component_id = compid
 
-                msg = self.master.recv_match(blocking=True, timeout=0.1)
-                if msg is None:
-                    continue
-                msg_type = msg.get_type()
-                # print(f"Received message: {msg_type}, sysid: {msg.get_srcSystem()}, compid: {msg.get_srcComponent()}")
+            if msgid ==  mavutil.mavlink.MAVLINK_MSG_ID_HEARTBEAT:
+                self.last_heartbeat_time = current_time  
 
-                if msg_type == 'HEARTBEAT':
-                    self._handle_msg_heartbeat(msg)
-                elif msg_type == 'PARAM_EXT_VALUE':
-                    self._handle_msg_param_ext_value(msg)
-                elif msg_type == 'PARAM_EXT_ACK':
-                    self._handle_msg_param_ext_ack(msg)
-                elif msg_type == 'COMMAND_ACK':
-                    self._handle_msg_command_ack(msg)
-                elif msg_type == 'CAMERA_INFORMATION':
-                    self._handle_msg_camera_information(msg)
-                elif msg_type == 'VIDEO_STREAM_INFORMATION':
-                    self._handle_msg_video_stream_information(msg)
-                elif msg_type == 'STORAGE_INFORMATION':
-                    self._handle_msg_storage_information(msg)
-                elif msg_type == 'CAMERA_CAPTURE_STATUS':
-                    self._handle_msg_camera_capture_status(msg)
-                elif msg_type == 'CAMERA_SETTINGS':
-                    self._handle_msg_camera_settings(msg)
-                elif msg_type == 'MOUNT_ORIENTATION':
-                    self._handle_msg_mount_orientation(msg)
-                elif msg_type == 'PARAM_VALUE':
-                    self._handle_msg_param_value(msg)
-                time.sleep(0.0001)
+            elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_PARAM_EXT_VALUE:
+                self._handle_msg_param_ext_value(msg)
+
+            elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_COMMAND_ACK:
+                self._handle_msg_command_ack(msg)
+
+            elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_CAMERA_INFORMATION:
+                self._handle_msg_camera_information(msg)
+
+            elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_VIDEO_STREAM_INFORMATION:
+                self._handle_msg_video_stream_information(msg)
+
+            elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_STORAGE_INFORMATION:
+                self._handle_msg_storage_information(msg)
+
+            elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_CAMERA_CAPTURE_STATUS:
+                self._handle_msg_camera_capture_status(msg)
+
+            elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_CAMERA_SETTINGS:
+                self._handle_msg_camera_settings(msg)
+
+            elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_MOUNT_ORIENTATION:
+                self._handle_msg_mount_orientation(msg)
+
+            elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_PARAM_VALUE:
+                self._handle_msg_param_value(msg)
+
+            elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_PARAM_EXT_ACK:
+                self._handle_msg_param_ext_ack(msg)
+                
+            time.sleep(0.0001)

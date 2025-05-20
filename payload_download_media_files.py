@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+import os
+os.environ['MAVLINK20'] = "1"
+os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+
 import requests
 import re
 import sys
@@ -6,7 +11,7 @@ from typing import List
 href_elements: List[str] = []
 listed = False
 download_directory = ""
-udp_ip_target = "192.168.55.1"
+udp_ip_target = "192.168.12.238"
 
 # encode spaces in URL
 def encode_url_spaces(name: str) -> str:

@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+import os
+os.environ['MAVLINK20'] = "1"
+os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+
 import time
 import signal
 import sys
@@ -10,13 +15,13 @@ is_calibration_running = False
 is_exit = False
 start_time = time.time() * 1000000 
 
-# Set the calibration type
-my_calib = calib_type_t.SEARCH_HOME
-
 # SDK log function
 def sdk_log(func_name, message):
     elapsed_time = int((time.time() * 1000000) - start_time)
     print(f"[{elapsed_time}] SDK {func_name}(): {message}")
+
+# Set the calibration 
+my_calib = calib_type_t.AUTO_TUNE
 
 # Signal handler for quitting
 def quit_handler(sig, frame):
@@ -34,8 +39,8 @@ def quit_handler(sig, frame):
     sys.exit(0)
 
 # Callback function for payload status changes
-def on_payload_status_changed(event: int, param: list):
-    global is_calibration_running, is_exit
+def onPayloadStatusChanged(event: int, param: list):
+    global is_calibration_running, is_exit, my_calib
     
     if payload_status_event_t(event) == payload_status_event_t.PAYLOAD_ACK:
 
@@ -116,12 +121,16 @@ def on_payload_status_changed(event: int, param: list):
                     is_calibration_running = True
                     sdk_log("onPayloadStatusChanged", "The SearchHome is processing")
 
-# Callback function for payload param changes
-def on_payload_param_changed(event: int, param_char: str, param: list):
+# Callback function for payload param changes   
+def onPayloadParamChanged(event: int, param_char: str, param: list):
     if payload_status_event_t(event) == payload_status_event_t.PAYLOAD_CAM_PARAMS:
+        # param[0]: param_index
+		# param[1]: value
         sdk_log("onPayloadParamChanged", f"--> Payload_param: {param_char}, value: {param[1]:.2f}")
-    
+
     elif payload_status_event_t(event) == payload_status_event_t.PAYLOAD_GB_PARAMS:
+        # param[0]: param_index
+		# param[1]: value
         sdk_log("onPayloadParamChanged", f"--> Gimbal_param: index: {param[0]:.0f}, id: {param_char}, value: {param[1]:.0f}")
 
 def main():
@@ -138,7 +147,8 @@ def main():
     print("Waiting for payload signal!")
 
     # Register callback function
-    my_payload.regPayloadStatusChanged(on_payload_status_changed)
+    my_payload.regPayloadStatusChanged(onPayloadStatusChanged)
+    my_payload.regPayloadParamChanged(onPayloadParamChanged)
 
     # Check connection
     my_payload.checkPayloadConnection()
@@ -175,20 +185,23 @@ def main():
     # Load parameters to verify calibration
     if my_calib == calib_type_t.CALIB_GYRO:
         sdk_log("main", "Load the Gyro offset values")
-        my_payload.getPayloadGimbalSettingByID("GYROX_OFFSET")
-        my_payload.getPayloadGimbalSettingByID("GYROY_OFFSET")
-        my_payload.getPayloadGimbalSettingByID("GYROZ_OFFSET")
+
+        my_payload.getPayloadGimbalSettingByID("GYRO_OFFSETX")
+        my_payload.getPayloadGimbalSettingByID("GYRO_OFFSETY")
+        my_payload.getPayloadGimbalSettingByID("GYRO_OFFSETZ")
 
     elif my_calib == calib_type_t.CALIB_ACCEL:
         sdk_log("main", "Load the accel offset values")
-        my_payload.getPayloadGimbalSettingByID("ACCELX_OFFSET")
-        my_payload.getPayloadGimbalSettingByID("ACCELY_OFFSET")
-        my_payload.getPayloadGimbalSettingByID("ACCELZ_OFFSET")
+
+        my_payload.getPayloadGimbalSettingByID("ACC_OFFSETX")
+        my_payload.getPayloadGimbalSettingByID("ACC_OFFSETY")
+        my_payload.getPayloadGimbalSettingByID("ACC_OFFSETZ")
 
     elif my_calib == calib_type_t.AUTO_TUNE:
         sdk_log("main", "Waiting for the gimbal rebooted 20s")
         time.sleep(20) 
         sdk_log("main", "Load the Stiffness/Holdstrength values")
+
         my_payload.getPayloadGimbalSettingByID("STIFF_TILT")
         my_payload.getPayloadGimbalSettingByID("STIFF_ROLL")
         my_payload.getPayloadGimbalSettingByID("STIFF_PAN")
@@ -203,7 +216,7 @@ def main():
         pass
 
     time.sleep(1)  
-    sdk_log("main", "Exit.")
+    print("Exit.")
 
 if __name__ == "__main__":
     main()

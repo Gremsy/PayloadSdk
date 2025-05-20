@@ -1,9 +1,15 @@
+#!/usr/bin/env python
+import os
+os.environ['MAVLINK20'] = "1"
+os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+
 import time
 import signal
 import sys
 from pymavlink import mavutil
 from libs.payload_sdk import PayloadSdkInterface, payload_status_event_t, payload_param_t
 from libs.payload_define import *
+import pretty_errors
 
 my_payload = None
 time_to_exit = False

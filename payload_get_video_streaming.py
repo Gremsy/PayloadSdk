@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+import os
+os.environ['MAVLINK20'] = "1"
+os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+
 import time
 import signal
 import sys
@@ -76,7 +81,7 @@ def run_video_stream():
     Gst.init(None)
 
     # GStreamer pipeline
-    gst_pipeline = f"rtspsrc location={stream_uri} latency=0 ! decodebin ! videoconvert ! autovideosink sync=false"
+    gst_pipeline = f"rtspsrc location={stream_uri} latency=0 ! decodebin ! videoconvert ! autovideosink sync=false async=false"
     print(f"Starting GStreamer pipeline: {gst_pipeline}")
 
     # Create pipeline

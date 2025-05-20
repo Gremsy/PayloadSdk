@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+import os
+os.environ['MAVLINK20'] = "1"
+os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+
 import time
 import signal
 import sys
@@ -110,9 +115,9 @@ def main():
     my_payload.setParamRate(payload_param_t.PARAM_IR_ZOOM_LEVEL, 1000)
 
     if PAYLOAD_TYPE == "VIO":
-        my_payload.setParamRate(payload_param_t.PARAM_LRF_RANGE, 100)
-        my_payload.setParamRate(payload_param_t.PARAM_LRF_OFSET_X, 100)
-        my_payload.setParamRate(payload_param_t.PARAM_LRF_OFSET_Y, 100)
+        my_payload.setParamRate(payload_param_t.PARAM_LRF_RANGE, 1000)
+        my_payload.setParamRate(payload_param_t.PARAM_LRF_OFSET_X, 1000)
+        my_payload.setParamRate(payload_param_t.PARAM_LRF_OFSET_Y, 1000)
 
         my_payload.setParamRate(payload_param_t.PARAM_TARGET_COOR_LON, 1000)
         my_payload.setParamRate(payload_param_t.PARAM_TARGET_COOR_LAT, 1000)

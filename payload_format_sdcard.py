@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+import os
+os.environ['MAVLINK20'] = "1"
+os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+
 import time
 import signal
 import sys
@@ -38,7 +43,6 @@ def main():
     my_payload.checkPayloadConnection()
 
     # Format SD card
-    print("Formatting SD card...\n")
     my_payload.setFormatSDCard()
 
     # Close payload interface

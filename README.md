@@ -17,7 +17,7 @@ This branch supports:
 
 ## Clone the project 
 ```shell
-git clone --recurse-submodules -b python_sdk_v3 git@github.com:Gremsy/PayloadSdk.git
+git clone -b develop ssh://git@gitlab.gremsy.vn:2224/ai/tay-cu/pymavlink.git
 ```
 
 ## Setup Environment

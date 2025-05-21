@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
-os.environ['MAVLINK20'] = "1"
-os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+os.environ['MAVLINK20'] = '1'
+os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
 
 import requests
 import re

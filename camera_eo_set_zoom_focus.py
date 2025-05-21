@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
-os.environ['MAVLINK20'] = "1"
-os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+os.environ['MAVLINK20'] = '1'
+os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
 
 import time
 import signal
@@ -58,6 +58,7 @@ def main():
     print("Set zoom level to 1x!")
     if PAYLOAD_TYPE == "GHADRON":
         my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_FACTOR, payload_camera_video_zoom_factor.ZOOM_EO_1X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32) 
+    
     elif PAYLOAD_TYPE in ["VIO", "ZIO"]:
         my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, payload_camera_video_zoom_super_resolution_factor.ZOOM_SUPER_RESOLUTION_1X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(3)
@@ -84,7 +85,8 @@ def main():
     
     print("Start Zoom Out!")
     my_payload.setCameraZoom(mavutil.mavlink.ZOOM_TYPE_CONTINUOUS, camera_zoom_value.ZOOM_OUT)     # Zoom out
-    time.sleep(7)  
+    time.sleep(7)
+
     print("Stop Zoom!")
     my_payload.setCameraZoom(mavutil.mavlink.ZOOM_TYPE_CONTINUOUS, camera_zoom_value.ZOOM_STOP)    # Stop zoom 
     time.sleep(2)   
@@ -111,6 +113,7 @@ def main():
         print("Start Focus In!")
         my_payload.setCameraFocus(mavutil.mavlink.ZOOM_TYPE_CONTINUOUS, camera_focus_value.FOCUS_IN)   # Focus in
         time.sleep(4)  
+
         print("Stop Focus!")
         my_payload.setCameraFocus(mavutil.mavlink.ZOOM_TYPE_CONTINUOUS, camera_focus_value.FOCUS_STOP)  # Stop focus
         time.sleep(2)   
@@ -118,6 +121,7 @@ def main():
         print("Start Focus Out!")
         my_payload.setCameraFocus(mavutil.mavlink.ZOOM_TYPE_CONTINUOUS, camera_focus_value.FOCUS_OUT)   # Focus out
         time.sleep(4)   
+
         print("Stop Focus!")
         my_payload.setCameraFocus(mavutil.mavlink.ZOOM_TYPE_CONTINUOUS, camera_focus_value.FOCUS_STOP)  # Stop focus
         time.sleep(2)   

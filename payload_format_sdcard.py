@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 import os
-os.environ['MAVLINK20'] = "1"
-os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+os.environ['MAVLINK20'] = '1'
+os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
 
-import time
 import signal
 import sys
-from pymavlink import mavutil
 from libs.payload_sdk import PayloadSdkInterface
 from libs.payload_define import *
 

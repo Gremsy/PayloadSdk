@@ -42,7 +42,7 @@ source payloadsdk_env/bin/activate
 
 ```shell
 cd PayloadSdk/
-pip3 install -r requirements.txt
+pip install -r requirements.txt
 ```
 
 - Run the example:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
-os.environ['MAVLINK20'] = "1"
-os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+os.environ['MAVLINK20'] = '1'
+os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
 
 import time
 import signal
@@ -35,12 +35,10 @@ def quit_handler(sig, frame):
 def onPayloadStatusChanged(event: int, param: list):
     global my_capture, time_to_exit
     if payload_status_event_t(event) == payload_status_event_t.PAYLOAD_CAM_CAPTURE_STATUS:
-
         # param[0]: image_status
 		# param[1]: video_status
 		# param[2]: image_count
 		# param[3]: recording_time_ms
-        
         if my_capture == record_sequence_t.CHECK_CAPTURE_STATUS:
             print(f"Got payload capture status: image_status: {param[0]:.2f}, video_status: {param[1]:.2f}")
             # If video status is idle, do capture
@@ -60,12 +58,10 @@ def onPayloadStatusChanged(event: int, param: list):
                 print("   ---> Payload is busy. Wait...")
     
     elif payload_status_event_t(event) == payload_status_event_t.PAYLOAD_CAM_STORAGE_INFO:
-
         # param[0]: total_capacity
 		# param[1]: used_capacity
 		# param[2]: available_capacity
 		# param[3]: status
-        
         if my_capture == record_sequence_t.CHECK_STORAGE:
             print(f"Got payload storage info: total: {param[0]:.2f} MB, used: {param[1]:.2f} MB, available: {param[2]:.2f} MB")
             # If payload have enough space, check capture status
@@ -77,11 +73,9 @@ def onPayloadStatusChanged(event: int, param: list):
                 my_capture = record_sequence_t.IDLE
     
     elif payload_status_event_t(event) == payload_status_event_t.PAYLOAD_CAM_SETTINGS:
-    
         # param[0]: mode_id
 		# param[1]: zoomLevel
 		# param[2]: focusLevel
-        
         if my_capture == record_sequence_t.CHECK_CAMERA_MODE:
             print(f"Got camera mode: {param[0]:.2f}")
             if param[0] == 1: 
@@ -122,6 +116,7 @@ def main():
         if my_capture == record_sequence_t.IDLE:
             # Wait in idle state
             pass  
+
         elif my_capture == record_sequence_t.CHECK_STORAGE:
             my_payload.getPayloadStorage()
 
@@ -145,6 +140,7 @@ def main():
             time.sleep(0.7) 
             time_to_record -= 1
             print(time_to_record)
+            
             if time_to_record == 0:
                 my_capture = record_sequence_t.STOP_RECORD_VIDEO
 

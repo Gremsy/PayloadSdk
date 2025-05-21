@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
-os.environ['MAVLINK20'] = "1"
-os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+os.environ['MAVLINK20'] = '1'
+os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
 
 import time
 import signal
@@ -28,7 +28,6 @@ def quit_handler(sig, frame):
 
 # Callback function for payload param changes
 def onPayloadParamChanged(event: int, param_char: str, param: list):
-    
     if payload_status_event_t(event) == payload_status_event_t.PAYLOAD_CAM_PARAMS:
         # param[0]: param_index
 		# param[1]: value

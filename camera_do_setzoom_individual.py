@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
-os.environ['MAVLINK20'] = "1"
-os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+os.environ['MAVLINK20'] = '1'
+os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
 
 import time
 import signal
@@ -9,7 +9,6 @@ import sys
 from pymavlink import mavutil
 from libs.payload_sdk import PayloadSdkInterface, payload_status_event_t, payload_param_t
 from libs.payload_define import *
-import pretty_errors
 
 my_payload = None
 time_to_exit = False
@@ -31,7 +30,6 @@ def quit_handler(sig, frame):
 
 # Callback function for payload status changes
 def onPayloadStatusChanged(event: int, param: list):
-
     if payload_status_event_t(event) == payload_status_event_t.PAYLOAD_ACK:
         print(f" --> Got ack, from command: {param[0]:.0f} - result: {param[1]:.2f}")
 
@@ -41,7 +39,6 @@ def onPayloadStatusChanged(event: int, param: list):
     elif payload_status_event_t(event) == payload_status_event_t.PAYLOAD_PARAMS:
         # param[0]: param index
 		# param[1]: value
-
         if payload_param_t(param[0]) == payload_param_t.PARAM_EO_ZOOM_LEVEL:  
             print(f"Payload EO_ZOOM_LEVEL: {param[1]:.2f}")
 

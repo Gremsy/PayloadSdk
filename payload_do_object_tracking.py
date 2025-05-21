@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
-os.environ['MAVLINK20'] = "1"
-os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+os.environ['MAVLINK20'] = '1'
+os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
 
 import time
 import signal
@@ -40,7 +40,6 @@ def onPayloadStatusChanged(event: int, param: list):
     if payload_status_event_t(event) == payload_status_event_t.PAYLOAD_PARAMS:
         # param[0]: param index
         # param[1]: value
-
         if payload_param_t(param[0]) == payload_param_t.PARAM_TRACK_POS_X:
             track_pos_x = param[1]
 

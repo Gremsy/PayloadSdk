@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
-os.environ['MAVLINK20'] = "1"
-os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+os.environ['MAVLINK20'] = '1'
+os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
 
 import time
 import signal
@@ -50,6 +50,7 @@ def main():
     print("Enable IR Isotherms with high GAIN, sleep 5s ...")
     my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_IR_ISOTHERMS, payload_camera_ir_isotherms.PAYLOAD_CAMERA_IR_ISOTHERMS_ENABLE, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(0.1) 
+    
     my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_IR_ISOTHERMS_GAIN, payload_camera_ir_isotherms_gain.PAYLOAD_CAMERA_IR_ISOTHERMS_HIGH_GAIN, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(5)  
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
-os.environ['MAVLINK20'] = "1"
-os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+os.environ['MAVLINK20'] = '1'
+os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
 
 from pymavlink import mavutil
 import math
@@ -13,6 +13,7 @@ import sys
 from typing import Callable, List, Optional
 from .payload_define import *
 from .enum_base import *
+from .mavlink_msg_param_ext_value import *
 
 SDK_VERSION  = "3.0.0_build.20052025"
 PAYLOAD_TYPE = "VIO"
@@ -195,24 +196,6 @@ class get_stream_sequence_t(IntEnumBase):
     CHECK_STREAMING_URI =                                                  2
     START_PIPELINE      =                                                  3
     PIPELINE_RUNNING    =                                                  4
-
-# MAVLink message structures
-class mavlink_message_t(ctypes.Structure):
-    _pack_ = 1
-    _fields_ = [
-        ("checksum", ctypes.c_uint16),
-        ("magic", ctypes.c_uint8),
-        ("len", ctypes.c_uint8),
-        ("incompat_flags", ctypes.c_uint8),
-        ("compat_flags", ctypes.c_uint8),
-        ("seq", ctypes.c_uint8),
-        ("sysid", ctypes.c_uint8),
-        ("compid", ctypes.c_uint8),
-        ("msgid", ctypes.c_uint8 * 3), 
-        ("payload64", ctypes.c_uint64 * 33),
-        ("ck", ctypes.c_uint8 * 2),
-        ("signature", ctypes.c_uint8 * 13),
-    ]
 
 # MAVLink global position structure
 class mavlink_global_position_int_t(ctypes.Structure):
@@ -787,15 +770,52 @@ class PayloadSdkInterface:
                 self.sendPayloadRequestStreamRate(param["index"], param["msg_rate"])
 
     def _handle_msg_param_ext_value(self, msg) -> None:
-            if self._notifyPayloadParamChanged:
-                param_value_bytes = msg.param_value.encode('utf-8')[:128]
-                if len(param_value_bytes) < 4:
-                    param_value_bytes = param_value_bytes.ljust(4, b'\0')
-                
-                param_uint32 = struct.unpack('<I', param_value_bytes[:4])[0]
-                params = [float(msg.param_index), float(param_uint32)]
-                param_id = msg.param_id
-                self._notifyPayloadParamChanged(payload_status_event_t.PAYLOAD_CAM_PARAMS, param_id, params)
+        if self._notifyPayloadParamChanged:
+            buf = msg.get_msgbuf()
+
+            # get_msgbuf() returns the raw bytes of the message
+            # MAVLink message structure:
+            # typedef struct __mavlink_message {
+            #     uint16_t checksum;      ///< sent at end of packet
+            #     uint8_t magic;          ///< protocol magic marker
+            #     uint8_t len;            ///< Length of payload
+            #     uint8_t incompat_flags; ///< flags that must be understood
+            #     uint8_t compat_flags;   ///< flags that can be ignored if not understood
+            #     uint8_t seq;            ///< Sequence of packet
+            #     uint8_t sysid;          ///< ID of message sender system/aircraft
+            #     uint8_t compid;         ///< ID of the message sender component
+            #     uint32_t msgid:24;      ///< ID of message in payload
+            #     uint64_t payload64[(MAVLINK_MAX_PAYLOAD_LEN+MAVLINK_NUM_CHECKSUM_BYTES+7)/8];
+            #     uint8_t ck[2];          ///< incoming checksum bytes
+            #     uint8_t signature[MAVLINK_SIGNATURE_BLOCK_LEN];
+            # } mavlink_message_t;
+
+            # Header: 10 byte (magic, len, incompat_flags, compat_flags, seq, sysid, compid, msgid).
+            # Payload: (149 byte).
+            # Checksum và Signature:(2 byte checksum + 13 byte signature).
+
+            # Check if the message buffer is long enough to contain the header and payload
+            if len(buf) < 10 + MAVLINK_MSG_ID_PARAM_EXT_VALUE_LEN:
+                print("Invalid message buffer length for PARAM_EXT_VALUE")
+                return
+
+            # Extract the payload from the message buffer
+            payload = buf[10:10 + MAVLINK_MSG_ID_PARAM_EXT_VALUE_LEN]
+            
+            # Extract param_value from the payload
+            param_value_bytes = payload[20:20 + 128]
+            
+            # Check if the param_value_bytes is long enough to contain the uint32 value
+            if len(param_value_bytes) < 4:
+                print("param_value_bytes too short")
+                return
+            
+            # Unpack the first 4 bytes of param_value_bytes as a little-endian uint32
+            param_uint32 = struct.unpack('<I', param_value_bytes[:4])[0]
+            
+            params = [float(msg.param_index), float(param_uint32)]
+            param_id = msg.param_id
+            self._notifyPayloadParamChanged(payload_status_event_t.PAYLOAD_CAM_PARAMS, param_id, params)
 
     def _handle_msg_param_ext_ack(self, msg) -> None:
         if self._notifyPayloadStatusChanged:

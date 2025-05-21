@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
-os.environ['MAVLINK20'] = "1"
-os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+os.environ['MAVLINK20'] = '1'
+os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
 
 import time
 import signal
@@ -40,7 +40,6 @@ def onPayloadStatusChanged(event: int, param: list):
 		# param[1]: video_status
 		# param[2]: image_count
 		# param[3]: recording_time_ms
-        
         if my_capture == capture_sequence_t.CHECK_CAPTURE_STATUS:
             print(f"Got payload capture status: image_status: {param[0]:.2f}, video_status: {param[1]:.2f}")
 
@@ -69,7 +68,6 @@ def onPayloadStatusChanged(event: int, param: list):
 		# param[1]: used_capacity
 		# param[2]: available_capacity
 		# param[3]: status
-        
         if my_capture == capture_sequence_t.CHECK_STORAGE:
             print(f"Got payload storage info: total: {param[0]:.2f} MB, used: {param[1]:.2f} MB, available: {param[2]:.2f} MB")
 
@@ -85,7 +83,6 @@ def onPayloadStatusChanged(event: int, param: list):
         # param[0]: mode_id
 		# param[1]: zoomLevel
 		# param[2]: focusLevel
-        
         if my_capture == capture_sequence_t.CHECK_CAMERA_MODE:
             print(f"Got camera mode: {param[0]:.2f}")
             if param[0] == 0:  
@@ -129,6 +126,7 @@ def main():
         if my_capture == capture_sequence_t.IDLE:
             # Wait in idle state
             pass  
+
         elif my_capture == capture_sequence_t.CHECK_STORAGE:
             my_payload.getPayloadStorage()
 

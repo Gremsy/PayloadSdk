@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
-os.environ['MAVLINK20'] = "1"
-os.environ['MAVLINK_DIALECT'] = "ardupilotmega"
+os.environ['MAVLINK20'] = '1'
+os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
 
 import time
 import signal
@@ -33,13 +33,11 @@ def onPayloadStatusChanged(event: int, param: list):
         # param[0]: pitch
         # param[1]: roll
         # param[2]: yaw
-
         print(f"Pitch: {param[0]:.2f} - Roll: {param[1]:.2f} - Yaw: {param[2]:.2f}")
 
     elif payload_status_event_t(event) == payload_status_event_t.PAYLOAD_PARAMS:
         # param[0]: param index
         # param[1]: value
-
         if payload_param_t(param[0]) == payload_param_t.PARAM_EO_ZOOM_LEVEL:
             print(f"Payload EO_ZOOM_LEVEL: {param[1]:.2f}")
 

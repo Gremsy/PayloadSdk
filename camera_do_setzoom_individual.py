@@ -72,7 +72,7 @@ def main():
     # Set view source to EO/IR
     print("Set view source to EO/IR!")
     my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_EOIR, mavutil.mavlink.MAV_PARAM_TYPE_UINT32) 
-
+    
     # Change EO zoom mode to Super Resolution
     my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_MODE, payload_camera_video_zoom_mode.PAYLOAD_CAMERA_VIDEO_ZOOM_MODE_SUPER_RESOLUTION, mavutil.mavlink.MAV_PARAM_TYPE_UINT32) 
 

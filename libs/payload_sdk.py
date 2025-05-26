@@ -4,6 +4,7 @@ os.environ['MAVLINK20'] = '1'
 os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
 
 from pymavlink import mavutil
+from pymavlink.dialects.v20.ardupilotmega import *
 import math
 import threading
 import time
@@ -15,7 +16,7 @@ from .payload_define import *
 from .enum_base import *
 from .mavlink_msg_param_ext_value import *
 
-SDK_VERSION  = "3.0.0_build.20052025"
+SDK_VERSION  = "3.0.0_build.25052025"
 PAYLOAD_TYPE = "VIO"
 
 # Default connection parameters
@@ -40,19 +41,6 @@ CAMERA_COMPONENT_ID  = mavutil.mavlink.MAV_COMP_ID_CAMERA    # Auto update when 
 
 GIMBAL_SYSTEM_ID     = 1
 GIMBAL_COMPONENT_ID  = mavutil.mavlink.MAV_COMP_ID_GIMBAL    # Auto update when got the message from the payload
-
-# Param type enum
-class param_type(IntEnumBase):
-    PARAM_TYPE_UINT8  =                                                    1
-    PARAM_TYPE_INT8   =                                                    2
-    PARAM_TYPE_UINT16 =                                                    3
-    PARAM_TYPE_INT16  =                                                    4
-    PARAM_TYPE_UINT32 =                                                    5
-    PARAM_TYPE_INT32  =                                                    6
-    PARAM_TYPE_UINT64 =                                                    7
-    PARAM_TYPE_INT64  =                                                    8
-    PARAM_TYPE_REAL32 =                                                    9
-    PARAM_TYPE_REAL64 =                                                    10
 
 # Payload status event enum
 class payload_status_event_t(IntEnumBase):
@@ -219,6 +207,8 @@ class mavlink_system_time_t(ctypes.Structure):
     ]
 
 class PayloadSdkInterface:
+
+    # Initialize the PayloadSdkInterface object. Set up default parameters for connection, system IDs, component IDs, and callbacks.
     def __init__(self):
         print(f"Starting Gremsy PayloadSdk {SDK_VERSION}")
 
@@ -252,50 +242,8 @@ class PayloadSdkInterface:
         self.time_to_exit           = False
         self.ping_seq               = 0
 
-    # Helper functions
-    def to_rad(self, deg: float) -> float:
-        return deg * math.pi / 180.0
-
-    def to_deg(self, rad: float) -> float:
-        return rad * 180.0 / math.pi
-
-    def _euler_to_quaternion(self, roll: float, pitch: float, yaw: float) -> list:
-        cy = math.cos(yaw * 0.5)
-        sy = math.sin(yaw * 0.5)
-        cp = math.cos(pitch * 0.5)
-        sp = math.sin(pitch * 0.5)
-        cr = math.cos(roll * 0.5)
-        sr = math.sin(roll * 0.5)
-
-        q = [0] * 4
-
-        q[0] = cy * cp * cr + sy * sp * sr  # w
-        q[1] = cy * cp * sr - sy * sp * cr  # x
-        q[2] = sy * cp * sr + cy * sp * cr  # y
-        q[3] = sy * cp * cr - cy * sp * sr  # z
-
-        return q
-
-    # Callback registration methods
-    def regPayloadStatusChanged(self, callback: Callable[[payload_status_event_t, List[float]], None]) -> None:
-        if not callable(callback):
-            raise ValueError("Callback must be a callable object")
-        
-        self._notifyPayloadStatusChanged = callback
-
-    def regPayloadParamChanged(self, callback: Callable[[payload_status_event_t, str, List[float]], None]) -> None:
-        if not callable(callback):
-            raise ValueError("Callback must be a callable object")
-        
-        self._notifyPayloadParamChanged = callback
-
-    def regPayloadStreamChanged(self, callback: Callable[[payload_status_event_t, str, List[float]], None]) -> None:
-        if not callable(callback):
-            raise ValueError("Callback must be a callable object")
-        
-        self._notifyPayloadStreamChanged = callback
-
-    # Init connection to payload
+    ''' Connection methods '''
+    # Initialize the connection to the payload via UDP or UART.
     def sdkInitConnection(self) -> bool:
         if self.connection_type == CONTROL_UDP:
             if not self.ip or not self.port:
@@ -326,11 +274,19 @@ class PayloadSdkInterface:
                 source_component=self.comp_id
             )
 
-            time.sleep(1)  # Allow time for connection to establish
+            # Sending initial ping
+            self.master.mav.ping_send(
+                int(time.time() * 1000),
+                self.ping_seq,
+                0,
+                0
+            )
+            self.ping_seq += 1
 
             self.receive_thread = threading.Thread(target=self.payload_recv_handle)
             self.receive_thread.daemon = True
             self.receive_thread.start()
+            time.sleep(1)  # Allow some time for the thread to start
 
             return True
 
@@ -341,6 +297,7 @@ class PayloadSdkInterface:
 
             return False
 
+    # Check the connection to the payload within a specified timeout period.
     def checkPayloadConnection(self, timeout: float = 5.0) -> bool:
         result = False
         start_time = time.time()
@@ -389,7 +346,7 @@ class PayloadSdkInterface:
 
         return False
 
-    # Interface terminator
+    # Close the connection and stop the data receiving thread.
     def sdkQuit(self) -> None:
         self.time_to_exit = True
 
@@ -402,7 +359,8 @@ class PayloadSdkInterface:
 
         print("[INFO] Connection closed.")
 
-    # Camera methods
+    ''' Camera Control methods '''
+    # Set the parameter value for the payload's camera.
     def setPayloadCameraParam(self, param_id: str, param_value: int, param_type: int) -> None:
         msg = {
             'param_id': bytearray(16),  
@@ -426,129 +384,238 @@ class PayloadSdkInterface:
             msg['param_type']
         )
     
+    # Set the operating mode for the camera.
+    def setPayloadCameraMode(self, mode: int) -> None:
+        self.master.mav.command_long_send(
+            self.camera_system_id,
+            self.camera_component_id,
+            mavutil.mavlink.MAV_CMD_SET_CAMERA_MODE,
+            1, 
+            0, 
+            mode, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0
+        )
+
+    # Request the camera to capture an image.
+    def setPayloadCameraCaptureImage(self, interval_s: int=0) -> None:
+        self.master.mav.command_long_send(
+            self.camera_system_id,
+            self.camera_component_id,
+            mavutil.mavlink.MAV_CMD_IMAGE_START_CAPTURE,
+            1, 
+            0, 
+            interval_s, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0
+        )
+
+    # Stop the interval image capturing process.
+    def setPayloadCameraStopImage(self) -> None:
+        self.master.mav.command_long_send(
+            self.camera_system_id,
+            self.camera_component_id,
+            mavutil.mavlink.MAV_CMD_IMAGE_STOP_CAPTURE,
+            1, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0
+        )
+
+    # Start video recording.
+    def setPayloadCameraRecordVideoStart(self) -> None:
+        self.master.mav.command_long_send(
+            self.camera_system_id,
+            self.camera_component_id,
+            mavutil.mavlink.MAV_CMD_VIDEO_START_CAPTURE,
+            1, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0
+        )
+
+    # Stop video recording.
+    def setPayloadCameraRecordVideoStop(self) -> None:
+        self.master.mav.command_long_send(
+            self.camera_system_id,
+            self.camera_component_id,
+            mavutil.mavlink.MAV_CMD_VIDEO_STOP_CAPTURE,
+            1, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0
+        )
+
+    # Adjust the camera's zoom level.
+    def setCameraZoom(self, zoom_type: float, zoom_value: float) -> None:
+        self.master.mav.command_long_send(
+            self.camera_system_id,
+            self.camera_component_id,
+            mavutil.mavlink.MAV_CMD_SET_CAMERA_ZOOM,
+            1, 
+            zoom_type, 
+            zoom_value, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0
+        )
+
+    # Adjust the camera's focus.
+    def setCameraFocus(self, focus_type: float, focus_value: float=0) -> None:
+        self.master.mav.command_long_send(
+            self.camera_system_id,
+            self.camera_component_id,
+            mavutil.mavlink.MAV_CMD_SET_CAMERA_FOCUS,
+            1, 
+            focus_type, 
+            focus_value, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0
+        )
+
+    # Request the list of all camera parameters.
     def getPayloadCameraSettingList(self) -> None:
         self.master.mav.param_ext_request_list_send(
             self.camera_system_id ,
             self.camera_component_id
         )  
-        
+   
+   # Request the value of a specific camera parameter by ID.
     def getPayloadCameraSettingByID(self, param_id: str) -> None:
-        self.master.mav.param_request_read_send(
+        if len(param_id) > 16:
+            print(f"[ERROR] param_id '{param_id}' exceeds 16 characters")
+            return
+        
+        self.master.mav.param_ext_request_read_send(
             self.camera_system_id,
             self.camera_component_id,
             param_id.encode(),
             -1
         )
 
+    # Request the value of a camera parameter by index.
     def getPayloadCameraSettingByIndex(self, idx: int) -> None:
-        self.master.mav.param_request_read_send(
+        if not 0 <= idx <= 255:
+            print(f"[ERROR] Index {idx} out of range (0-255)")
+            return
+        
+        self.master.mav.param_ext_request_read_send(
             self.camera_system_id,
             self.camera_component_id,
             b"",
             idx
         )
 
-    def getPayloadStorage(self) -> None:
-        self.master.mav.command_long_send(
-            self.camera_system_id,
-            self.camera_component_id,
-            mavutil.mavlink.MAV_CMD_REQUEST_STORAGE_INFORMATION,
-            0, 0, 0, 0, 0, 0, 0, 0
-        )
-
-    def getPayloadCaptureStatus(self) -> None:
-        self.master.mav.command_long_send(
-            self.camera_system_id,
-            self.camera_component_id,
-            mavutil.mavlink.MAV_CMD_REQUEST_CAMERA_CAPTURE_STATUS,
-            0, 0, 0, 0, 0, 0, 0, 0
-        )
-
+    # Request the current mode of the camera.
     def getPayloadCameraMode(self) -> None:
         self.master.mav.command_long_send(
             self.camera_system_id,
             self.camera_component_id,
             mavutil.mavlink.MAV_CMD_REQUEST_CAMERA_SETTINGS,
-            0, 0, 0, 0, 0, 0, 0, 0
+            1, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0
         )
 
+    # Request detailed information about the camera.
     def getPayloadCameraInformation(self) -> None:
         self.master.mav.command_long_send(
             self.camera_system_id,
             self.camera_component_id,
             mavutil.mavlink.MAV_CMD_REQUEST_CAMERA_INFORMATION,
-            0, 0, 0, 0, 0, 0, 0, 0
+            1, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0
         )
 
+    # Request information about the camera's video stream.
     def getPayloadCameraStreamingInformation(self) -> None:
         self.master.mav.command_long_send(
             self.camera_system_id,
             self.camera_component_id,
             mavutil.mavlink.MAV_CMD_REQUEST_VIDEO_STREAM_INFORMATION,
-            0, 0, 0, 0, 0, 0, 0, 0
+            1, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0
         )
 
-    def setPayloadCameraMode(self, mode: int) -> None:
+    # Request information about the camera's storage (SD card).
+    def getPayloadStorage(self) -> None:
         self.master.mav.command_long_send(
             self.camera_system_id,
             self.camera_component_id,
-            mavutil.mavlink.MAV_CMD_SET_CAMERA_MODE,
-            0, 0, mode, 0, 0, 0, 0, 0
+            mavutil.mavlink.MAV_CMD_REQUEST_STORAGE_INFORMATION,
+            1, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0
         )
 
-    def setPayloadCameraCaptureImage(self, interval_s: int=0) -> None:
+    # Request the current capture status of the camera.
+    def getPayloadCaptureStatus(self) -> None:
         self.master.mav.command_long_send(
             self.camera_system_id,
             self.camera_component_id,
-            mavutil.mavlink.MAV_CMD_IMAGE_START_CAPTURE,
-            0, 0, interval_s, 1, 0, 0, 0, 0
+            mavutil.mavlink.MAV_CMD_REQUEST_CAMERA_CAPTURE_STATUS,
+            1, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0
         )
 
-    def setPayloadCameraStopImage(self) -> None:
-        self.master.mav.command_long_send(
-            self.camera_system_id,
-            self.camera_component_id,
-            mavutil.mavlink.MAV_CMD_IMAGE_STOP_CAPTURE,
-            0, 0, 0, 0, 0, 0, 0, 0
-        )
-
-    def setPayloadCameraRecordVideoStart(self) -> None:
-        self.master.mav.command_long_send(
-            self.camera_system_id,
-            self.camera_component_id,
-            mavutil.mavlink.MAV_CMD_VIDEO_START_CAPTURE,
-            0, 0, 0, 0, 0, 0, 0, 0
-        )
-
-    def setPayloadCameraRecordVideoStop(self) -> None:
-        self.master.mav.command_long_send(
-            self.camera_system_id,
-            self.camera_component_id,
-            mavutil.mavlink.MAV_CMD_VIDEO_STOP_CAPTURE,
-            0, 0, 0, 0, 0, 0, 0, 0
-        )
-
+    # Set the message rate for a specific parameter.
     def setParamRate(self, param_index: int, time_ms: int) -> None:
         PAYLOAD_PARAMS[param_index]["msg_rate"] = time_ms
         self.sendPayloadRequestStreamRate(param_index, time_ms)
 
-    def setCameraZoom(self, zoom_type: float, zoom_value: float) -> None:
-        self.master.mav.command_long_send(
-            self.camera_system_id,
-            self.camera_component_id,
-            mavutil.mavlink.MAV_CMD_SET_CAMERA_ZOOM,
-            0, zoom_type, zoom_value, 0, 0, 0, 0, 0
-        )
-
-    def setCameraFocus(self, focus_type: float, focus_value: float=0) -> None:
-        self.master.mav.command_long_send(
-            self.camera_system_id,
-            self.camera_component_id,
-            mavutil.mavlink.MAV_CMD_SET_CAMERA_FOCUS,
-            0, focus_type, focus_value, 0, 0, 0, 0, 0
-        )
-
-    # Gimbal methods
+    ''' Gimbal Control methods '''
+    # Set the value of a gimbal parameter by ID.
     def setPayloadGimbalParamByID(self, param_id: str, param_value: float) -> None:
         self.master.mav.param_set_send(
             self.gimbal_system_id,
@@ -558,73 +625,7 @@ class PayloadSdkInterface:
             mavutil.mavlink.MAV_PARAM_TYPE_REAL32
         )
 
-    def sendPayloadGimbalCalibGyro(self) -> None:
-        self.master.mav.command_long_send(
-            self.gimbal_system_id,
-            self.gimbal_component_id,
-            mavutil.mavlink.MAV_CMD_GIMBAL_REQUEST_AXIS_CALIBRATION,
-            1, 
-            0, 0, 0, 0, 0, 0, 1
-        )
-
-    def sendPayloadGimbalCalibAccel(self) -> None:
-        self.master.mav.command_long_send(
-            self.gimbal_system_id,
-            self.gimbal_component_id,
-            mavutil.mavlink.MAV_CMD_GIMBAL_REQUEST_AXIS_CALIBRATION,
-            1, 
-            0, 0, 0, 0, 0, 0, 2 
-        )
-
-    def sendPayloadGimbalCalibMotor(self) -> None:
-        self.master.mav.command_long_send(
-            self.gimbal_system_id,
-            self.gimbal_component_id,
-            mavutil.mavlink.MAV_CMD_DO_SET_HOME,
-            1,  
-            0, 0, 0, 0, 0, 0, 1 
-        )
-
-    def sendPayloadGimbalSearchHome(self) -> None:
-        self.master.mav.command_long_send(
-            self.gimbal_system_id,
-            self.gimbal_component_id,
-            mavutil.mavlink.MAV_CMD_DO_SET_HOME,
-            1,  
-            0, 0, 0, 0, 0, 0, 2  
-        )
-
-    def sendPayloadGimbalAutoTune(self, status: bool) -> None:
-        self.master.mav.command_long_send(
-            self.gimbal_system_id,
-            self.gimbal_component_id,
-            mavutil.mavlink.MAV_CMD_USER_3,
-            1, 
-            0, 0, 0, 0, 0, 0, 1 if status else 0  
-        )
-
-    def getPayloadGimbalSettingList(self) -> None:
-        self.master.mav.param_request_list_send(
-            self.gimbal_system_id,
-            self.gimbal_component_id
-        )
-
-    def getPayloadGimbalSettingByID(self, param_id: str) -> None:
-        self.master.mav.param_request_read_send(
-            self.gimbal_system_id,
-            self.gimbal_component_id,
-            param_id.encode(),
-            -1
-        )
-
-    def getPayloadGimbalSettingByIndex(self, idx: int) -> None:
-        self.master.mav.param_request_read_send(
-            self.gimbal_system_id,
-            self.gimbal_component_id,
-            b"",
-            idx
-        )
-
+    # Set the speed or angle for move gimbal.
     def setGimbalSpeed(self, spd_pitch: float, spd_roll: float, spd_yaw: float, mode: input_mode_t) -> None:
         if mode == input_mode_t.INPUT_ANGLE:
             if spd_yaw > 180 or spd_yaw < -180:
@@ -639,7 +640,7 @@ class PayloadSdkInterface:
                 print("ERROR: Gimbal Protocol V2 only supports pitch axis from -90 degrees to 90 degrees!")
                 return
             
-            q = self._euler_to_quaternion(self.to_rad(spd_roll), self.to_rad(spd_pitch), self.to_rad(spd_yaw))
+            q = self.mavlink_euler_to_quaternion(self.to_rad(spd_roll), self.to_rad(spd_pitch), self.to_rad(spd_yaw))
 
             angular_velocity_x = float('nan')
             angular_velocity_y = float('nan')
@@ -666,9 +667,123 @@ class PayloadSdkInterface:
             print(f"Error in gimbal_device_set_attitude_send: {e}")
             print("Ensure pymavlink is updated and supports GIMBAL_DEVICE_SET_ATTITUDE correctly.")
 
-    # FFC methods
+    # Request the list of all gimbal parameters.
+    def getPayloadGimbalSettingList(self) -> None:
+        self.master.mav.param_request_list_send(
+            self.gimbal_system_id,
+            self.gimbal_component_id
+        )
+
+    # Request the value of a specific gimbal parameter by ID.
+    def getPayloadGimbalSettingByID(self, param_id: str) -> None:
+        if len(param_id) > 16:
+            print(f"[ERROR] param_id '{param_id}' exceeds 16 characters")
+            return
+        
+        self.master.mav.param_request_read_send(
+            self.gimbal_system_id,
+            self.gimbal_component_id,
+            param_id.encode(),
+            -1
+        )
+
+    # Request the value of a gimbal parameter by index.
+    def getPayloadGimbalSettingByIndex(self, idx: int) -> None:
+        if not 0 <= idx <= 255:
+            print(f"[ERROR] Index {idx} out of range (0-255)")
+            return
+
+        self.master.mav.param_request_read_send(
+            self.gimbal_system_id,
+            self.gimbal_component_id,
+            b"",
+            idx
+        )
+
+    # Send command to calibrate the gimbal's gyro.
+    def sendPayloadGimbalCalibGyro(self) -> None:
+        self.master.mav.command_long_send(
+            self.gimbal_system_id,
+            self.gimbal_component_id,
+            mavutil.mavlink.MAV_CMD_GIMBAL_REQUEST_AXIS_CALIBRATION,
+            1, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            1
+        )
+
+    # Send command to calibrate the gimbal's accelerometer.
+    def sendPayloadGimbalCalibAccel(self) -> None:
+        self.master.mav.command_long_send(
+            self.gimbal_system_id,
+            self.gimbal_component_id,
+            mavutil.mavlink.MAV_CMD_GIMBAL_REQUEST_AXIS_CALIBRATION,
+            1, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            2 
+        )
+
+    # Send command to calibrate the gimbal's motor.
+    def sendPayloadGimbalCalibMotor(self) -> None:
+        self.master.mav.command_long_send(
+            self.gimbal_system_id,
+            self.gimbal_component_id,
+            mavutil.mavlink.MAV_CMD_DO_SET_HOME,
+            1,  
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            1 
+        )
+
+    # Send command to search for the gimbal's home position.
+    def sendPayloadGimbalSearchHome(self) -> None:
+        self.master.mav.command_long_send(
+            self.gimbal_system_id,
+            self.gimbal_component_id,
+            mavutil.mavlink.MAV_CMD_DO_SET_HOME,
+            1,  
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            2  
+        )
+
+    # Send command to auto-tune the gimbal.
+    def sendPayloadGimbalAutoTune(self, status: bool) -> None:
+        self.master.mav.command_long_send(
+            self.gimbal_system_id,
+            self.gimbal_component_id,
+            mavutil.mavlink.MAV_CMD_USER_3,
+            1, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            1 if status else 0  
+        )
+
+    ''' FFC Control methods '''
+    # Set the FFC mode for the camera.
     def setPayloadCameraFFCMode(self, mode: int) -> None:
-        if mode >= ffc_mode_t.FFC_MODE_END:
+        if 0 > mode or mode >= ffc_mode_t.FFC_MODE_END:
             print("Invalid FFC mode")
             return
         
@@ -676,21 +791,34 @@ class PayloadSdkInterface:
             self.payload_system_id,
             self.payload_component_id,
             mavutil.mavlink.MAV_CMD_USER_4,
-            0, 2, 6, mode, 0, 0, 0, 0
+            1, 
+            2, 
+            6, 
+            mode, 
+            0, 
+            0, 
+            0, 
+            0
         )
 
+    # Trigger FFC calibration for the camera.
     def setPayloadCameraFFCTrigg(self) -> None:
         self.master.mav.command_long_send(
-            self.payload_system_id,
-            self.payload_component_id,
-            mavutil.mavlink.MAV_CMD_USER_4,
-            0, 2, 7, 0, 0, 0, 0, 0
+            self.payload_system_id,          
+            self.payload_component_id,       
+            mavutil.mavlink.MAV_CMD_USER_4,  
+            1,                               
+            2,                               
+            7,                               
+            0,                               
+            0,                               
+            0,                               
+            0,                               
+            0                                
         )
 
-    def getPayloadCameraFFCMode(self) -> None:
-        raise NotImplementedError("getPayloadCameraFFCMode is not implemented yet.")
-
-    # GPS and system time methods
+    ''' GPS methods '''
+    # Send GPS position information to the payload.
     def sendPayloadGPSPosition(self, gps_data: mavlink_global_position_int_t) -> None:
         self.master.mav.global_position_int_send(
             gps_data.time_boot_ms,
@@ -704,13 +832,16 @@ class PayloadSdkInterface:
             gps_data.hdg
         )
 
+    ''' System Time methods '''
+    # Send system time information to the payload.
     def sendPayloadSystemTime(self, sys_time_data: mavlink_system_time_t) -> None:
         self.master.mav.system_time_send(
             sys_time_data.time_unix_usec,
             sys_time_data.time_boot_ms
         )
 
-    # FormatSDCard method
+    ''' SD Card method '''
+    # Format the camera's SD card.
     def setFormatSDCard(self) -> None:
         print("[INFO] Sending SD card format command")
 
@@ -718,37 +849,50 @@ class PayloadSdkInterface:
             self.camera_system_id,
             self.camera_component_id,
             mavutil.mavlink.MAV_CMD_STORAGE_FORMAT,
-            1, 1, 0, 0, 0, 0, 0, 0   
+            1, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0   
         )
 
-        while True:
-            msg = self.master.recv_match(type='COMMAND_ACK', blocking=False, timeout=0.1)
-
-            if msg is None:
-                continue
-
-            if msg.command == mavutil.mavlink.MAV_CMD_STORAGE_FORMAT:
-                if msg.result == mavutil.mavlink.MAV_RESULT_ACCEPTED:
-                    
-                    print("[INFO] SD card formatted successfully")
-
-                else:
-                    print(f"[ERROR] SD card format failed with result: {msg.result}")
-                break  
-
-            time.sleep(0.01)
-
-    # Tracking method
+    ''' Object Tracking method '''
+    # Set parameters for object tracking functionality.
     def setPayloadObjectTrackingParams(self, cmd: float, pos_x: float=960, pos_y: float=540) -> None:
         self.master.mav.command_long_send(
             self.payload_system_id,
             self.payload_component_id,
             mavutil.mavlink.MAV_CMD_USER_4,
-            0, 4, 0, cmd, pos_x, pos_y, 0, 0
+            1, 
+            4, 
+            0, 
+            cmd, 
+            pos_x, 
+            pos_y, 
+            0, 
+            0
         )
 
-    def requestParamValue(self, param_index) -> None:
-        param_id = PAYLOAD_PARAMS[param_index]["id"]
+    ''' Parameter Request methods '''
+    # Request the value of a specific parameter.
+    def requestParamValue(self, param_index: int) -> None:
+        if not 0 <= param_index <= 255:
+            print(f"[ERROR] param_index {param_index} out of range (0-255)")
+            return
+        
+        try:
+            param_id = PAYLOAD_PARAMS[param_index]["id"]
+        except (IndexError, KeyError):
+            print(f"[ERROR] Invalid param_index {param_index} or missing 'id' in PAYLOAD_PARAMS")
+            return
+        
+        if len(param_id) > 16:
+            print(f"[ERROR] param_id '{param_id}' exceeds 16 characters")
+            return
+        
         self.master.mav.param_request_read_send(
             self.payload_system_id,
             self.payload_component_id,
@@ -756,20 +900,31 @@ class PayloadSdkInterface:
             -1
         )
 
-    def sendPayloadRequestStreamRate(self, index, time_ms) -> None:
+    # Send a request for the message rate of a parameter.
+    def sendPayloadRequestStreamRate(self, index: int, time_ms: int) -> None:
         self.master.mav.command_long_send(
             self.payload_system_id,
             self.payload_component_id,
             mavutil.mavlink.MAV_CMD_SET_MESSAGE_INTERVAL,
-            0, index, time_ms * 1000, 0, 0, 0, 0, 1
+            0, 
+            index, 
+            time_ms * 1000, 
+            0, 
+            0, 
+            0, 
+            0, 
+            1
         )
 
+    # Request the message rate for all parameters with a set msg_rate.
     def requestMessageStreamInterval(self) -> None:
         for param in PAYLOAD_PARAMS:
             if param["msg_rate"] >= 0:
                 self.sendPayloadRequestStreamRate(param["index"], param["msg_rate"])
 
-    def _handle_msg_param_ext_value(self, msg) -> None:
+    ''' Message Handler methods '''
+    # Handle the PARAM_EXT_VALUE message from MAVLink.
+    def _handle_msg_param_ext_value(self, msg: MAVLink_param_ext_value_message) -> None:
         if self._notifyPayloadParamChanged:
             buf = msg.get_msgbuf()
 
@@ -817,56 +972,58 @@ class PayloadSdkInterface:
             param_id = msg.param_id
             self._notifyPayloadParamChanged(payload_status_event_t.PAYLOAD_CAM_PARAMS, param_id, params)
 
-    def _handle_msg_param_ext_ack(self, msg) -> None:
-        if self._notifyPayloadStatusChanged:
-            event = payload_status_event_t.PAYLOAD_PARAM_EXT_ACK
-            param = [msg.param_result]
-            self._notifyPayloadStatusChanged(event, param)
-
-    def _handle_msg_command_ack(self, msg) -> None:
+    # Handle the COMMAND_ACK message from MAVLink.
+    def _handle_msg_command_ack(self, msg: MAVLink_command_ack_message) -> None:
         if self._notifyPayloadStatusChanged:
             event = payload_status_event_t.PAYLOAD_ACK
             param = [msg.command, msg.result, msg.progress]
             self._notifyPayloadStatusChanged(event, param)
 
-    def _handle_msg_camera_information(self, msg) -> None:
+    # Handle the CAMERA_INFORMATION message from MAVLink.
+    def _handle_msg_camera_information(self, msg: MAVLink_camera_information_message) -> None:
         if self._notifyPayloadStatusChanged:
             event = payload_status_event_t.PAYLOAD_CAM_INFO
             param = [msg.flags]
             self._notifyPayloadStatusChanged(event, param)
 
-    def _handle_msg_video_stream_information(self, msg) -> None:
+    # Handle the CAMERA_STREAM_INFORMATION message from MAVLink.
+    def _handle_msg_camera_stream_information(self, msg: MAVLink_video_stream_information_message) -> None:
         if self._notifyPayloadStreamChanged:
             event = payload_status_event_t.PAYLOAD_CAM_STREAMINFO
             param = [msg.type, msg.resolution_v, msg.resolution_h]
             param_char = msg.uri.rstrip('\0')
             self._notifyPayloadStreamChanged(event, param_char, param)
 
-    def _handle_msg_storage_information(self, msg) -> None:
+    # Handle the STORAGE_INFORMATION message from MAVLink.
+    def _handle_msg_storage_information(self, msg: MAVLink_storage_information_message) -> None:
         if self._notifyPayloadStatusChanged:
             event = payload_status_event_t.PAYLOAD_CAM_STORAGE_INFO
             param = [msg.total_capacity, msg.used_capacity, msg.available_capacity, msg.status]
             self._notifyPayloadStatusChanged(event, param)
 
-    def _handle_msg_camera_capture_status(self, msg) -> None:
+    # Handle the CAMERA_CAPTURE_STATUS message from MAVLink.
+    def _handle_msg_camera_capture_status(self, msg: MAVLink_camera_capture_status_message) -> None:
         if self._notifyPayloadStatusChanged:
             event = payload_status_event_t.PAYLOAD_CAM_CAPTURE_STATUS
             param = [msg.image_status, msg.video_status, msg.image_count, msg.recording_time_ms]
             self._notifyPayloadStatusChanged(event, param)
 
-    def _handle_msg_camera_settings(self, msg) -> None:
+    # Handle the CAMERA_SETTINGS message from MAVLink.
+    def _handle_msg_camera_settings(self, msg: MAVLink_camera_settings_message) -> None:
         if self._notifyPayloadStatusChanged:
             event = payload_status_event_t.PAYLOAD_CAM_SETTINGS
             param = [msg.mode_id, msg.zoomLevel, msg.focusLevel]
             self._notifyPayloadStatusChanged(event, param)
 
-    def _handle_msg_mount_orientation(self, msg) -> None:
+    # Handle the MOUNT_ORIENTATION message from MAVLink.
+    def _handle_msg_mount_orientation(self, msg: MAVLink_mount_orientation_message) -> None:
         if self._notifyPayloadStatusChanged:
             event = payload_status_event_t.PAYLOAD_GB_ATTITUDE
             param = [msg.pitch, msg.roll, msg.yaw]
             self._notifyPayloadStatusChanged(event, param)
 
-    def _handle_msg_param_value(self, msg) -> None:
+    # Handle the PARAM_VALUE message from MAVLink.
+    def _handle_msg_param_value(self, msg: MAVLink_param_value_message) -> None:
 
         if msg.get_srcComponent() == self.gimbal_component_id and self._notifyPayloadParamChanged:
             event = payload_status_event_t.PAYLOAD_GB_PARAMS
@@ -878,8 +1035,15 @@ class PayloadSdkInterface:
             event = payload_status_event_t.PAYLOAD_PARAMS
             param = [msg.param_index, msg.param_value]
             self._notifyPayloadStatusChanged(event, param)
+    
+    # Handle the COMMAND_EXT_ACK message from MAVLink.
+    def _handle_msg_command_ext_ack(self, msg: MAVLink_param_ext_ack_message) -> None:
+        if self._notifyPayloadStatusChanged:
+            event = payload_status_event_t.PAYLOAD_PARAM_EXT_ACK
+            param = [msg.param_result]
+            self._notifyPayloadStatusChanged(event, param)
 
-    # Core message receiving loop
+    # Main loop to receive and process MAVLink messages.
     def payload_recv_handle(self) -> None:
         self.last_heartbeat_time = time.time()
         
@@ -888,7 +1052,7 @@ class PayloadSdkInterface:
 
             if current_time - self.last_heartbeat_time >= 1:
                 self.master.mav.ping_send(
-                    int(time.time() * 1e6),
+                    int(time.time() * 1000),
                     self.ping_seq,
                     0,
                     0  
@@ -943,14 +1107,14 @@ class PayloadSdkInterface:
                 self._handle_msg_camera_information(msg)
 
             elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_VIDEO_STREAM_INFORMATION:
-                self._handle_msg_video_stream_information(msg)
+                self._handle_msg_camera_stream_information(msg)
 
             elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_STORAGE_INFORMATION:
                 self._handle_msg_storage_information(msg)
 
             elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_CAMERA_CAPTURE_STATUS:
                 self._handle_msg_camera_capture_status(msg)
-
+            
             elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_CAMERA_SETTINGS:
                 self._handle_msg_camera_settings(msg)
 
@@ -961,6 +1125,55 @@ class PayloadSdkInterface:
                 self._handle_msg_param_value(msg)
 
             elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_PARAM_EXT_ACK:
-                self._handle_msg_param_ext_ack(msg)
-                
+                self._handle_msg_command_ext_ack(msg)
+
             time.sleep(0.0001)
+
+    ''' Helper functions '''
+    # Convert angle from degrees to radians.
+    def to_rad(self, deg: float) -> float:
+        return deg * math.pi / 180.0
+
+    # Convert angle from radians to degrees.
+    def to_deg(self, rad: float) -> float:
+        return rad * 180.0 / math.pi
+
+    # Convert Euler angles to quaternion.
+    def mavlink_euler_to_quaternion(self, roll: float, pitch: float, yaw: float) -> list:
+        cy = math.cos(yaw * 0.5)
+        sy = math.sin(yaw * 0.5)
+        cp = math.cos(pitch * 0.5)
+        sp = math.sin(pitch * 0.5)
+        cr = math.cos(roll * 0.5)
+        sr = math.sin(roll * 0.5)
+
+        q = [0] * 4
+
+        q[0] = cy * cp * cr + sy * sp * sr  # w
+        q[1] = cy * cp * sr - sy * sp * cr  # x
+        q[2] = sy * cp * sr + cy * sp * cr  # y
+        q[3] = sy * cp * cr - cy * sp * sr  # z
+
+        return q
+
+    ''' Callback registration methods '''
+    # Register a callback to receive notifications when the payload status changes.
+    def regPayloadStatusChanged(self, callback: Callable[[payload_status_event_t, List[float]], None]) -> None:
+        if not callable(callback):
+            raise ValueError("Callback must be a callable object")
+        
+        self._notifyPayloadStatusChanged = callback
+
+    # Register a callback to receive notifications when a payload parameter changes.
+    def regPayloadParamChanged(self, callback: Callable[[payload_status_event_t, str, List[float]], None]) -> None:
+        if not callable(callback):
+            raise ValueError("Callback must be a callable object")
+        
+        self._notifyPayloadParamChanged = callback
+
+    # Register a callback to receive notifications when the payload's video stream information changes.
+    def regPayloadStreamChanged(self, callback: Callable[[payload_status_event_t, str, List[float]], None]) -> None:
+        if not callable(callback):
+            raise ValueError("Callback must be a callable object")
+        
+        self._notifyPayloadStreamChanged = callback

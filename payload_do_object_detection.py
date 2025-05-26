@@ -45,7 +45,7 @@ def main():
     # Set view source to EO
     print("Set view source to EO!")
     my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_EO, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
-    time.sleep(0.5)  
+    time.sleep(1)  
 
     # Enable object detection
     print("Enable object detection, delay in 5 secs")

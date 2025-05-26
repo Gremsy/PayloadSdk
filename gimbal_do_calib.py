@@ -21,7 +21,7 @@ def sdk_log(func_name, message):
     print(f"[{elapsed_time}] SDK {func_name}(): {message}")
 
 # Set the calibration 
-my_calib = calib_type_t.AUTO_TUNE
+my_calib = calib_type_t.CALIB_MOTOR
 
 # Signal handler for quitting
 def quit_handler(sig, frame):
@@ -45,7 +45,7 @@ def onPayloadStatusChanged(event: int, param: list):
     if payload_status_event_t(event) == payload_status_event_t.PAYLOAD_ACK:
 
         cmd_id, result, progress = param[0], param[1], param[2]
-        sdk_log("onPayloadStatusChanged", f"Got ack from {cmd_id:.0f}, result {result:.0f}, progress: {progress:.0f}")
+        # sdk_log("onPayloadStatusChanged", f"Got ack from {cmd_id:.0f}, result {result:.0f}, progress: {progress:.0f}")
 
         if my_calib == calib_type_t.CALIB_GYRO:
             if cmd_id == mavutil.mavlink.MAV_CMD_GIMBAL_REQUEST_AXIS_CALIBRATION:

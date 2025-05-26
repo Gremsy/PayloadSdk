@@ -67,7 +67,7 @@ def main():
     # Change zoom mode to SuperResolution
     if PAYLOAD_TYPE in ["VIO", "ZIO"]:
         my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_MODE, payload_camera_video_zoom_mode.PAYLOAD_CAMERA_VIDEO_ZOOM_MODE_SUPER_RESOLUTION, mavutil.mavlink.MAV_PARAM_TYPE_UINT32) 
-        time.sleep(3)  
+        # time.sleep(3)  
 
     # Request to read all settings of the payload to verify the changes
     print("------------------------> Changed values \n")

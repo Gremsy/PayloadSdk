@@ -340,6 +340,11 @@ public:
     void sendPayloadGPSPosition(mavlink_global_position_int_t gps);
 
     /**
+     * Send the GPS RAW information to the payload
+     **/
+    void sendPayloadGPSRawInt(mavlink_gps_raw_int_t gps_raw);
+
+    /**
      * Send the Sytem Time to the payload
      **/
     void sendPayloadSystemTime(mavlink_system_time_t sys_time);

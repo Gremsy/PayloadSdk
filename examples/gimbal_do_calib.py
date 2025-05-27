@@ -1,14 +1,19 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+import sys
 import os
-os.environ['MAVLINK20'] = '1'
-os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
+
+# Add the libs directory to the path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'libs'))
+
+# Import config first to setup environment automatically
+from config import config
 
 import time
 import signal
 import sys
 from pymavlink import mavutil
-from libs.payload_sdk import PayloadSdkInterface, payload_status_event_t, calib_type_t
-from libs.payload_define import *
+from payload_sdk import PayloadSdkInterface, payload_status_event_t, calib_type_t
+from payload_define import *
 
 my_payload = None
 is_calibration_running = False
@@ -21,7 +26,7 @@ def sdk_log(func_name, message):
     print(f"[{elapsed_time}] SDK {func_name}(): {message}")
 
 # Set the calibration 
-my_calib = calib_type_t.CALIB_MOTOR
+my_calib = calib_type_t.CALIB_GYRO
 
 # Signal handler for quitting
 def quit_handler(sig, frame):

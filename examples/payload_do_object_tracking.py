@@ -1,7 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+import sys
 import os
-os.environ['MAVLINK20'] = '1'
-os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
+
+# Add the libs directory to the path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'libs'))
+
+# Import config first to setup environment automatically
+from config import config
 
 import time
 import signal
@@ -9,8 +14,8 @@ import sys
 import threading
 import random
 from pymavlink import mavutil
-from libs.payload_sdk import PayloadSdkInterface, payload_status_event_t, payload_param_t, tracking_cmd_t, PAYLOAD_TYPE
-from libs.payload_define import *
+from payload_sdk import PayloadSdkInterface, payload_status_event_t, payload_param_t, tracking_cmd_t, PAYLOAD_TYPE
+from payload_define import *
 
 # Global variables
 my_payload = None

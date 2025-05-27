@@ -1,8 +1,5 @@
-#!/usr/bin/env python
-import os
-os.environ['MAVLINK20'] = '1'
-os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
-
+#!/usr/bin/env python3
+from config import config
 from pymavlink import mavutil
 from pymavlink.dialects.v20.ardupilotmega import *
 import math
@@ -12,35 +9,40 @@ import struct
 import ctypes
 import sys
 from typing import Callable, List, Optional
-from .payload_define import *
-from .enum_base import *
-from .mavlink_msg_param_ext_value import *
+from payload_define import *
+from enum_base import *
+from mavlink_msg_param_ext_value import *
 
-SDK_VERSION  = "3.0.0_build.25052025"
-PAYLOAD_TYPE = "VIO"
+# Setup environment from config
+config.setup_environment()
 
-# Default connection parameters
-CONTROL_UART   = 0
-CONTROL_UDP    = 1
-CONTROL_METHOD = CONTROL_UDP
+# ============================================================================
+# Constants from config
+# ============================================================================
+from config import SDK_VERSION, PAYLOAD_TYPE
 
-udp_ip_target     = "192.168.12.238"    # This is an ip address of the payload
-udp_port_target   = 14566               # Do not change
-payload_uart_port = "/dev/ttyUSB0"
-payload_uart_baud = 115200
+# Connection parameters from config
+CONTROL_UART = config.connection.CONTROL_UART
+CONTROL_UDP = config.connection.CONTROL_UDP
+CONTROL_METHOD = config.connection.CONTROL_METHOD
 
-# Define Mavlink Component
-SYS_ID               = 1
-COMP_ID              = mavutil.mavlink.MAV_COMP_ID_ONBOARD_COMPUTER3
+udp_ip_target = config.connection.UDP_IP_TARGET
+udp_port_target = config.connection.UDP_PORT_TARGET
+payload_uart_port = config.connection.UART_PORT
+payload_uart_baud = config.connection.UART_BAUDRATE
 
-PAYLOAD_SYSTEM_ID    = 1
-PAYLOAD_COMPONENT_ID = mavutil.mavlink.MAV_COMP_ID_USER2     # Do not change
+# MAVLink Component IDs from config
+SYS_ID = config.mavlink.SYS_ID
+COMP_ID = config.mavlink.COMP_ID
 
-CAMERA_SYSTEM_ID     = 1
-CAMERA_COMPONENT_ID  = mavutil.mavlink.MAV_COMP_ID_CAMERA    # Auto update when got the message from the payload
+PAYLOAD_SYSTEM_ID = config.mavlink.PAYLOAD_SYSTEM_ID
+PAYLOAD_COMPONENT_ID = config.mavlink.PAYLOAD_COMPONENT_ID
 
-GIMBAL_SYSTEM_ID     = 1
-GIMBAL_COMPONENT_ID  = mavutil.mavlink.MAV_COMP_ID_GIMBAL    # Auto update when got the message from the payload
+CAMERA_SYSTEM_ID = config.mavlink.CAMERA_SYSTEM_ID
+CAMERA_COMPONENT_ID = config.mavlink.CAMERA_COMPONENT_ID
+
+GIMBAL_SYSTEM_ID = config.mavlink.GIMBAL_SYSTEM_ID
+GIMBAL_COMPONENT_ID = config.mavlink.GIMBAL_COMPONENT_ID
 
 # Payload status event enum
 class payload_status_event_t(IntEnumBase):
@@ -211,26 +213,30 @@ class PayloadSdkInterface:
     # Initialize the PayloadSdkInterface object. Set up default parameters for connection, system IDs, component IDs, and callbacks.
     def __init__(self):
         print(f"Starting Gremsy PayloadSdk {SDK_VERSION}")
+        
+        # Validate configuration
+        if not config.validate_all():
+            raise ValueError("Invalid configuration detected")
 
-        self.connection_type = CONTROL_METHOD
-        self.ip              = udp_ip_target
-        self.port            = udp_port_target
-        self.serial_port     = payload_uart_port
-        self.baudrate        = payload_uart_port
+        self.connection_type = config.connection.CONTROL_METHOD
+        self.ip              = config.connection.UDP_IP_TARGET
+        self.port            = config.connection.UDP_PORT_TARGET
+        self.serial_port     = config.connection.UART_PORT
+        self.baudrate        = config.connection.UART_BAUDRATE
 
         self.master  = None
 
-        self.sys_id               = SYS_ID
-        self.comp_id              = COMP_ID
+        self.sys_id               = config.mavlink.SYS_ID
+        self.comp_id              = config.mavlink.COMP_ID
 
-        self.payload_system_id    = PAYLOAD_SYSTEM_ID
-        self.payload_component_id = PAYLOAD_COMPONENT_ID
+        self.payload_system_id    = config.mavlink.PAYLOAD_SYSTEM_ID
+        self.payload_component_id = config.mavlink.PAYLOAD_COMPONENT_ID
 
-        self.camera_system_id     = CAMERA_SYSTEM_ID
-        self.camera_component_id  = CAMERA_COMPONENT_ID
+        self.camera_system_id     = config.mavlink.CAMERA_SYSTEM_ID
+        self.camera_component_id  = config.mavlink.CAMERA_COMPONENT_ID
 
-        self.gimbal_system_id     = GIMBAL_SYSTEM_ID
-        self.gimbal_component_id  = GIMBAL_COMPONENT_ID
+        self.gimbal_system_id     = config.mavlink.GIMBAL_SYSTEM_ID
+        self.gimbal_component_id  = config.mavlink.GIMBAL_COMPONENT_ID
 
         self._notifyPayloadStatusChanged: Optional[Callable[[payload_status_event_t, List[float]],      None]] = None
         self._notifyPayloadParamChanged : Optional[Callable[[payload_status_event_t, str, List[float]], None]] = None
@@ -240,7 +246,10 @@ class PayloadSdkInterface:
         self.receive_thread         = None
         self.last_heartbeat_time    = 0  
         self.time_to_exit           = False
-        self.ping_seq               = 0
+        self.ping_seq               = config.communication.PING_INITIAL_SEQ
+        
+        # Print configuration summary
+        config.print_config_summary()
 
     ''' Connection methods '''
     # Initialize the connection to the payload via UDP or UART.
@@ -266,7 +275,7 @@ class PayloadSdkInterface:
             return False
 
         try:
-            print(f"[INFO] Connecting to {connection_str}")
+            print(f"{config.debug.INFO_PREFIX} Connecting to {connection_str}")
 
             self.master = mavutil.mavlink_connection(
                 connection_str,
@@ -292,24 +301,27 @@ class PayloadSdkInterface:
 
         except Exception as e:
 
-            print(f"[ERROR] SDK connection failed: {e}")
+            print(f"{config.debug.ERROR_PREFIX} SDK connection failed: {e}")
             self.master = None
 
             return False
 
     # Check the connection to the payload within a specified timeout period.
-    def checkPayloadConnection(self, timeout: float = 5.0) -> bool:
+    def checkPayloadConnection(self, timeout: float = None) -> bool:
+        if timeout is None:
+            timeout = config.connection.CONNECTION_TIMEOUT
+            
         result = False
         start_time = time.time()
-        print("[INFO] Checking payload connection")
+        print(f"{config.debug.INFO_PREFIX} Checking payload connection")
 
         while not self.time_to_exit:
             if time.time() - start_time > timeout:
-                print(f"[ERROR] No payload detected after {timeout} seconds")
+                print(f"{config.debug.ERROR_PREFIX} No payload detected after {timeout} seconds")
                 self.sdkQuit()  
                 sys.exit(1)  
 
-            msg = self.master.recv_match(blocking=True, timeout=0.1)
+            msg = self.master.recv_match(blocking=True, timeout=config.communication.MESSAGE_TIMEOUT)
 
             if msg is None:
                 continue
@@ -336,11 +348,11 @@ class PayloadSdkInterface:
                 result = True
 
             if result:
-                print("[INFO] Payload connected!")
+                print(f"{config.debug.INFO_PREFIX} Payload connected!")
                 return True
 
         if not result:
-            print(f"[ERROR] No payload detected!")
+            print(f"{config.debug.ERROR_PREFIX} No payload detected!")
             self.sdkQuit()
             sys.exit(1)
 
@@ -357,7 +369,7 @@ class PayloadSdkInterface:
             self.master.close()
             self.master = None
 
-        print("[INFO] Connection closed.")
+        print(f"{config.debug.INFO_PREFIX} Connection closed.")
 
     ''' Camera Control methods '''
     # Set the parameter value for the payload's camera.
@@ -505,8 +517,7 @@ class PayloadSdkInterface:
    
    # Request the value of a specific camera parameter by ID.
     def getPayloadCameraSettingByID(self, param_id: str) -> None:
-        if len(param_id) > 16:
-            print(f"[ERROR] param_id '{param_id}' exceeds 16 characters")
+        if not config.validator.validate_param_id(param_id):
             return
         
         self.master.mav.param_ext_request_read_send(
@@ -518,8 +529,7 @@ class PayloadSdkInterface:
 
     # Request the value of a camera parameter by index.
     def getPayloadCameraSettingByIndex(self, idx: int) -> None:
-        if not 0 <= idx <= 255:
-            print(f"[ERROR] Index {idx} out of range (0-255)")
+        if not config.validator.validate_param_index(idx):
             return
         
         self.master.mav.param_ext_request_read_send(
@@ -628,16 +638,8 @@ class PayloadSdkInterface:
     # Set the speed or angle for move gimbal.
     def setGimbalSpeed(self, spd_pitch: float, spd_roll: float, spd_yaw: float, mode: input_mode_t) -> None:
         if mode == input_mode_t.INPUT_ANGLE:
-            if spd_yaw > 180 or spd_yaw < -180:
-                print("ERROR: Gimbal Protocol V2 only supports yaw axis from -180 degrees to 180 degrees!")
-                return
-            
-            if spd_roll > 180 or spd_roll < -180:
-                print("ERROR: Gimbal Protocol V2 only supports roll axis from -180 degrees to 180 degrees!")
-                return
-            
-            if spd_pitch > 90 or spd_pitch < -90:
-                print("ERROR: Gimbal Protocol V2 only supports pitch axis from -90 degrees to 90 degrees!")
+            # Use config validation instead of hardcoded limits
+            if not config.validator.validate_gimbal_angles(spd_yaw, spd_pitch, spd_roll):
                 return
             
             q = self.mavlink_euler_to_quaternion(self.to_rad(spd_roll), self.to_rad(spd_pitch), self.to_rad(spd_yaw))
@@ -664,7 +666,7 @@ class PayloadSdkInterface:
             )
 
         except TypeError as e:
-            print(f"Error in gimbal_device_set_attitude_send: {e}")
+            print(f"{config.debug.ERROR_PREFIX} Error in gimbal_device_set_attitude_send: {e}")
             print("Ensure pymavlink is updated and supports GIMBAL_DEVICE_SET_ATTITUDE correctly.")
 
     # Request the list of all gimbal parameters.
@@ -676,8 +678,7 @@ class PayloadSdkInterface:
 
     # Request the value of a specific gimbal parameter by ID.
     def getPayloadGimbalSettingByID(self, param_id: str) -> None:
-        if len(param_id) > 16:
-            print(f"[ERROR] param_id '{param_id}' exceeds 16 characters")
+        if not config.validator.validate_param_id(param_id):
             return
         
         self.master.mav.param_request_read_send(
@@ -689,8 +690,7 @@ class PayloadSdkInterface:
 
     # Request the value of a gimbal parameter by index.
     def getPayloadGimbalSettingByIndex(self, idx: int) -> None:
-        if not 0 <= idx <= 255:
-            print(f"[ERROR] Index {idx} out of range (0-255)")
+        if not config.validator.validate_param_index(idx):
             return
 
         self.master.mav.param_request_read_send(
@@ -879,18 +879,16 @@ class PayloadSdkInterface:
     ''' Parameter Request methods '''
     # Request the value of a specific parameter.
     def requestParamValue(self, param_index: int) -> None:
-        if not 0 <= param_index <= 255:
-            print(f"[ERROR] param_index {param_index} out of range (0-255)")
+        if not config.validator.validate_param_index(param_index):
             return
         
         try:
             param_id = PAYLOAD_PARAMS[param_index]["id"]
         except (IndexError, KeyError):
-            print(f"[ERROR] Invalid param_index {param_index} or missing 'id' in PAYLOAD_PARAMS")
+            print(f"{config.debug.ERROR_PREFIX} Invalid param_index {param_index} or missing 'id' in PAYLOAD_PARAMS")
             return
         
-        if len(param_id) > 16:
-            print(f"[ERROR] param_id '{param_id}' exceeds 16 characters")
+        if not config.validator.validate_param_id(param_id):
             return
         
         self.master.mav.param_request_read_send(
@@ -1050,7 +1048,7 @@ class PayloadSdkInterface:
         while self.time_to_exit == False:
             current_time = time.time()
 
-            if current_time - self.last_heartbeat_time >= 1:
+            if current_time - self.last_heartbeat_time >= config.communication.HEARTBEAT_INTERVAL:
                 self.master.mav.ping_send(
                     int(time.time() * 1000),
                     self.ping_seq,
@@ -1059,7 +1057,7 @@ class PayloadSdkInterface:
                 )
                 self.ping_seq += 1
 
-            msg = self.master.recv_match(blocking=True, timeout=0.1)
+            msg = self.master.recv_match(blocking=True, timeout=config.communication.MESSAGE_TIMEOUT)
 
             if msg is None:
                 continue
@@ -1127,7 +1125,7 @@ class PayloadSdkInterface:
             elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_PARAM_EXT_ACK:
                 self._handle_msg_command_ext_ack(msg)
 
-            time.sleep(0.0001)
+            time.sleep(config.communication.RECV_THREAD_SLEEP)
 
     ''' Helper functions '''
     # Convert angle from degrees to radians.

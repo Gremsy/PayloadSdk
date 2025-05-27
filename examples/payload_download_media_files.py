@@ -1,17 +1,33 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+import sys
 import os
-os.environ['MAVLINK20'] = '1'
-os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
+
+# Add the libs directory to the path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'libs'))
+
+# Import config first to setup environment automatically
+from config import config
 
 import requests
 import re
-import sys
+import signal
 from typing import List
 
 href_elements: List[str] = []
 listed = False
 download_directory = ""
-udp_ip_target = "192.168.12.238"
+time_to_exit = False
+
+# Get IP from config instead of hardcoding
+udp_ip_target = config.connection.UDP_IP_TARGET
+
+# Signal handler for quitting
+def quit_handler(sig, frame):
+    global time_to_exit
+    print("\n\nTERMINATING AT USER REQUEST")
+    print("Exiting download media files program...")
+    time_to_exit = True
+    sys.exit(0)
 
 # encode spaces in URL
 def encode_url_spaces(name: str) -> str:
@@ -68,6 +84,8 @@ def directory_listing(url: str) -> None:
 
 # Download a file from the specified URL to the local directory
 def download_file(url: str, file_name: str) -> None:
+    global time_to_exit
+    
     download_url = f"{url}/download/{file_name}"
     local_file_name = decode_url_spaces(file_name)
 
@@ -92,6 +110,11 @@ def download_file(url: str, file_name: str) -> None:
                     f.write(chunk)
                     downloaded_size += len(chunk)
                     print(f"\rDownloading... {downloaded_size}/{total_size} bytes", end='')
+                    
+                    # Check if user wants to exit during download
+                    if time_to_exit:
+                        print("\nDownload interrupted by user.")
+                        return
 
         print(f"\nDownload completed: {local_file_name}")
 
@@ -100,8 +123,15 @@ def download_file(url: str, file_name: str) -> None:
 
 # Main function to handle user interaction and media file downloads
 def main():
-    global download_directory
+    global download_directory, time_to_exit
 
+    print("Starting Download Media Files example...")
+    print("Press Ctrl+C to exit at any time.")
+    print(f"Using payload IP from config: {udp_ip_target}")
+    
+    # Setup signal handler for Ctrl+C
+    signal.signal(signal.SIGINT, quit_handler)
+    
     if len(sys.argv) == 1:
         print("The download directory is in current folder.")
     else:
@@ -111,65 +141,81 @@ def main():
         else:
             print("The download directory is in current folder.")
 
-    print(f"IP Address: {udp_ip_target}")
     base_url = f"http://{udp_ip_target}:8000"
+    print(f"Media server URL: {base_url}")
 
-    while True:
-        print("\n----")
-        print("Select an option:")
-        print("  1. List media files")
-        print("  2. Download a Image or a Video")
-        print("  3. Download all Images")
-        print("  4. Download all Videos")
-        print("  Enter 'q' to quit")
-        choice = input("Choice: ").strip().lower()
-        print("")
-
-        if choice == "1":
-            print("Listing items...")
-            directory_listing(f"{base_url}/list-file")
+    while not time_to_exit:
+        try:
+            print("\n----")
+            print("Select an option:")
+            print("  1. List media files")
+            print("  2. Download a Image or a Video")
+            print("  3. Download all Images")
+            print("  4. Download all Videos")
+            print("  Enter 'q' to quit")
+            choice = input("Choice: ").strip().lower()
             print("")
-            for element in href_elements:
-                print(decode_url_spaces(element))
 
-        elif choice == "2":
-            directory_listing(f"{base_url}/list-file")
-            print("")
-            for element in href_elements:
-                print(decode_url_spaces(element))
-            print("--")
-            name_input = input("Downloading a image or video. Enter the name: ").strip()
-            name_parts = name_input.split()
+            if choice == "1":
+                print("Listing items...")
+                directory_listing(f"{base_url}/list-file")
+                print("")
+                for element in href_elements:
+                    print(decode_url_spaces(element))
 
-            if len(name_parts) != 1:
-                print("Invalid choice. Please try again.")
+            elif choice == "2":
+                directory_listing(f"{base_url}/list-file")
+                print("")
+                for element in href_elements:
+                    print(decode_url_spaces(element))
+                print("--")
+                name_input = input("Downloading a image or video. Enter the name: ").strip()
+                name_parts = name_input.split()
+
+                if len(name_parts) != 1:
+                    print("Invalid choice. Please try again.")
+                else:
+                    name = name_parts[0]
+                    download_file(base_url, encode_url_spaces(name))
+
+            elif choice == "3":
+                print("Downloading all Images...")
+                if not listed:
+                    directory_listing(f"{base_url}/list-file")
+                    print("")
+                for element in href_elements:
+                    if is_image_extension(decode_url_spaces(element)):
+                        download_file(base_url, element)
+                        if time_to_exit:
+                            break
+
+            elif choice == "4":
+                print("Downloading all Videos...")
+                if not listed:
+                    directory_listing(f"{base_url}/list-file")
+                    print("")
+                for element in href_elements:
+                    if is_video_extension(decode_url_spaces(element)):
+                        download_file(base_url, element)
+                        if time_to_exit:
+                            break
+
+            elif choice == "q":
+                print("Exiting program...")
+                break
+
             else:
-                name = name_parts[0]
-                download_file(base_url, encode_url_spaces(name))
-
-        elif choice == "3":
-            print("Downloading all Images...")
-            if not listed:
-                directory_listing(f"{base_url}/list-file")
-                print("")
-            for element in href_elements:
-                if is_image_extension(decode_url_spaces(element)):
-                    download_file(base_url, element)
-
-        elif choice == "4":
-            print("Downloading all Videos...")
-            if not listed:
-                directory_listing(f"{base_url}/list-file")
-                print("")
-            for element in href_elements:
-                if is_video_extension(decode_url_spaces(element)):
-                    download_file(base_url, element)
-
-        elif choice == "q":
+                print("Invalid choice. Please try again.")
+                
+        except KeyboardInterrupt:
+            # This will be caught by the signal handler
+            pass
+        except EOFError:
+            # Handle Ctrl+D
+            print("\nEOF detected. Exiting...")
             break
 
-        else:
-            print("Invalid choice. Please try again.")
+    print("Download media files program finished.")
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,74 @@
-# build folder
+# Build and distribution
 build/
-.vscode/
+dist/
+*.egg-info/
+.eggs/
 
-# Byte-compiled / optimized / DLL files
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+payloadsdk_env/
+payloadsdk_prod/
+
+# Configuration and secrets
+.env
+.env.local
+.env.production
+config.local.py
+secrets.py
+
+# Logs
+*.log
+logs/
+payloadsdk.log
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+
+# Documentation build
+docs/_build/
+
+# Package files
+*.tar.gz
+*.zip
+
+# Media files (if any)
+*.mp4
+*.avi
+*.mov
+*.jpg
+*.jpeg
+*.png
+*.gif

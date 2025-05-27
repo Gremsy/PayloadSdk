@@ -1,4 +1,4 @@
-from .enum_base import IntEnumBase, FloatEnumBase
+from enum_base import IntEnumBase, FloatEnumBase
 
 PAYLOAD_CAMERA_TRACKING_MODE =                                          "TRACK_MODE"
 class payload_camera_tracking_mode(IntEnumBase):

@@ -1,14 +1,19 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+import sys
 import os
-os.environ['MAVLINK20'] = '1'
-os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
+
+# Add the libs directory to the path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'libs'))
+
+# Import config first to setup environment automatically
+from config import config
 
 import time
 import signal
 import sys
 from pymavlink import mavutil
-from libs.payload_sdk import PayloadSdkInterface, PAYLOAD_TYPE
-from libs.payload_define import *
+from payload_sdk import PayloadSdkInterface, PAYLOAD_TYPE
+from payload_define import *
 
 my_payload = None
 
@@ -48,12 +53,12 @@ def main():
     time.sleep(1)  
 
     # Enable object detection
-    print("Enable object detection, delay in 5 secs")
+    print("Enable object detection, delay in 30 secs to load model")
     if PAYLOAD_TYPE in ["VIO", "ZIO"]:
         my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE, payload_camera_tracking_mode.PAYLOAD_CAMERA_TRACKING_OBJ_DETECTION, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     elif PAYLOAD_TYPE == "GHADRON":
         my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_OBJECT_DETECTION, payload_camera_object_detection.PAYLOAD_CAMERA_OBJECT_DETECTION_ENABLE, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
-    time.sleep(5) 
+    time.sleep(30) 
 
     # Disable object detection
     print("Disable object detection. Exit!")

@@ -1,14 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+import sys
 import os
-os.environ['MAVLINK20'] = '1'
-os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
+
+# Add the libs directory to the path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'libs'))
+
+# Import config first to setup environment automatically
+from config import config
 
 import time
 import signal
-import sys
 from pymavlink import mavutil
-from libs.payload_sdk import PayloadSdkInterface, payload_status_event_t, payload_param_t
-from libs.payload_define import *
+from payload_sdk import PayloadSdkInterface, payload_status_event_t, payload_param_t
+from payload_define import *
 
 my_payload = None
 time_to_exit = False
@@ -29,7 +33,7 @@ def quit_handler(sig, frame):
     sys.exit(0)
 
 # Callback function for payload status changes
-def onPayloadStatusChanged(event: int, param: list):
+def onPayloadStatusChanged(event, param):
     if payload_status_event_t(event) == payload_status_event_t.PAYLOAD_ACK:
         print(f" --> Got ack, from command: {param[0]:.0f} - result: {param[1]:.2f}")
 

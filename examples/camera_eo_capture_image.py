@@ -1,14 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+import sys
 import os
-os.environ['MAVLINK20'] = '1'
-os.environ['MAVLINK_DIALECT'] = 'ardupilotmega'
+
+# Add the libs directory to the path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'libs'))
+
+# Import config first to setup environment automatically
+from config import config
 
 import time
 import signal
-import sys
 from pymavlink import mavutil
-from libs.payload_sdk import PayloadSdkInterface, payload_status_event_t, capture_sequence_t
-from libs.payload_define import *   
+from payload_sdk import PayloadSdkInterface, payload_status_event_t, capture_sequence_t, PAYLOAD_TYPE
+from payload_define import *
 
 my_payload = None
 image_to_capture = 3
@@ -32,7 +36,7 @@ def quit_handler(sig, frame):
     sys.exit(0)
 
 # Callback function for payload status changes
-def onPayloadStatusChanged(event: int, param: list):
+def onPayloadStatusChanged(event, param):
     global my_capture, image_to_capture, time_to_exit
 
     if payload_status_event_t(event) == payload_status_event_t.PAYLOAD_CAM_CAPTURE_STATUS:      
@@ -47,7 +51,6 @@ def onPayloadStatusChanged(event: int, param: list):
             if param[0] == 0:
                 my_capture = capture_sequence_t.CHECK_CAMERA_MODE
                 print("   ---> Payload is idle, Check camera mode")
-
             else:
                 print("   ---> Payload is busy")
                 my_capture = capture_sequence_t.IDLE
@@ -115,14 +118,19 @@ def main():
     
     # Set payload to IMAGE mode for testing
     my_payload.setPayloadCameraMode(mavutil.mavlink.CAMERA_MODE_IMAGE)  
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_RECORD_SRC, payload_camera_record_src.PAYLOAD_CAMERA_RECORD_IR, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_RECORD_SRC, payload_camera_record_src.PAYLOAD_CAMERA_RECORD_EO, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+    
+    # Set photo storage to Internal
+    if PAYLOAD_TYPE == "GHADRON":
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_STORAGE, payload_camera_storage.PAYLOAD_CAMERA_STORAGE_INTERNAL, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
 
     while not time_to_exit:
 
-        # Capture IR image with payload following this sequence
+        # Capture image with payload following this sequence
         if my_capture == capture_sequence_t.IDLE:
             # Wait in idle state
             pass  
+
         elif my_capture == capture_sequence_t.CHECK_STORAGE:
             my_payload.getPayloadStorage()
 

@@ -16,7 +16,7 @@ from payload_sdk import PayloadSdkInterface, payload_status_event_t
 from payload_define import *
 
 my_payload = None
-STIFF_TILT_VALUE = 0.0
+STIFF_TILT_VALUE = 80.0
 step_num = 0
 
 # Signal handler for quitting

@@ -12,6 +12,7 @@ from typing import Callable, List, Optional
 from payload_define import *
 from enum_base import *
 from mavlink_msg_param_ext_value import *
+from serial.serialutil import SerialException
 
 # Setup environment from config
 config.setup_environment()
@@ -63,28 +64,35 @@ class payload_param_t(IntEnumBase):
     PARAM_EO_ZOOM_LEVEL     =                                              0
     PARAM_IR_ZOOM_LEVEL     =                                              1
     PARAM_LRF_RANGE         =                                              2
+
     PARAM_TRACK_POS_X       =                                              3
     PARAM_TRACK_POS_Y       =                                              4
     PARAM_TRACK_POS_W       =                                              5
     PARAM_TRACK_POS_H       =                                              6
     PARAM_TRACK_STATUS      =                                              7
+
     PARAM_LRF_OFSET_X       =                                              8
     PARAM_LRF_OFSET_Y       =                                              9
+
     PARAM_TARGET_COOR_LON   =                                              10
     PARAM_TARGET_COOR_LAT   =                                              11
     PARAM_TARGET_COOR_ALT   =                                              12
     PARAM_PAYLOAD_GPS_LON   =                                              13
     PARAM_PAYLOAD_GPS_LAT   =                                              14
     PARAM_PAYLOAD_GPS_ALT   =                                              15
+
     PARAM_PAYLOAD_APP_VER_X =                                              16
     PARAM_PAYLOAD_APP_VER_Y =                                              17
     PARAM_PAYLOAD_APP_VER_Z =                                              18
+
     PARAM_CAM_VIEW_MODE     =                                              19
     PARAM_CAM_REC_SOURCE    =                                              20
     PARAM_CAM_IR_TYPE       =                                              21
     PARAM_CAM_IR_PALETTE_ID =                                              22
     PARAM_CAM_IR_FFC_MODE   =                                              23
+
     PARAM_GIMBAL_MODE       =                                              24
+
     PARAM_COUNT             =                                              25
 
 PAYLOAD_PARAMS = [
@@ -201,6 +209,27 @@ class mavlink_global_position_int_t(ctypes.Structure):
         ("hdg", ctypes.c_uint16),     
     ]   
 
+# MAVLink gps raw structure
+class mavlink_gps_raw_int_t(ctypes.Structure):
+    _fields_ = [
+        ("time_usec", ctypes.c_uint64), 
+        ("lat", ctypes.c_int32),           
+        ("lon", ctypes.c_int32),           
+        ("alt", ctypes.c_int32),           
+        ("eph", ctypes.c_uint16),  
+        ("epv", ctypes.c_uint16),           
+        ("vel", ctypes.c_uint16),            
+        ("cog", ctypes.c_uint16),           
+        ("fix_type", ctypes.c_uint8),
+        ("satellites_visible", ctypes.c_uint8),  
+        ("alt_ellipsoid", ctypes.c_int32),  
+        ("h_acc", ctypes.c_uint32),           
+        ("v_acc", ctypes.c_uint32),           
+        ("vel_acc", ctypes.c_uint32),         
+        ("hdg_acc", ctypes.c_uint32),     
+        ("yaw", ctypes.c_uint16),  
+    ]   
+
 # MAVLink system time structure
 class mavlink_system_time_t(ctypes.Structure):
     _fields_ = [
@@ -260,103 +289,207 @@ class PayloadSdkInterface:
                 return False
             
             connection_str = f"udpout:{self.ip}:{self.port}"
+            try:
+                print(f"[INFO] Connecting to {connection_str}")
+                self.master = mavutil.mavlink_connection(
+                    connection_str,
+                    source_system=self.sys_id,
+                    source_component=self.comp_id,
+                )
+
+                print("[INFO] Sending initial ping")
+                self.master.mav.ping_send(
+                    int(time.time() * 1000),
+                    self.ping_seq,
+                    0,
+                    0
+                )
+                self.ping_seq += 1
+
+                print("[INFO] Starting receive thread")
+                self.receive_thread = threading.Thread(target=self.payload_recv_handle)
+                self.receive_thread.daemon = True
+                self.receive_thread.start()
+                time.sleep(1)
+
+                return True
+
+            except Exception as e:
+                print(f"[ERROR] UDP connection failed: {e}")
+                self.master = None
+                return False
 
         elif self.connection_type == CONTROL_UART:
             if not self.serial_port or not self.baudrate:
                 print("Error: Serial port and baudrate must be provided for serial connection")
-
                 return False
             
-            connection_str = f"{self.serial_port}:{self.baudrate}"
+            if not os.path.exists(self.serial_port):
+                print(f"[ERROR] Serial port {self.serial_port} does not exist")
+                return False
+            
+            try:
+                baudrate = int(self.baudrate)
+                if baudrate not in [9600, 19200, 38400, 57600, 115200]:
+                    print(f"[ERROR] Unsupported baudrate: {baudrate}")
+                    return False
+            except (ValueError, TypeError):
+                print(f"[ERROR] Invalid baudrate: {self.baudrate} (must be an integer)")
+                return False
+
+            connection_str = str(self.serial_port)
+            try:
+                print(f"[INFO] Connecting to {connection_str} at {baudrate} baud")
+                self.master = mavutil.mavlink_connection(
+                    connection_str,
+                    baud=baudrate,
+                    source_system=self.sys_id,  
+                    source_component=self.comp_id,
+                    autoreconnect=True,
+                )
+
+                print("[INFO] Waiting for HEARTBEAT...")
+                if not self.master.wait_heartbeat(timeout=5):
+                    print("[ERROR] No HEARTBEAT received within 5 seconds")
+                    self.master = None
+                    return False
+
+                print("[INFO] Sending initial ping")
+                self.master.mav.ping_send(
+                    int(time.time() * 1000),
+                    self.ping_seq,
+                    0,
+                    0
+                )
+                self.ping_seq += 1
+
+                print("[INFO] Starting receive thread")
+                self.receive_thread = threading.Thread(target=self.payload_recv_handle)
+                self.receive_thread.daemon = True
+                self.receive_thread.start()
+                time.sleep(1)
+
+                return True
+
+            except (OSError, IOError) as e:
+                print(f"[ERROR] UART connection failed: {e} (check port availability or permissions)")
+                self.master = None
+                return False
+            except Exception as e:
+                print(f"[ERROR] UART connection failed: {e}")
+                self.master = None
+                return False
 
         else:
             print("Error: Invalid connection type. Use 'udp' or 'serial'")
-
-            return False
-
-        try:
-            print(f"{config.debug.INFO_PREFIX} Connecting to {connection_str}")
-
-            self.master = mavutil.mavlink_connection(
-                connection_str,
-                source_system=self.sys_id,
-                source_component=self.comp_id
-            )
-
-            # Sending initial ping
-            self.master.mav.ping_send(
-                int(time.time() * 1000),
-                self.ping_seq,
-                0,
-                0
-            )
-            self.ping_seq += 1
-
-            self.receive_thread = threading.Thread(target=self.payload_recv_handle)
-            self.receive_thread.daemon = True
-            self.receive_thread.start()
-            time.sleep(1)  # Allow some time for the thread to start
-
-            return True
-
-        except Exception as e:
-
-            print(f"{config.debug.ERROR_PREFIX} SDK connection failed: {e}")
-            self.master = None
-
             return False
 
     # Check the connection to the payload within a specified timeout period.
     def checkPayloadConnection(self, timeout: float = None) -> bool:
         if timeout is None:
             timeout = config.connection.CONNECTION_TIMEOUT
-            
+        
         result = False
         start_time = time.time()
+        max_retries = 3  # Giới hạn số lần thử reconnect
+        retry_delay = 2  # Thời gian chờ giữa các lần thử (giây)
+        attempt = 0
+
         print(f"{config.debug.INFO_PREFIX} Checking payload connection")
 
-        while not self.time_to_exit:
+        while not self.time_to_exit and attempt < max_retries:
             if time.time() - start_time > timeout:
                 print(f"{config.debug.ERROR_PREFIX} No payload detected after {timeout} seconds")
-                self.sdkQuit()  
-                sys.exit(1)  
+                return False
 
-            msg = self.master.recv_match(blocking=True, timeout=config.communication.MESSAGE_TIMEOUT)
+            try:
+                # Thử nhận tin nhắn từ payload
+                msg = self.master.recv_match(blocking=True, timeout=config.communication.MESSAGE_TIMEOUT)
+                if msg is None:
+                    continue
 
-            if msg is None:
-                continue
+                # Xác định component ID và system ID từ tin nhắn
+                comp_id = msg.get_srcComponent()
+                sys_id = msg.get_srcSystem()
 
-            comp_id = msg.get_srcComponent()
-            sys_id = msg.get_srcSystem()
+                # Kiểm tra nếu là camera
+                if (comp_id >= mavutil.mavlink.MAV_COMP_ID_CAMERA and
+                    comp_id <= mavutil.mavlink.MAV_COMP_ID_CAMERA6):
+                    self.camera_system_id = sys_id
+                    self.camera_component_id = comp_id
+                    result = True
 
-            if (comp_id >= mavutil.mavlink.MAV_COMP_ID_CAMERA and
-                comp_id <= mavutil.mavlink.MAV_COMP_ID_CAMERA6):
+                # Kiểm tra nếu là gimbal
+                elif (comp_id in [mavutil.mavlink.MAV_COMP_ID_GIMBAL, mavutil.mavlink.MAV_COMP_ID_GIMBAL2,
+                                mavutil.mavlink.MAV_COMP_ID_GIMBAL3, mavutil.mavlink.MAV_COMP_ID_GIMBAL4,
+                                mavutil.mavlink.MAV_COMP_ID_GIMBAL5, mavutil.mavlink.MAV_COMP_ID_GIMBAL6]):
+                    self.gimbal_system_id = sys_id
+                    self.gimbal_component_id = comp_id
+                    result = True
 
-                self.camera_system_id = sys_id
-                self.camera_component_id = comp_id
-                result = True
+                if result:
+                    print(f"{config.debug.INFO_PREFIX} Payload connected successfully!")
+                    return True  # Thoát ra và tiếp tục chương trình
 
-            if (comp_id == mavutil.mavlink.MAV_COMP_ID_GIMBAL  or
-                comp_id == mavutil.mavlink.MAV_COMP_ID_GIMBAL2 or
-                comp_id == mavutil.mavlink.MAV_COMP_ID_GIMBAL3 or
-                comp_id == mavutil.mavlink.MAV_COMP_ID_GIMBAL4 or
-                comp_id == mavutil.mavlink.MAV_COMP_ID_GIMBAL5 or
-                comp_id == mavutil.mavlink.MAV_COMP_ID_GIMBAL6):
+            except SerialException as e:
+                print(f"{config.debug.ERROR_PREFIX} Serial communication error: {e}")
+                print(f"{config.debug.INFO_PREFIX} Attempting to reconnect (Attempt {attempt + 1}/{max_retries})")
+                attempt += 1
 
-                self.gimbal_system_id = sys_id
-                self.gimbal_component_id = comp_id
-                result = True
+                # Đóng kết nối hiện tại
+                self.sdkQuit()
+                time.sleep(retry_delay)  # Chờ để làm sạch cổng
 
-            if result:
-                print(f"{config.debug.INFO_PREFIX} Payload connected!")
-                return True
+                # Thử reconnect
+                if not self.sdkInitConnection():
+                    print(f"{config.debug.ERROR_PREFIX} Reconnection failed")
+                    if attempt >= max_retries:
+                        print(f"{config.debug.ERROR_MESSAGE} Max retries reached, giving up")
+                        return False
+                    time.sleep(retry_delay)
+                    continue
+
+                # Sau khi reconnect thành công, kiểm tra HEARTBEAT ngay lập tức
+                try:
+                    print(f"{config.debug.INFO_PREFIX} Waiting for HEARTBEAT after reconnect...")
+                    if self.master.wait_heartbeat(timeout=5):
+                        print(f"{config.debug.INFO_PREFIX} HEARTBEAT received, connection restored")
+                        # Kiểm tra lại payload ngay lập tức
+                        msg = self.master.recv_match(blocking=True, timeout=config.communication.MESSAGE_TIMEOUT)
+                        if msg is None:
+                            continue
+
+                        comp_id = msg.get_srcComponent()
+                        sys_id = msg.get_srcSystem()
+
+                        if (comp_id >= mavutil.mavlink.MAV_COMP_ID_CAMERA and
+                            comp_id <= mavutil.mavlink.MAV_COMP_ID_CAMERA6) or \
+                        (comp_id in [mavutil.mavlink.MAV_COMP_ID_GIMBAL, mavutil.mavlink.MAV_COMP_ID_GIMBAL2,
+                                        mavutil.mavlink.MAV_COMP_ID_GIMBAL3, mavutil.mavlink.MAV_COMP_ID_GIMBAL4,
+                                        mavutil.mavlink.MAV_COMP_ID_GIMBAL5, mavutil.mavlink.MAV_COMP_ID_GIMBAL6]):
+                            print(f"{config.debug.INFO_PREFIX} Payload connected successfully after reconnect!")
+                            return True  # Thoát ra sau khi reconnect thành công
+                    else:
+                        print(f"{config.debug.ERROR_PREFIX} No HEARTBEAT received after reconnect")
+                        if attempt >= max_retries:
+                            print(f"{config.debug.ERROR_MESSAGE} Max retries reached, giving up")
+                            return False
+                        time.sleep(retry_delay)
+                        continue
+
+                except serial.serialutil.SerialException as e:
+                    print(f"{config.debug.ERROR_PREFIX} Serial error during HEARTBEAT check: {e}")
+                    if attempt >= max_retries:
+                        print(f"{config.debug.ERROR_MESSAGE} Max retries reached, giving up")
+                        return False
+                    time.sleep(retry_delay)
+                    continue
 
         if not result:
             print(f"{config.debug.ERROR_PREFIX} No payload detected!")
-            self.sdkQuit()
-            sys.exit(1)
+            return False
 
-        return False
+        return result
 
     # Close the connection and stop the data receiving thread.
     def sdkQuit(self) -> None:
@@ -818,7 +951,28 @@ class PayloadSdkInterface:
         )
 
     ''' GPS methods '''
-    # Send GPS position information to the payload.
+    # Send the GPS RAW information to the payload.
+    def sendPayloadGPSRawInt(self, gps_raw: mavlink_gps_raw_int_t) -> None:
+        self.master.mav.gps_raw_int_send(
+            gps_raw.time_usec,
+            gps_raw.fix_type,
+            gps_raw.lat,
+            gps_raw.lon,
+            gps_raw.alt,
+            gps_raw.eph,
+            gps_raw.epv,
+            gps_raw.vel,
+            gps_raw.cog,
+            gps_raw.satellites_visible,
+            gps_raw.alt_ellipsoid,
+            gps_raw.h_acc,
+            gps_raw.v_acc,
+            gps_raw.vel_acc,
+            gps_raw.hdg_acc,
+            gps_raw.yaw
+        )
+
+    # Send the GPS information to the payload
     def sendPayloadGPSPosition(self, gps_data: mavlink_global_position_int_t) -> None:
         self.master.mav.global_position_int_send(
             gps_data.time_boot_ms,
@@ -1034,6 +1188,18 @@ class PayloadSdkInterface:
             param = [msg.param_index, msg.param_value]
             self._notifyPayloadStatusChanged(event, param)
     
+    # Handle the MSG_DEBUG message from MAVLink.
+    def _handle_msg_debug(self, msg: MAVLink_debug_message) -> None:
+        if msg.get_srcComponent() == self.payload_component_id and self._notifyPayloadStatusChanged:
+            event = payload_status_event_t.PAYLOAD_PARAMS
+            param = [msg.ind, msg.value]
+            self._notifyPayloadStatusChanged(event, param)
+        
+        elif msg.get_srcComponent() == self.gimbal_component_id and self._notifyPayloadParamChanged:
+            event = payload_status_event_t.PAYLOAD_GB_PARAMS
+            param = [msg.ind, msg.value]
+            self._notifyPayloadParamChanged(event, "", param)
+
     # Handle the COMMAND_EXT_ACK message from MAVLink.
     def _handle_msg_command_ext_ack(self, msg: MAVLink_param_ext_ack_message) -> None:
         if self._notifyPayloadStatusChanged:
@@ -1121,6 +1287,9 @@ class PayloadSdkInterface:
 
             elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_PARAM_VALUE:
                 self._handle_msg_param_value(msg)
+
+            elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_DEBUG:
+                self._handle_msg_debug(msg)
 
             elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_PARAM_EXT_ACK:
                 self._handle_msg_command_ext_ack(msg)

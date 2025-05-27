@@ -39,10 +39,10 @@ source payloadsdk_env/bin/activate
 
 ## Configuring Connection Settings
 
-To connect to the payload, configure the connection settings in `payload_sdk.py`. Follow these steps to set up the connection type and parameters.
+To connect to the payload, configure the connection settings in `libs/config.py`. Follow these steps to set up the connection type and parameters.
 
 ### Step 1: Set Connection Type
-- Define the connection method by setting `CONTROL_METHOD` in `payload_sdk.py`:
+- Define the connection method by setting `CONTROL_METHOD` in `libs/config.py`:
 
 ```python
 # Default connection parameters

@@ -73,6 +73,7 @@
     - [_handle_msg_camera_settings](#_handle_msg_camera_settings)
     - [_handle_msg_mount_orientation](#_handle_msg_mount_orientation)
     - [_handle_msg_param_value](#_handle_msg_param_value)
+    - [_handle_msg_debug](#_handle_msg_debug)
     - [_handle_msg_command_ext_ack](#_handle_msg_command_ext_ack)
 
 - [Helper functions](#helper-functions)
@@ -639,11 +640,21 @@
 
 ### _handle_msg_param_value
 
-- Brief: Handle the PARAM_VALUE message from MAVLink.k.
+- Brief: Handle the PARAM_VALUE message from MAVLink.
 
 | Param | Type               | Range       | Default Value | Description     |
 |-------|--------------------|-------------|---------------|-----------------|
 | msg   | MAVLink_param_value_message  | None        | None          | MAVLink message |
+
+- Return: None
+
+### _handle_msg_debug
+
+- Brief:  Handle the MSG_DEBUG message from MAVLink.
+
+| Param | Type               | Range       | Default Value | Description     |
+|-------|--------------------|-------------|---------------|-----------------|
+| msg   | MAVLink_debug_message  | None        | None          | MAVLink message |
 
 - Return: None
 

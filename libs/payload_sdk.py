@@ -12,7 +12,6 @@ from typing import Callable, List, Optional
 from payload_define import *
 from enum_base import *
 from mavlink_msg_param_ext_value import *
-from serial.serialutil import SerialException
 
 # Setup environment from config
 config.setup_environment()
@@ -388,108 +387,53 @@ class PayloadSdkInterface:
     def checkPayloadConnection(self, timeout: float = None) -> bool:
         if timeout is None:
             timeout = config.connection.CONNECTION_TIMEOUT
-        
+            
         result = False
         start_time = time.time()
-        max_retries = 3  # Giới hạn số lần thử reconnect
-        retry_delay = 2  # Thời gian chờ giữa các lần thử (giây)
-        attempt = 0
-
         print(f"{config.debug.INFO_PREFIX} Checking payload connection")
 
-        while not self.time_to_exit and attempt < max_retries:
+        while not self.time_to_exit:
             if time.time() - start_time > timeout:
                 print(f"{config.debug.ERROR_PREFIX} No payload detected after {timeout} seconds")
-                return False
+                self.sdkQuit()  
+                sys.exit(1)  
 
-            try:
-                # Thử nhận tin nhắn từ payload
-                msg = self.master.recv_match(blocking=True, timeout=config.communication.MESSAGE_TIMEOUT)
-                if msg is None:
-                    continue
+            msg = self.master.recv_match(blocking=True, timeout=config.communication.MESSAGE_TIMEOUT)
 
-                # Xác định component ID và system ID từ tin nhắn
-                comp_id = msg.get_srcComponent()
-                sys_id = msg.get_srcSystem()
+            if msg is None:
+                continue
 
-                # Kiểm tra nếu là camera
-                if (comp_id >= mavutil.mavlink.MAV_COMP_ID_CAMERA and
-                    comp_id <= mavutil.mavlink.MAV_COMP_ID_CAMERA6):
-                    self.camera_system_id = sys_id
-                    self.camera_component_id = comp_id
-                    result = True
+            comp_id = msg.get_srcComponent()
+            sys_id = msg.get_srcSystem()
 
-                # Kiểm tra nếu là gimbal
-                elif (comp_id in [mavutil.mavlink.MAV_COMP_ID_GIMBAL, mavutil.mavlink.MAV_COMP_ID_GIMBAL2,
-                                mavutil.mavlink.MAV_COMP_ID_GIMBAL3, mavutil.mavlink.MAV_COMP_ID_GIMBAL4,
-                                mavutil.mavlink.MAV_COMP_ID_GIMBAL5, mavutil.mavlink.MAV_COMP_ID_GIMBAL6]):
-                    self.gimbal_system_id = sys_id
-                    self.gimbal_component_id = comp_id
-                    result = True
+            if (comp_id >= mavutil.mavlink.MAV_COMP_ID_CAMERA and
+                comp_id <= mavutil.mavlink.MAV_COMP_ID_CAMERA6):
 
-                if result:
-                    print(f"{config.debug.INFO_PREFIX} Payload connected successfully!")
-                    return True  # Thoát ra và tiếp tục chương trình
+                self.camera_system_id = sys_id
+                self.camera_component_id = comp_id
+                result = True
 
-            except SerialException as e:
-                print(f"{config.debug.ERROR_PREFIX} Serial communication error: {e}")
-                print(f"{config.debug.INFO_PREFIX} Attempting to reconnect (Attempt {attempt + 1}/{max_retries})")
-                attempt += 1
+            if (comp_id == mavutil.mavlink.MAV_COMP_ID_GIMBAL  or
+                comp_id == mavutil.mavlink.MAV_COMP_ID_GIMBAL2 or
+                comp_id == mavutil.mavlink.MAV_COMP_ID_GIMBAL3 or
+                comp_id == mavutil.mavlink.MAV_COMP_ID_GIMBAL4 or
+                comp_id == mavutil.mavlink.MAV_COMP_ID_GIMBAL5 or
+                comp_id == mavutil.mavlink.MAV_COMP_ID_GIMBAL6):
 
-                # Đóng kết nối hiện tại
-                self.sdkQuit()
-                time.sleep(retry_delay)  # Chờ để làm sạch cổng
+                self.gimbal_system_id = sys_id
+                self.gimbal_component_id = comp_id
+                result = True
 
-                # Thử reconnect
-                if not self.sdkInitConnection():
-                    print(f"{config.debug.ERROR_PREFIX} Reconnection failed")
-                    if attempt >= max_retries:
-                        print(f"{config.debug.ERROR_MESSAGE} Max retries reached, giving up")
-                        return False
-                    time.sleep(retry_delay)
-                    continue
-
-                # Sau khi reconnect thành công, kiểm tra HEARTBEAT ngay lập tức
-                try:
-                    print(f"{config.debug.INFO_PREFIX} Waiting for HEARTBEAT after reconnect...")
-                    if self.master.wait_heartbeat(timeout=5):
-                        print(f"{config.debug.INFO_PREFIX} HEARTBEAT received, connection restored")
-                        # Kiểm tra lại payload ngay lập tức
-                        msg = self.master.recv_match(blocking=True, timeout=config.communication.MESSAGE_TIMEOUT)
-                        if msg is None:
-                            continue
-
-                        comp_id = msg.get_srcComponent()
-                        sys_id = msg.get_srcSystem()
-
-                        if (comp_id >= mavutil.mavlink.MAV_COMP_ID_CAMERA and
-                            comp_id <= mavutil.mavlink.MAV_COMP_ID_CAMERA6) or \
-                        (comp_id in [mavutil.mavlink.MAV_COMP_ID_GIMBAL, mavutil.mavlink.MAV_COMP_ID_GIMBAL2,
-                                        mavutil.mavlink.MAV_COMP_ID_GIMBAL3, mavutil.mavlink.MAV_COMP_ID_GIMBAL4,
-                                        mavutil.mavlink.MAV_COMP_ID_GIMBAL5, mavutil.mavlink.MAV_COMP_ID_GIMBAL6]):
-                            print(f"{config.debug.INFO_PREFIX} Payload connected successfully after reconnect!")
-                            return True  # Thoát ra sau khi reconnect thành công
-                    else:
-                        print(f"{config.debug.ERROR_PREFIX} No HEARTBEAT received after reconnect")
-                        if attempt >= max_retries:
-                            print(f"{config.debug.ERROR_MESSAGE} Max retries reached, giving up")
-                            return False
-                        time.sleep(retry_delay)
-                        continue
-
-                except serial.serialutil.SerialException as e:
-                    print(f"{config.debug.ERROR_PREFIX} Serial error during HEARTBEAT check: {e}")
-                    if attempt >= max_retries:
-                        print(f"{config.debug.ERROR_MESSAGE} Max retries reached, giving up")
-                        return False
-                    time.sleep(retry_delay)
-                    continue
+            if result:
+                print(f"{config.debug.INFO_PREFIX} Payload connected!")
+                return True
 
         if not result:
             print(f"{config.debug.ERROR_PREFIX} No payload detected!")
-            return False
+            self.sdkQuit()
+            sys.exit(1)
 
-        return result
+        return False
 
     # Close the connection and stop the data receiving thread.
     def sdkQuit(self) -> None:

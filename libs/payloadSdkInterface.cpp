@@ -1360,4 +1360,11 @@ _handle_msg_debug(mavlink_message_t* msg){
             __notifyPayloadStatusChanged(PAYLOAD_PARAMS, params);
         }
     }
+    else if(msg->compid == GIMBAL_COMPONENT_ID){
+        // params value from the gimbal
+        if(__notifyPayloadParamChanged != NULL){
+            double params[2] = {value.ind, value.value};
+            __notifyPayloadParamChanged(PAYLOAD_GB_PARAMS, "", params);
+        }
+    }
 }

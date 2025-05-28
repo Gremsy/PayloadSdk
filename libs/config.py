@@ -25,10 +25,10 @@ class ConnectionConfig:
     CONTROL_UDP = 1
     
     # Default connection method
-    CONTROL_METHOD = CONTROL_UART
+    CONTROL_METHOD = CONTROL_UDP
     
     # UDP Configuration
-    UDP_IP_TARGET = "192.168.12.238"    # Payload IP address
+    UDP_IP_TARGET = "192.168.55.1"    # Payload IP address
     UDP_PORT_TARGET = 14566             # Do not change
     
     # UART Configuration

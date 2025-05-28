@@ -387,6 +387,11 @@ class PayloadSdkInterface:
     def checkPayloadConnection(self, timeout: float = None) -> bool:
         if timeout is None:
             timeout = config.connection.CONNECTION_TIMEOUT
+        
+        # Check if connection was established
+        if self.master is None:
+            print(f"{config.debug.ERROR_PREFIX} No connection established. Cannot check payload connection.")
+            return False
             
         result = False
         start_time = time.time()
@@ -396,9 +401,14 @@ class PayloadSdkInterface:
             if time.time() - start_time > timeout:
                 print(f"{config.debug.ERROR_PREFIX} No payload detected after {timeout} seconds")
                 self.sdkQuit()  
-                sys.exit(1)  
+                return False
 
-            msg = self.master.recv_match(blocking=True, timeout=config.communication.MESSAGE_TIMEOUT)
+            try:
+                msg = self.master.recv_match(blocking=True, timeout=config.communication.MESSAGE_TIMEOUT)
+            except Exception as e:
+                print(f"{config.debug.ERROR_PREFIX} Error receiving message: {e}")
+                self.sdkQuit()
+                return False
 
             if msg is None:
                 continue
@@ -431,7 +441,7 @@ class PayloadSdkInterface:
         if not result:
             print(f"{config.debug.ERROR_PREFIX} No payload detected!")
             self.sdkQuit()
-            sys.exit(1)
+            return False
 
         return False
 

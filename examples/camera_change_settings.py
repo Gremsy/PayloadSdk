@@ -47,14 +47,19 @@ def main():
     my_payload = PayloadSdkInterface()
 
     # Init payload
-    my_payload.sdkInitConnection()
+    if not my_payload.sdkInitConnection():
+        print("Failed to initialize connection. Exiting...")
+        sys.exit(1)
+        
     print("Waiting for payload signal!")
     
     # Register callback function
     my_payload.regPayloadParamChanged(onPayloadParamChanged)
     
     # Check connection
-    my_payload.checkPayloadConnection()
+    if not my_payload.checkPayloadConnection():
+        print("Failed to connect to payload. Exiting...")
+        sys.exit(1)
     
     # Change setting of RC_MODE to STANDARD
     my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_RC_MODE, payload_camera_rc_mode.PAYLOAD_CAMERA_RC_MODE_STANDARD, mavutil.mavlink.MAV_PARAM_TYPE_UINT32) 

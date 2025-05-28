@@ -42,7 +42,14 @@ def main():
     my_payload = PayloadSdkInterface()
 
     # Init payload
-    my_payload.sdkInitConnection()
+    if not my_payload.sdkInitConnection():
+        print("❌ Failed to initialize connection!")
+        print("Please check:")
+        print("  - Network connection (for UDP)")
+        print("  - Serial port availability (for UART)")
+        print("  - Configuration settings in libs/config.py")
+        sys.exit(1)
+        
     print("Waiting for payload signal!")
 
     # Check connection
@@ -66,6 +73,10 @@ def main():
     else:
         print("❌ Connection test failed!")
         print("Could not establish connection to payload.")
+        print("Please check:")
+        print("  - Payload is powered on")
+        print("  - Network/serial connection is working")
+        print("  - IP address/port configuration")
         
         # Close payload interface
         try:

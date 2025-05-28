@@ -94,7 +94,7 @@ void onPayloadParamChanged(int event, char* param_char, double* param){
 	case PAYLOAD_GB_PARAMS:{
 		// param[0]: param_index
 		// param[1]: value
-		SDK_LOG("--> Gimbal_param: index: %.f, id: %s, value: %.f", param_char, param[0], param[1]);
+		SDK_LOG("--> Gimbal_param: id: %s, index: %.f, value: %.f", param_char, param[0], param[1]);
 		break;
 	}
 	

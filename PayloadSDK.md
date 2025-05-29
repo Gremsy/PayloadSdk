@@ -45,7 +45,8 @@
     - [setPayloadCameraFFCMode](#setpayloadcameraffcmode)
     - [setPayloadCameraFFCTrigg](#setpayloadcameraffctrigg)
 
-- [GPS function](#gps-function)
+- [GPS functions](#gps-functions)
+    - [sendPayloadGPSRawInt](#sendpayloadgpsrawint)
     - [sendPayloadGPSPosition](#sendpayloadgpsposition)
 
 - [System Time function](#system-time-function)
@@ -56,30 +57,6 @@
 
 - [Object Tracking function](#object-tracking-function)
     - [setPayloadObjectTrackingParams](#setpayloadobjecttrackingparams)
-
-- [Parameter Request functions](#parameter-request-functions)
-    - [requestParamValue](#requestparamvalue)
-    - [sendPayloadRequestStreamRate](#sendpayloadrequeststreamrate)
-    - [requestMessageStreamInterval](#requestmessagestreaminterval)
-
-- [Message Handler functions](#message-handler-functions)
-    - [payload_recv_handle](#payload_recv_handle)
-    - [_handle_msg_param_ext_value](#_handle_msg_param_ext_value)
-    - [_handle_msg_command_ack](#_handle_msg_command_ack)
-    - [_handle_msg_camera_information](#_handle_msg_camera_information)
-    - [_handle_msg_camera_stream_information](#_handle_msg_camera_stream_information)
-    - [_handle_msg_storage_information](#_handle_msg_storage_information)
-    - [_handle_msg_camera_capture_status](#_handle_msg_camera_capture_status)
-    - [_handle_msg_camera_settings](#_handle_msg_camera_settings)
-    - [_handle_msg_mount_orientation](#_handle_msg_mount_orientation)
-    - [_handle_msg_param_value](#_handle_msg_param_value)
-    - [_handle_msg_debug](#_handle_msg_debug)
-    - [_handle_msg_command_ext_ack](#_handle_msg_command_ext_ack)
-
-- [Helper functions](#helper-functions)
-    - [to_rad](#to_rad)
-    - [to_deg](#to_deg)
-    - [mavlink_euler_to_quaternion](#mavlink_euler_to_quaternion)
 
 - [Callback functions](#callback-functions)
     - [regPayloadStatusChanged](#regpayloadstatuschanged)
@@ -453,7 +430,17 @@
 
 <div style="page-break-after: always"></div>
 
-## GPS function
+## GPS functions
+
+### sendPayloadGPSRawInt
+
+- Brief: Send the GPS RAW information to the payload.
+
+| Param     | Type                        | Range | Default Value | Description                 |
+|-----------|-----------------------------|-------|---------------|-----------------------------|
+| gps_raw  | mavlink_gps_raw_int_t | None  | None        | GPS raw data structure |
+
+- Return: None
 
 ### sendPayloadGPSPosition
 
@@ -508,203 +495,6 @@
 | pos_y | float | None  | 540           | Y position       |
 
 - Return: None
-
-<div style="page-break-after: always"></div>
-
-## Parameter Request functions
-
-### requestParamValue
-
-- Brief: Request the value of a specific parameter.
-
-| Param       | Type | Range | Default Value | Description     |
-|-------------|------|-------|---------------|-----------------|
-| param_index | int  | None  | None          | Parameter index |
-
-- Return: None
-
-### sendPayloadRequestStreamRate
-
-- Brief: Send a request for the message rate of a parameter.
-
-| Param    | Type | Range | Default Value | Description                   |
-|----------|------|-------|---------------|-------------------------------|
-| index    | int  | None  | None          | Parameter index               |
-| time_ms  | int  | None  | None          | Time interval in milliseconds |
-
-- Return: None
-
-### requestMessageStreamInterval
-
-- Brief: Request the message rate for all parameters with a set msg_rate.
-
-| Param | Type | Range | Default Value | Description |
-|-------|------|-------|---------------|-------------|
-| None  | None | None  | None          | None        |
-
-- Return: None
-
-<div style="page-break-after: always"></div>
-
-## Message Handler functions
-
-### payload_recv_handle
-
-- Brief: Main loop to receive and process MAVLink messages.
-
-| Param | Type | Range | Default Value | Description |
-|-------|------|-------|---------------|-------------|
-| None  | None | None  | None          | None        |
-
-- Return: None 
-
-### _handle_msg_param_ext_value
-
-- Brief: Handle the PARAM_EXT_VALUE message from MAVLink.
-
-| Param | Type               | Range       | Default Value | Description     |
-|-------|--------------------|-------------|---------------|-----------------|
-| msg   | MAVLink_param_ext_value_message  | None        | None          | MAVLink message |
-
-- Return: None
-
-### _handle_msg_command_ack
-
-- Brief: Handle the COMMAND_ACK message from MAVLink.
-
-| Param | Type               | Range       | Default Value | Description     |
-|-------|--------------------|-------------|---------------|-----------------|
-| msg   | MAVLink_command_ack_message  | None        | None          | MAVLink message |
-
-- Return: None
-
-### _handle_msg_camera_information
-
-- Brief: Handle the CAMERA_INFORMATION message from MAVLink.
-
-| Param | Type               | Range       | Default Value | Description     |
-|-------|--------------------|-------------|---------------|-----------------|
-| msg   | MAVLink_camera_information_message  | None        | None          | MAVLink message |
-
-- Return: None
-
-### _handle_msg_camera_stream_information
-
-- Brief: Handle the CAMERA_STREAM_INFORMATION message from MAVLink.
-
-| Param | Type               | Range       | Default Value | Description     |
-|-------|--------------------|-------------|---------------|-----------------|
-| msg   | MAVLink_video_stream_information_message  | None        | None          | MAVLink message |
-
-- Return: None
-
-### _handle_msg_storage_information
-
-- Brief: Handle the STORAGE_INFORMATION message from MAVLink.
-
-| Param | Type               | Range       | Default Value | Description     |
-|-------|--------------------|-------------|---------------|-----------------|
-| msg   | MAVLink_storage_information_message  | None        | None          | MAVLink message |
-
-- Return: None
-
-### _handle_msg_camera_capture_status
-
-- Brief: Handle the CAMERA_CAPTURE_STATUS message from MAVLink.
-
-| Param | Type               | Range       | Default Value | Description     |
-|-------|--------------------|-------------|---------------|-----------------|
-| msg   | MAVLink_camera_capture_status_message  | None        | None          | MAVLink message |
-
-- Return: None
-
-### _handle_msg_camera_settings
-
-- Brief: Handle the CAMERA_SETTINGS message from MAVLink.
-
-| Param | Type               | Range       | Default Value | Description     |
-|-------|--------------------|-------------|---------------|-----------------|
-| msg   | MAVLink_camera_settings_message  | None        | None          | MAVLink message |
-
-- Return: None
-
-### _handle_msg_mount_orientation
-
-- Brief: Handle the MOUNT_ORIENTATION message from MAVLink.
-
-| Param | Type               | Range       | Default Value | Description     |
-|-------|--------------------|-------------|---------------|-----------------|
-| msg   | MAVLink_mount_orientation_message  | None        | None          | MAVLink message |
-
-- Return: None
-
-### _handle_msg_param_value
-
-- Brief: Handle the PARAM_VALUE message from MAVLink.
-
-| Param | Type               | Range       | Default Value | Description     |
-|-------|--------------------|-------------|---------------|-----------------|
-| msg   | MAVLink_param_value_message  | None        | None          | MAVLink message |
-
-- Return: None
-
-### _handle_msg_debug
-
-- Brief:  Handle the MSG_DEBUG message from MAVLink.
-
-| Param | Type               | Range       | Default Value | Description     |
-|-------|--------------------|-------------|---------------|-----------------|
-| msg   | MAVLink_debug_message  | None        | None          | MAVLink message |
-
-- Return: None
-
-<div style="page-break-after: always"></div>
-
-### _handle_msg_command_ext_ack
-
-- Brief: Handle the COMMAND_EXT_ACK message from MAVLink.
-
-| Param | Type               | Range       | Default Value | Description     |
-|-------|--------------------|-------------|---------------|-----------------|
-| msg   | MAVLink_param_ext_ack_message  | None        | None          | MAVLink message |
-
-- Return: None
-
-<div style="page-break-after: always"></div>
-
-## Helper functions
-
-### to_rad
-
-- Brief: Convert angle from degrees to radians.
-
-| Param | Type  | Range | Default Value | Description      |
-|-------|-------|-------|---------------|------------------|
-| deg   | float | None  | None          | Angle in degrees |
-
-- Return: Angle in radians (float)
-
-### to_deg
-
-- Brief: Convert angle from radians to degrees.
-
-| Param | Type  | Range | Default Value | Description      |
-|-------|-------|-------|---------------|------------------|
-| rad   | float | None  | None          | Angle in radians |
-
-- Return: Angle in degrees (float)
-
-### mavlink_euler_to_quaternion
-
-- Brief: Convert Euler angles to quaternion.
-
-| Param  | Type  | Range | Default Value | Description            |
-|--------|-------|-------|---------------|------------------------|
-| roll   | float | None  | None          | Roll angle in radians  |
-| pitch  | float | None  | None          | Pitch angle in radians |
-| yaw    | float | None  | None          | Yaw angle in radians   |
-
-- Return: Quaternion [w, x, y, z] (list)
 
 <div style="page-break-after: always"></div>
 

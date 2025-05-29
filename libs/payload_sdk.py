@@ -1032,28 +1032,8 @@ class PayloadSdkInterface:
     # Handle the PARAM_EXT_VALUE message from MAVLink.
     def _handle_msg_param_ext_value(self, msg: MAVLink_param_ext_value_message) -> None:
         if self._notifyPayloadParamChanged:
+            # Get the message buffer
             buf = msg.get_msgbuf()
-
-            # get_msgbuf() returns the raw bytes of the message
-            # MAVLink message structure:
-            # typedef struct __mavlink_message {
-            #     uint16_t checksum;      ///< sent at end of packet
-            #     uint8_t magic;          ///< protocol magic marker
-            #     uint8_t len;            ///< Length of payload
-            #     uint8_t incompat_flags; ///< flags that must be understood
-            #     uint8_t compat_flags;   ///< flags that can be ignored if not understood
-            #     uint8_t seq;            ///< Sequence of packet
-            #     uint8_t sysid;          ///< ID of message sender system/aircraft
-            #     uint8_t compid;         ///< ID of the message sender component
-            #     uint32_t msgid:24;      ///< ID of message in payload
-            #     uint64_t payload64[(MAVLINK_MAX_PAYLOAD_LEN+MAVLINK_NUM_CHECKSUM_BYTES+7)/8];
-            #     uint8_t ck[2];          ///< incoming checksum bytes
-            #     uint8_t signature[MAVLINK_SIGNATURE_BLOCK_LEN];
-            # } mavlink_message_t;
-
-            # Header: 10 byte (magic, len, incompat_flags, compat_flags, seq, sysid, compid, msgid).
-            # Payload: (149 byte).
-            # Checksum và Signature:(2 byte checksum + 13 byte signature).
 
             # Check if the message buffer is long enough to contain the header and payload
             if len(buf) < 10 + MAVLINK_MSG_ID_PARAM_EXT_VALUE_LEN:
@@ -1259,7 +1239,7 @@ class PayloadSdkInterface:
     def to_deg(self, rad: float) -> float:
         return rad * 180.0 / math.pi
 
-    # Convert Euler angles to quaternion.
+    # Convert euler angles to quaternion.
     def mavlink_euler_to_quaternion(self, roll: float, pitch: float, yaw: float) -> list:
         cy = math.cos(yaw * 0.5)
         sy = math.sin(yaw * 0.5)

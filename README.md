@@ -28,7 +28,7 @@ The Gremsy Payload SDK provides a comprehensive Python interface for controlling
 
 ### 1. Clone the Repository
 ```bash
-git clone -b develop ssh://git@gitlab.gremsy.vn:2224/ai/tay-cu/pymavlink.git
+git clone -b payloadsdk_v3_python3 https://github.com/Gremsy/PayloadSdk.git
 cd pymavlink
 ```
 
@@ -302,7 +302,7 @@ For detailed API documentation, function parameters, and advanced usage examples
 
 - **SDK Version:** 3.0.0_build.27052025
 - **MAVLink Protocol:** 2.0 (with 1.0 compatibility)
-- **Supported Firmware:** v2.0.0 and higher
+- **Supported Software:** v2.0.0 and higher
 
 ---
 

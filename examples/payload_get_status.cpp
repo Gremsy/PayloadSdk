@@ -43,6 +43,10 @@ int main(int argc, char *argv[]){
 	// check connection
 	my_payload->checkPayloadConnection();
 
+#if 1
+	// set message rate for auto-sending the status
+	// the reply from the payload will be DEBUG messages
+
 	my_payload->setParamRate(PARAM_EO_ZOOM_LEVEL, 1000);
 	my_payload->setParamRate(PARAM_IR_ZOOM_LEVEL, 1000);
 
@@ -68,7 +72,14 @@ int main(int argc, char *argv[]){
 
 		my_payload->setParamRate(PARAM_CAM_IR_FFC_MODE, 1000);
     #endif /* VIO */
-
+#else
+	// request the param one-by-one
+	// the reply from the payload will be PARAM_VALUE 
+	for (int i =0; i < PARAM_COUNT; i++){
+		my_payload->requestParamValue(i);
+		usleep(100000);
+	}
+#endif
 
 	while(!time_to_exit){
 
@@ -105,7 +116,7 @@ void onPayloadStatusChanged(int event, double* param){
 		// param[1]: roll
 		// param[2]: yaw
 
-		SDK_LOG("Pich: %.2f - Roll: %.2f - Yaw: %.2f", param[0], param[1], param[2]);
+		// SDK_LOG("Pich: %.2f - Roll: %.2f - Yaw: %.2f", param[0], param[1], param[2]);
 		break;
 	}
 	case PAYLOAD_PARAMS:{

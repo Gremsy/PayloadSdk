@@ -857,8 +857,10 @@ requestParamValue(uint8_t pIndex){
 
     request.target_system = PAYLOAD_SYSTEM_ID;
     request.target_component = PAYLOAD_COMPONENT_ID;
-    // request.param_index = pIndex;
+    request.param_index = pIndex;
     strncpy(request.param_id, payloadParams[pIndex].id, 16);
+
+    // printf("%s, for index: %d, id: %s\n", __func__, pIndex, payloadParams[pIndex].id);
 
     // --------------------------------------------------------------------------
     //   ENCODE
@@ -1337,8 +1339,14 @@ PayloadSdkInterface::
 _handle_msg_param_value(mavlink_message_t* msg){
     mavlink_param_value_t value = {0};
     mavlink_msg_param_value_decode(msg, &value);
-
-    if(msg->compid == GIMBAL_COMPONENT_ID){
+    if(msg->compid == PAYLOAD_COMPONENT_ID){
+        // params value from the payload
+        if(__notifyPayloadStatusChanged != NULL){
+            double params[2] = {value.param_index, value.param_value};
+            __notifyPayloadStatusChanged(PAYLOAD_PARAMS, params);
+        }
+    }
+    else if(msg->compid == GIMBAL_COMPONENT_ID){
         // params value from the gimbal
         if(__notifyPayloadParamChanged != NULL){
             double params[2] = {value.param_index, value.param_value};

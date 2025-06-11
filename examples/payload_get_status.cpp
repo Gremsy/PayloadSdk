@@ -44,8 +44,8 @@ int main(int argc, char *argv[]){
 	my_payload->checkPayloadConnection();
 
 #if 1
-	// set message rate for auto-sending the status
-	// the reply from the payload will be DEBUG messages
+	set message rate for auto-sending the status
+	the reply from the payload will be DEBUG messages
 
 	my_payload->setParamRate(PARAM_EO_ZOOM_LEVEL, 1000);
 	my_payload->setParamRate(PARAM_IR_ZOOM_LEVEL, 1000);
@@ -71,7 +71,12 @@ int main(int argc, char *argv[]){
 		my_payload->setParamRate(PARAM_PAYLOAD_GPS_ALT, 1000);
 
 		my_payload->setParamRate(PARAM_CAM_IR_FFC_MODE, 1000);
+
+		my_payload->setParamRate(PARAM_IR_TEMP_MAX, 1000);
+	    my_payload->setParamRate(PARAM_IR_TEMP_MIN, 1000);
+	    my_payload->setParamRate(PARAM_IR_TEMP_MEAN, 1000);
     #endif /* VIO */
+
 #else
 	// request the param one-by-one
 	// the reply from the payload will be PARAM_VALUE 
@@ -175,6 +180,15 @@ void onPayloadStatusChanged(int event, double* param){
 		}
 		else if(param[0] == PARAM_GIMBAL_MODE){
 			SDK_LOG("Payload PARAM_GIMBAL_MODE: %.2f ", param[1]);
+		}
+		else if(param[0] == PARAM_IR_TEMP_MAX){
+			SDK_LOG("Payload PARAM_IR_TEMP_MAX: %.2f ", param[1]);
+		}
+		else if(param[0] == PARAM_IR_TEMP_MIN){
+			SDK_LOG("Payload PARAM_IR_TEMP_MIN: %.2f ", param[1]);
+		}
+		else if(param[0] == PARAM_IR_TEMP_MEAN){
+			SDK_LOG("Payload PARAM_IR_TEMP_MEAN: %.2f ", param[1]);
 		}
     #endif /* VIO */
 		break;

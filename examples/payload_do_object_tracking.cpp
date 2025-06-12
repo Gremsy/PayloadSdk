@@ -38,10 +38,16 @@ void all_threads_init();
 void handle_tracking();
 void onPayloadStatusChanged(int event, double* param);
 
-enum tracking_cmd_t{
-	TRACK_IDLE = 0,
-	TRACK_ACT = 1,
-	TRACK_LOST = 2
+enum tracking_mode_t{
+	TRACK_STOP 		= 0,
+	TRACK_ACTIVE 	= 1,
+	TRACK_EAGLEEYES = 2
+};
+
+enum tracking_status_t {
+    TRACK_IDLE = 0,
+    TRACK_TRACKED = 1,
+    TRACK_LOST = 2
 };
 
 pthread_t thrd_tracking;
@@ -138,28 +144,36 @@ void handle_tracking(){
 		int random_w = std::rand() % (1921 - 20); // 1920 + 1 to include 1920
 		int random_h = std::rand() % (1079 - 20); // 1080 + 1 to include 1080
 
-		printf("Start tracking new object \n");
-		my_payload->setPayloadObjectTrackingParams(TRACK_ACT, random_w, random_h);
+		printf("Active the tracker \n");
+		my_payload->setPayloadObjectTrackingMode(TRACK_ACTIVE);
 
-		// if you want ot track the object at the center of the screen, just use
-		// my_payload->setPayloadObjectTrackingParams(TRACK_ACT);
+		printf("Start tracking new object \n");
+		// if you send the postion while the tracker is not actived, the payload will move by the EagleEyes feature (only move, without tracking)
+		my_payload->setPayloadObjectTrackingPosition(random_w, random_h, 64, 128);
+
+		// if you want to track the object at the center of the screen, just use
+		// my_payload->setPayloadObjectTrackingPosition();
 
 		// sleep for 200ms
 		usleep(200000);
 
 		// check tracking status
-		if(track_status){
+		if(track_status == TRACK_TRACKED){
 			printf("Object was tracked. Keep this object for 5 seconds... \n");
 			usleep(5000000); // sleep for 5 secs
 
 			// release object
-			my_payload->setPayloadObjectTrackingParams(TRACK_IDLE, random_w, random_h);
+			my_payload->setPayloadObjectTrackingMode(TRACK_STOP);
 			printf("Object was released. Wait 3 seconds... \n");
 			usleep(3000000); // sleep for 3 secs
 		}
-		else{
-			printf("Lost object. Try catch another object \n");
-			my_payload->setPayloadObjectTrackingParams(TRACK_IDLE, random_w, random_h);
+		else if(track_status == TRACK_IDLE){
+			printf("Tracker in IDLE mode. \n");
+			usleep(1000000);
+		}
+		else if(track_status == TRACK_LOST){
+			printf("Lost object. Release the tracker then Try catch another object \n");
+			my_payload->setPayloadObjectTrackingMode(TRACK_STOP);
 			usleep(1000000);
 		}
 	}

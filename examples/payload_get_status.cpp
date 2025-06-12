@@ -44,8 +44,8 @@ int main(int argc, char *argv[]){
 	my_payload->checkPayloadConnection();
 
 #if 1
-	set message rate for auto-sending the status
-	the reply from the payload will be DEBUG messages
+	// set message rate for auto-sending the status
+	// the reply from the payload will be DEBUG messages
 
 	my_payload->setParamRate(PARAM_EO_ZOOM_LEVEL, 1000);
 	my_payload->setParamRate(PARAM_IR_ZOOM_LEVEL, 1000);

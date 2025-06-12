@@ -1005,9 +1005,9 @@ setCameraFocus(float focusType, float focusValue)
     payload_interface->push_message_to_queue(message);
 }
 
-void
+void 
 PayloadSdkInterface::
-setPayloadObjectTrackingParams(float cmd, float pos_x, float pos_y){
+setPayloadObjectTrackingMode(float mode){
     mavlink_command_long_t msg = {0};
 
     msg.target_system = PAYLOAD_SYSTEM_ID;
@@ -1015,9 +1015,11 @@ setPayloadObjectTrackingParams(float cmd, float pos_x, float pos_y){
     msg.command = MAV_CMD_USER_4;
     msg.param1 = 4;
     msg.param2 = 0;
-    msg.param3 = cmd;
-    msg.param4 = pos_x;
-    msg.param5 = pos_y;
+    msg.param3 = 0;
+    msg.param4 = mode;
+    msg.param5 = 0;
+    msg.param6 = 0;
+    msg.param7 = 0;
     msg.confirmation = 1;
 
     // --------------------------------------------------------------------------
@@ -1034,8 +1036,41 @@ setPayloadObjectTrackingParams(float cmd, float pos_x, float pos_y){
     // do the write
     payload_interface->push_message_to_queue(message);
 
-    SDK_LOG("%s %.2f %.2f ", __func__, pos_x, pos_y);
+    SDK_LOG("%s %.f ", __func__, mode);
+}
 
+void 
+PayloadSdkInterface::
+setPayloadObjectTrackingPosition(float pos_x, float pos_y, float width, float height){
+    mavlink_command_long_t msg = {0};
+
+    msg.target_system = PAYLOAD_SYSTEM_ID;
+    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.command = MAV_CMD_USER_4;
+    msg.param1 = 4;
+    msg.param2 = 0;
+    msg.param3 = 1;
+    msg.param4 = pos_x;
+    msg.param5 = pos_y;
+    msg.param6 = width;
+    msg.param7 = height;
+    msg.confirmation = 1;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+
+    SDK_LOG("%s, %.2f %.2f %.2f %.2f ", __func__, pos_x, pos_y, width, height);
 }
 
 void 

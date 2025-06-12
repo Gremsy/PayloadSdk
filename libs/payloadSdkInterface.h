@@ -324,10 +324,15 @@ public:
      * */
     void setCameraFocus(float focusType, float focusValue=0);
 
-    /**
-     * send bounding box position for object tracking feature
-     **/
-    void setPayloadObjectTrackingParams(float cmd, float pos_x=960, float pos_y=540);
+    // send object tracking mode
+    // 3 modes: 
+    // - Stop tracking:   0
+    // - Active tracking: 1 (tracking actived but in idle mode, waiting for a trigger command with position)
+    // - EagleEyes:       2 (gimbal move only, no tracking trigger) 
+    void setPayloadObjectTrackingMode(float mode);
+
+    // send object tracking trigger
+    void setPayloadObjectTrackingPosition(float pos_x=960, float pos_y=540, float width=128, float height=128);
 
     /**
      * Send the GPS information to the payload

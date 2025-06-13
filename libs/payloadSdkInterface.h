@@ -255,7 +255,7 @@ public:
     /**
      * set payload's camera capture image
      **/
-    void setPayloadCameraCaptureImage(int = 0);
+    void setPayloadCameraCaptureImage(float = 0);
 
     /**
      * set payload's camera stop image

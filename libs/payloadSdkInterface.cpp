@@ -676,13 +676,13 @@ setPayloadCameraMode(CAMERA_MODE mode){
 
 void
 PayloadSdkInterface::
-setPayloadCameraCaptureImage(int interval_s){
+setPayloadCameraCaptureImage(float interval_s){
     mavlink_command_long_t msg = {0};
 
     msg.target_system = CAMERA_SYSTEM_ID;
     msg.target_component = CAMERA_COMPONENT_ID;
     msg.command = MAV_CMD_IMAGE_START_CAPTURE;
-    msg.param2 = (int)interval_s;
+    msg.param2 = (float)interval_s;
     msg.confirmation = 1;
 
     // --------------------------------------------------------------------------

@@ -39,6 +39,7 @@ add_subdirectory(examples)
 # Project subdirectory
 if (VIO)
 add_subdirectory(tests/demo_project)
+add_subdirectory(tests/parse_thermal_stream)
 endif(VIO)
 if (GHADRON)
 add_subdirectory(tests/ghadron_project)

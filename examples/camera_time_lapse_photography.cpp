@@ -36,7 +36,7 @@ typedef enum{
 }capture_sequence_t;
 
 capture_sequence_t my_capture = idle;
-uint8_t interval = 3;
+float interval = 3.0;
 uint8_t time_to_capturing = 12;
 
 int main(int argc, char *argv[]){
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]){
 		}
 		case do_capture:{
 			my_payload->setPayloadCameraCaptureImage(interval);
-			printf("Payload is capturing image elapsed time between %ds, within %ds, wait... \n", interval, time_to_capturing);
+			printf("Payload is capturing image elapsed time between %.1fs, within %ds, wait... \n", interval, time_to_capturing);
 			my_capture = image_in_capturing;
 			break;
 		}
@@ -105,6 +105,7 @@ int main(int argc, char *argv[]){
 		case stop_capturing_image:{
 			my_payload->setPayloadCameraStopImage();
 			my_payload->getPayloadCaptureStatus();
+			sleep(3);
 			break;
 		}
 		default: break;
@@ -148,6 +149,7 @@ void onPayloadStatusChanged(int event, double* param){
 				printf("   ---> Payload is idle, Check camera mode \n");
 			}else{
 				printf("   ---> Payload is busy \n");
+				my_payload->setPayloadCameraStopImage();
 				my_capture = idle;
 			}
 		}else if(my_capture == stop_capturing_image){

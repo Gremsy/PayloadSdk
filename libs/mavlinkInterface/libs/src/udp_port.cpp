@@ -269,17 +269,17 @@ stop()
 
 }
 
-void UDP_Port::set_mavlink_channel(int _ch){
+void UDP_Port::set_mav_channel(int _ch){
     mav_channel = _ch;
 }
-int UDP_Port::get_mavlink_channel(){
+int UDP_Port::get_mav_channel(){
     return mav_channel;
 }
-void UDP_Port::set_mavlink_version(int _ver){
+void UDP_Port::set_mav_version(int _ver){
     mav_ver = _ver;
     mavlink_set_proto_version(mav_channel, mav_ver);
 }
-int UDP_Port::get_mavlink_version(){
+int UDP_Port::get_mav_version(){
     return mav_ver;
 }
 

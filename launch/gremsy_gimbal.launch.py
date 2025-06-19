@@ -15,7 +15,7 @@ Usage Examples:
   # With heading follow enabled
   ros2 launch PayloadSDK gremsy_gimbal.launch.py enable_heading_follow:=true
 
-  # Override robot name
+  # Override robot name (ignores ROBOT_NAME env var)
   ros2 launch PayloadSDK gremsy_gimbal.launch.py robot_name:=robot_3
 
   # Disable auto-namespacing
@@ -29,8 +29,7 @@ import os
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument, LogInfo
-from launch.substitutions import LaunchConfiguration, EnvironmentVariable, PythonExpression
-from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration, EnvironmentVariable
 from ament_index_python.packages import get_package_share_directory
 
 
@@ -41,8 +40,8 @@ def generate_launch_description():
     # Path to the default config file
     default_config_file = os.path.join(package_dir, 'config', 'config_uav2.yaml')
 
-    # Get robot name from environment with fallback
-    robot_name_default = EnvironmentVariable('ROBOT_NAME', default_value='robot_1')
+    # Get robot name from ROBOT_NAME environment variable with fallback
+    robot_name_from_env = EnvironmentVariable('ROBOT_NAME', default_value='robot_1')
 
     # Declare launch arguments with descriptions
     config_arg = DeclareLaunchArgument(
@@ -53,8 +52,8 @@ def generate_launch_description():
 
     robot_name_arg = DeclareLaunchArgument(
         'robot_name',
-        default_value=robot_name_default,
-        description='Robot name for topic namespacing (defaults to ROBOT_NAME env var)'
+        default_value=robot_name_from_env,
+        description='Robot name for topic namespacing (defaults to ROBOT_NAME env var, fallback: robot_1)'
     )
 
     auto_namespace_arg = DeclareLaunchArgument(
@@ -109,7 +108,7 @@ def generate_launch_description():
         'heading_follow.enable': LaunchConfiguration('enable_heading_follow'),
         'heading_follow.offset': LaunchConfiguration('heading_offset'),
 
-        # Environment settings
+        # Environment settings - Override robot_name from launch argument (which uses env var)
         'environment.robot_name': LaunchConfiguration('robot_name'),
         'environment.auto_namespace': LaunchConfiguration('auto_namespace'),
     }
@@ -135,7 +134,7 @@ def generate_launch_description():
     startup_log = LogInfo(
         msg=[
             'Starting Gremsy Heading Follower with:',
-            '\n  - Robot Name: ', LaunchConfiguration('robot_name'),
+            '\n  - Robot Name: ', LaunchConfiguration('robot_name'), ' (from ROBOT_NAME env or launch arg)',
             '\n  - Auto Namespace: ', LaunchConfiguration('auto_namespace'),
             '\n  - Gimbal IP: ', LaunchConfiguration('gimbal_ip'),
             '\n  - Gimbal Port: ', LaunchConfiguration('gimbal_port'),

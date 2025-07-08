@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
-project (PayloadSDK)
+project (PayloadSDK LANGUAGES C CXX)
 
 set(CMAKE_BUILD_TYPE Debug)
 

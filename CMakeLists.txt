@@ -87,6 +87,12 @@ target_link_libraries(gremsysdk
 
 install(TARGETS gremsysdk DESTINATION lib/${PROJECT_NAME})
 
+# Install launch files
+install(DIRECTORY launch/
+    DESTINATION share/${PROJECT_NAME}/launch
+    FILES_MATCHING PATTERN "*.py"
+)
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

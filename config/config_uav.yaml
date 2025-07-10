@@ -82,6 +82,7 @@ heading_follow:
 # Node Configuration
 node:
   name: "gremsy_gimbal_node"
+  executable: "gremsy_align_node" # Modify to whatever node desired
   namespace: ""                   # Leave empty for global namespace
   publish_rate: 50.0              # Status publishing rate (Hz)
   timeout: 5.0                    # Connection timeout (seconds)

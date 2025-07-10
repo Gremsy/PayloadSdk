@@ -5,45 +5,40 @@ import os
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument, LogInfo
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, TextSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
+from launch.actions import OpaqueFunction
+
+
+def launch_setup(context, *args, **kwargs):
+    pkg_share = FindPackageShare('PayloadSDK').perform(context)
+    config_path = os.path.join(pkg_share, 'config', 'config_uav.yaml')  # hardcoded, or use LaunchConfiguration
+    
+    # Load YAML
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+
+    # Extract executable name from YAML
+    executable_name = config.get('node', {}).get('executable', 'gremsysdk')  # fallback to default
+
+    # Extract node name (optional)
+    node_name = config.get('node', {}).get('name', 'gremsy_gimbal_node')
+
+    return [
+        LogInfo(msg=f'Launching {executable_name} as node {node_name} using config {config_path}'),
+        Node(
+            package='PayloadSDK',
+            executable=executable_name,
+            name=node_name,
+            namespace='',
+            output='screen',
+            emulate_tty=True,
+            parameters=[config_path]
+        )
+    ]
+
 
 def generate_launch_description():
-    # Get package share directory
-    pkg_share = FindPackageShare('PayloadSDK')
-    
-    # Config file path
-    default_config_path = PathJoinSubstitution([pkg_share, 'config', 'config.yaml'])
-    
-    # Declare arguments
-    config_file_arg = DeclareLaunchArgument(
-        'config_file',
-        default_value=default_config_path,
-        description='Path to the configuration YAML file'
-    )
-    
-    # For now, we'll use a simple approach
-    # In production, you'd use OpaqueFunction to load YAML dynamically
-    
-    # Create main gimbal node
-    gimbal_node = Node(
-        package='PayloadSDK',
-        executable='gremsysdk',  # You can override this with launch argument
-        name='gremsy_gimbal_node',  # Must match config file
-        namespace='',
-        output='screen',
-        emulate_tty=True,
-        parameters=[LaunchConfiguration('config_file')],
-        # The node will configure itself based on the YAML file
-    )
-    
-    # Log what we're doing
-    log_msg = LogInfo(
-        msg=['Launching Gremsy gimbal with config: ', LaunchConfiguration('config_file')]
-    )
-    
     return LaunchDescription([
-        config_file_arg,
-        log_msg,
-        gimbal_node
+        OpaqueFunction(function=launch_setup)
     ])

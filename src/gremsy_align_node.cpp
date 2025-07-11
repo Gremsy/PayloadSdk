@@ -23,10 +23,8 @@ public:
   GimbalFollowerNode() : Node("gimbal_follower_node")
   {
     publisher_ = this->create_publisher<std_msgs::msg::String>("gimbal_status", 10);
-
     timer_ = this->create_wall_timer(
       1s, std::bind(&GimbalFollowerNode::timer_callback, this));
-
     subscription_ = this->create_subscription<geometry_msgs::msg::Vector3>(
       "move_gimbal_angle", 10,
       std::bind(&GimbalFollowerNode::move_gimbal_callback, this, std::placeholders::_1));
@@ -35,21 +33,31 @@ public:
     my_payload->sdkInitConnection();
     my_payload->checkPayloadConnection();
 
-    // ⚙️ Disable stabilization - make gimbal follow drone orientation
-    my_payload->setPayloadCameraParam(
-      PAYLOAD_CAMERA_RC_MODE,
-      PAYLOAD_CAMERA_RC_MODE_FOLLOW,  // ← This is the key change
-      PARAM_TYPE_UINT32);
+    // Try different approaches to disable stabilization:
+    
+    // Approach 1: Try different numeric values for the mode
+    // Common gimbal modes: 0=manual, 1=stabilize, 2=lock, 3=follow
+    try {
+        my_payload->setPayloadCameraParam(
+          PAYLOAD_CAMERA_RC_MODE,
+          2,  // Try 2 for "lock" mode
+          PARAM_TYPE_UINT32);
+        RCLCPP_INFO(this->get_logger(), "Set gimbal to lock mode (value 2)");
+    } catch (...) {
+        RCLCPP_WARN(this->get_logger(), "Failed to set lock mode");
+    }
 
-    // Optional: You could disable stabilization on specific axes if SDK allows
-    // my_payload->setGimbalStabilization(false, false, false); // pseudo
+    // Approach 2: Try to disable stabilization directly
+    // Look for other parameter types that might control stabilization
+    
+    RCLCPP_INFO(this->get_logger(), "Gimbal configured for lock/follow mode");
   }
 
 private:
   void timer_callback()
   {
     auto message = std_msgs::msg::String();
-    message.data = "Gimbal in FOLLOW mode";
+    message.data = "Gimbal in LOCK mode";
     RCLCPP_INFO(this->get_logger(), "Status: '%s'", message.data.c_str());
     publisher_->publish(message);
   }

@@ -73,7 +73,7 @@ include_directories(${PAYLOADSDKLIB_DIR}
 
 
 
-add_executable(gremsysdk src/gremsy_ros2_interface_node.cpp ${SOURCES})
+add_executable(gremsysdk src/gremsy_align_node.cpp ${SOURCES})
 ament_target_dependencies(gremsysdk rclcpp std_msgs geometry_msgs)
 
 target_link_libraries(gremsysdk

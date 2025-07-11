@@ -73,10 +73,10 @@ include_directories(${PAYLOADSDKLIB_DIR}
 
 
 
-add_executable(gremsysdk src/gremsy_align_node.cpp ${SOURCES})
-ament_target_dependencies(gremsysdk rclcpp std_msgs geometry_msgs)
+add_executable(gremsy_align_node src/gremsy_align_node.cpp ${SOURCES})
+ament_target_dependencies(gremsy_align_node rclcpp std_msgs geometry_msgs)
 
-target_link_libraries(gremsysdk
+target_link_libraries(gremsy_align_node
                     PayloadSDK
                     ${CMAKE_THREAD_LIBS_INIT}
                     ${GST_LIBRARIES} 
@@ -85,7 +85,7 @@ target_link_libraries(gremsysdk
                     stdc++fs
                     )
 
-install(TARGETS gremsysdk DESTINATION lib/${PROJECT_NAME})
+install(TARGETS gremsy_align_node DESTINATION lib/${PROJECT_NAME})
 
 # Install launch files
 install(DIRECTORY launch/

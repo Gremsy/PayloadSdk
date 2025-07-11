@@ -1,94 +1,90 @@
-# Gremsy Gimbal Configuration for UAV2
-# ===========================================
+gremsy_gimbal_node:
+  ros__parameters:
+    # Network Configuration
+    network:
+      udp_ip_target: "10.4.1.33"     # IP address of the Gremsy gimbal
+      udp_port_target: 14566          # Gremsy UDP port
 
-# Network Configuration
-network:
-  udp_ip_target: "10.4.1.33"     # IP address of the Gremsy gimbal
-  udp_port_target: 14566          # Gremsy UDP port
+    # UART Configuration (alternative to UDP)
+    uart:
+      port: "/dev/ttyUSB0"            # UART port path
+      baudrate: 115200                # UART baudrate
 
-# UART Configuration (alternative to UDP)
-uart:
-  port: "/dev/ttyUSB0"            # UART port path
-  baudrate: 115200                # UART baudrate
+    # Connection Method
+    connection:
+      control_method: 1               # 0 = UART, 1 = UDP
 
-# Connection Method
-connection:
-  control_method: 1               # 0 = UART, 1 = UDP
+    # Environment Configuration
+    environment:
+      robot_name: "robot_2"           # Robot name for topic namespacing
+      auto_namespace: true            # Automatically prefix drone topics with robot name
 
-# Environment Configuration
-environment:
-  robot_name: "robot_2"           # Robot name for topic namespacing
-  auto_namespace: true            # Automatically prefix drone topics with robot name
+    # ROS2 Topic Names
+    topics:
+      # Gimbal Control Topics (commands TO gimbal)
+      move_gimbal_angle: "move_gimbal_angle"
+      gimbal_command: "gimbal/command"
+      gimbal_home: "gimbal/home"
+      gimbal_reboot: "gimbal/reboot"
+      gimbal_reset: "gimbal/reset"
+      heading_follow: "gimbal/heading_follow"
 
-# ROS2 Topic Names
-topics:
-  # Gimbal Control Topics (commands TO gimbal)
-  move_gimbal_angle: "move_gimbal_angle"
-  gimbal_command: "gimbal/command"
-  gimbal_home: "gimbal/home"
-  gimbal_reboot: "gimbal/reboot"
-  gimbal_reset: "gimbal/reset"
-  heading_follow: "gimbal/heading_follow"
+      # Gimbal Status Topics (data FROM gimbal)
+      gimbal_status: "gimbal/status"
+      gimbal_attitude: "gimbal/attitude"
+      gimbal_encoder: "gimbal/encoder"
+      gimbal_imu: "gimbal/imu"
+      gimbal_motor: "gimbal/motor"
 
-  # Gimbal Status Topics (data FROM gimbal)
-  gimbal_status: "gimbal/status"
-  gimbal_attitude: "gimbal/attitude"
-  gimbal_encoder: "gimbal/encoder"
-  gimbal_imu: "gimbal/imu"
-  gimbal_motor: "gimbal/motor"
+      # Drone Topics (data FROM drone via MAVROS)
+      drone_heading: "interface/mavros/global_position/compass_hdg"  # std_msgs/Float64
+      drone_odom: "interface/mavros/local_position/odom"             # nav_msgs/Odometry
+      drone_imu: "interface/mavros/imu/data"                         # sensor_msgs/Imu
 
-  # Drone Topics (data FROM drone via MAVROS)
-  # Note: These will be automatically prefixed with robot_name if auto_namespace is true
-  drone_heading: "interface/mavros/global_position/compass_hdg"  # std_msgs/Float64
-  drone_odom: "interface/mavros/local_position/odom"             # nav_msgs/Odometry (backup)
-  drone_imu: "interface/mavros/imu/data"                         # sensor_msgs/Imu (backup)
+    # MAVLink Configuration
+    mavlink:
+      payload_system_id: 1            # PAYLOAD_SYSTEM_ID
+      payload_component_id: 100       # MAV_COMP_ID_CAMERA2
+      gimbal_system_id: 1             # GIMBAL_SYSTEM_ID
+      gimbal_component_id: 154        # MAV_COMP_ID_GIMBAL
 
-# MAVLink Configuration
-mavlink:
-  payload_system_id: 1            # PAYLOAD_SYSTEM_ID
-  payload_component_id: 100       # MAV_COMP_ID_CAMERA2
-  gimbal_system_id: 1             # GIMBAL_SYSTEM_ID
-  gimbal_component_id: 154        # MAV_COMP_ID_GIMBAL
+    # Gimbal Settings
+    gimbal:
+      # Gimbal control input mode
+      input_mode: 1                   # 1 = INPUT_ANGLE, 2 = INPUT_SPEED
 
-# Gimbal Settings
-gimbal:
-  # Gimbal control input mode
-  input_mode: 1                   # 1 = INPUT_ANGLE, 2 = INPUT_SPEED
+      # Angle limits (degrees)
+      limits:
+        pan_min: -180.0               # Minimum pan (yaw) angle
+        pan_max: 180.0                # Maximum pan (yaw) angle
+        tilt_min: -90.0               # Minimum tilt (pitch) angle
+        tilt_max: 90.0                # Maximum tilt (pitch) angle
+        roll_min: -45.0               # Minimum roll angle
+        roll_max: 45.0                # Maximum roll angle
 
-  # Angle limits (degrees) - Adjust based on your gimbal model
-  limits:
-    pan_min: -180.0               # Minimum pan (yaw) angle
-    pan_max: 180.0                # Maximum pan (yaw) angle
-    tilt_min: -90.0               # Minimum tilt (pitch) angle
-    tilt_max: 90.0                # Maximum tilt (pitch) angle
-    roll_min: -45.0               # Minimum roll angle
-    roll_max: 45.0                # Maximum roll angle
+      # Control parameters
+      control:
+        max_speed: 30.0               # Maximum speed (deg/s)
+        acceleration: 10.0            # Acceleration (deg/s²)
+        smoothing: 3                  # Smoothing factor (0-5)
 
-  # Control parameters
-  control:
-    max_speed: 30.0               # Maximum speed (deg/s)
-    acceleration: 10.0            # Acceleration (deg/s²)
-    smoothing: 3                  # Smoothing factor (0-5)
+    # Heading Follow Configuration
+    heading_follow:
+      enable: false                   # Enable heading follow mode on startup
+      offset: 0.0                     # Heading offset in degrees
+      deadband: 3.0                   # Don't move gimbal if error is less than this (degrees)
+      gain: 0.6                       # Proportional gain for heading correction (0.0-1.0)
 
-# Heading Follow Configuration
-heading_follow:
-  enable: false                   # Enable heading follow mode on startup
-  offset: 0.0                     # Heading offset in degrees (gimbal yaw = drone heading + offset)
-                                  # Examples: 0° = forward, 90° = right, -90° = left, 180° = backward
-  deadband: 3.0                   # Don't move gimbal if error is less than this (degrees)
-  gain: 0.6                       # Proportional gain for heading correction (0.0-1.0)
-                                  # Lower = smoother, Higher = more responsive
+    # Node Configuration
+    node:
+      name: "gremsysdk"
+      executable: "gremsy_align_node"
+      namespace: ""
+      publish_rate: 50.0              # Status publishing rate (Hz)
+      timeout: 5.0                    # Connection timeout (seconds)
 
-# Node Configuration
-node:
-  name: "gremsy_gimbal_node"
-  executable: "gremsy_align_node" # Modify to whatever node desired
-  namespace: ""                   # Leave empty for global namespace
-  publish_rate: 50.0              # Status publishing rate (Hz)
-  timeout: 5.0                    # Connection timeout (seconds)
-
-# Logging Configuration
-logging:
-  level: "INFO"                   # DEBUG, INFO, WARN, ERROR
-  enable_file_log: false
-  log_file_path: "/tmp/gremsy_heading_follower.log"
+    # Logging Configuration
+    logging:
+      level: "INFO"                   # DEBUG, INFO, WARN, ERROR
+      enable_file_log: false
+      log_file_path: "/tmp/gremsy_heading_follower.log"

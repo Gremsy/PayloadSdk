@@ -12,16 +12,20 @@ from launch.actions import OpaqueFunction
 
 def launch_setup(context, *args, **kwargs):
     pkg_share = FindPackageShare('PayloadSDK').perform(context)
-    config_path = os.path.join(pkg_share, 'config', 'config_uav.yaml')  # hardcoded, or use LaunchConfiguration
+    config_path = os.path.join(pkg_share, 'config', 'config_uav.yaml')
     
-    # Load YAML
-    with open(config_path, 'r') as f:
-        config = yaml.safe_load(f)
+    # Load YAML configuration
+    try:
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+    except FileNotFoundError:
+        # If config file doesn't exist, use defaults
+        config = {}
 
-    # Extract executable name from YAML
-    executable_name = config.get('node', {}).get('executable', 'gremsysdk')  # fallback to default
+    # Extract executable name from YAML (fallback to 'gremsysdk')
+    executable_name = config.get('node', {}).get('executable', 'gremsysdk')
 
-    # Extract node name (optional)
+    # Extract node name (fallback to 'gremsy_gimbal_node')
     node_name = config.get('node', {}).get('name', 'gremsy_gimbal_node')
 
     return [
@@ -33,7 +37,7 @@ def launch_setup(context, *args, **kwargs):
             namespace='',
             output='screen',
             emulate_tty=True,
-            parameters=[config_path]
+            # parameters=[config_path] if os.path.exists(config_path) else []
         )
     ]
 

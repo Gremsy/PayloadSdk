@@ -1,90 +1,155 @@
-gremsy_gimbal_node:
+# Complete Gremsy ROS2 Configuration
+# This file replaces hardcoded values in payloadsdk.h
+
+# Common network configuration for all nodes
+gremsy_common:
   ros__parameters:
-    # Network Configuration
+    # Network Configuration - replaces hardcoded values in payloadsdk.h
     network:
-      udp_ip_target: "10.4.1.33"     # IP address of the Gremsy gimbal
-      udp_port_target: 14566          # Gremsy UDP port
+      udp_ip_target: "10.4.1.23"     # Replaces udp_ip_target in payloadsdk.h
+      udp_port_target: 14566          # Replaces udp_port_target in payloadsdk.h
 
-    # UART Configuration (alternative to UDP)
+    # UART Configuration - replaces hardcoded values in payloadsdk.h
     uart:
-      port: "/dev/ttyUSB0"            # UART port path
-      baudrate: 115200                # UART baudrate
+      port: "/dev/ttyUSB0"            # Replaces payload_uart_port in payloadsdk.h
+      baudrate: 115200                # Replaces payload_uart_baud in payloadsdk.h
 
-    # Connection Method
+    # Connection Method - replaces CONTROL_METHOD in payloadsdk.h
     connection:
-      control_method: 1               # 0 = UART, 1 = UDP
+      control_method: 1               # 0 = UART, 1 = UDP (replaces CONTROL_METHOD)
 
-    # Environment Configuration
-    environment:
-      robot_name: "robot_2"           # Robot name for topic namespacing
-      auto_namespace: true            # Automatically prefix drone topics with robot name
-
-    # ROS2 Topic Names
-    topics:
-      # Gimbal Control Topics (commands TO gimbal)
-      move_gimbal_angle: "move_gimbal_angle"
-      gimbal_command: "gimbal/command"
-      gimbal_home: "gimbal/home"
-      gimbal_reboot: "gimbal/reboot"
-      gimbal_reset: "gimbal/reset"
-      heading_follow: "gimbal/heading_follow"
-
-      # Gimbal Status Topics (data FROM gimbal)
-      gimbal_status: "gimbal/status"
-      gimbal_attitude: "gimbal/attitude"
-      gimbal_encoder: "gimbal/encoder"
-      gimbal_imu: "gimbal/imu"
-      gimbal_motor: "gimbal/motor"
-
-      # Drone Topics (data FROM drone via MAVROS)
-      drone_heading: "interface/mavros/global_position/compass_hdg"  # std_msgs/Float64
-      drone_odom: "interface/mavros/local_position/odom"             # nav_msgs/Odometry
-      drone_imu: "interface/mavros/imu/data"                         # sensor_msgs/Imu
-
-    # MAVLink Configuration
+    # MAVLink Configuration - replaces hardcoded values in payloadsdk.h
     mavlink:
-      payload_system_id: 1            # PAYLOAD_SYSTEM_ID
-      payload_component_id: 100       # MAV_COMP_ID_CAMERA2
-      gimbal_system_id: 1             # GIMBAL_SYSTEM_ID
-      gimbal_component_id: 154        # MAV_COMP_ID_GIMBAL
-
-    # Gimbal Settings
-    gimbal:
-      # Gimbal control input mode
-      input_mode: 1                   # 1 = INPUT_ANGLE, 2 = INPUT_SPEED
-
-      # Angle limits (degrees)
-      limits:
-        pan_min: -180.0               # Minimum pan (yaw) angle
-        pan_max: 180.0                # Maximum pan (yaw) angle
-        tilt_min: -90.0               # Minimum tilt (pitch) angle
-        tilt_max: 90.0                # Maximum tilt (pitch) angle
-        roll_min: -45.0               # Minimum roll angle
-        roll_max: 45.0                # Maximum roll angle
-
-      # Control parameters
-      control:
-        max_speed: 30.0               # Maximum speed (deg/s)
-        acceleration: 10.0            # Acceleration (deg/s²)
-        smoothing: 3                  # Smoothing factor (0-5)
-
-    # Heading Follow Configuration
-    heading_follow:
-      enable: false                   # Enable heading follow mode on startup
-      offset: 0.0                     # Heading offset in degrees
-      deadband: 3.0                   # Don't move gimbal if error is less than this (degrees)
-      gain: 0.6                       # Proportional gain for heading correction (0.0-1.0)
+      payload_system_id: 1            # Replaces PAYLOAD_SYSTEM_ID
+      payload_component_id: 100       # Replaces PAYLOAD_COMPONENT_ID (MAV_COMP_ID_CAMERA2)
+      gimbal_system_id: 1             # Replaces GIMBAL_SYSTEM_ID
+      gimbal_component_id: 154        # Replaces GIMBAL_COMPONENT_ID (MAV_COMP_ID_GIMBAL)
 
     # Node Configuration
     node:
-      name: "gremsysdk"
-      executable: "gremsy_align_node"
-      namespace: ""
-      publish_rate: 50.0              # Status publishing rate (Hz)
+      publish_rate: 50.0              # Default publishing rate (Hz)
       timeout: 5.0                    # Connection timeout (seconds)
 
     # Logging Configuration
     logging:
       level: "INFO"                   # DEBUG, INFO, WARN, ERROR
       enable_file_log: false
-      log_file_path: "/tmp/gremsy_heading_follower.log"
+      log_file_path: "/tmp/gremsy_nodes.log"
+
+# Node 1: Gimbal Control and Status
+gremsy_gimbal_node:
+  ros__parameters:
+    # Inherit all common parameters above, plus:
+    
+    # Gimbal-specific topics
+    topics:
+      gimbal_status: "gimbal/status"
+      gimbal_attitude: "gimbal/attitude"
+      gimbal_encoder: "gimbal/encoder"
+      gimbal_imu: "gimbal/imu"
+      gimbal_motor: "gimbal/motor"
+      gimbal_mode_cmd: "gimbal/mode/cmd"
+
+    # Gimbal Settings
+    gimbal:
+      lock_mode: 0                    # 0 = LOCK_MODE_OFF, 1 = LOCK_MODE_ON
+      input_mode: 1                   # 1 = INPUT_ANGLE, 2 = INPUT_SPEED
+      default_mode: "FOLLOW"          # LOCK, FOLLOW, MAPPING, OFF
+
+    # Override common config if needed
+    node:
+      publish_rate: 50.0              # Status publishing rate (Hz)
+      timeout: 5.0                    # Connection timeout (seconds)
+
+# Node 2: Camera Streaming
+gremsy_camera_stream_node:
+  ros__parameters:
+    # Inherit all common parameters above, plus:
+    
+    # Camera stream topics
+    topics:
+      rgb_camera_stream: "gimbal/camera/rgb/image"
+      ir_camera_stream: "gimbal/camera/ir/image"
+      camera_info: "gimbal/camera/info"
+      stream_control: "gimbal/camera/stream/control"
+      stream_status: "gimbal/camera/stream_status"
+      storage_info: "gimbal/camera/storage_info"
+
+    # Camera stream settings
+    camera:
+      # Stream Type Configuration
+      stream_mode: "DUAL"             # RGB, IR, DUAL
+      rgb_enabled: true               # Enable RGB stream
+      ir_enabled: true                # Enable IR stream
+      
+      # Auto-start streaming on node startup
+      auto_start_stream: true         # Start streaming automatically when node starts
+      
+      # Stream Quality Settings
+      stream_quality: "HD"            # HD, FHD, 4K
+      framerate: 30                   # Target framerate
+      encoding: "h264"                # Video encoding
+      
+      # Dual Stream Configuration
+      dual_stream:
+        layout: "SIDE_BY_SIDE"        # SIDE_BY_SIDE, PICTURE_IN_PICTURE, SEPARATE_URLS
+        rgb_position: "LEFT"          # LEFT, RIGHT, TOP, BOTTOM (for side-by-side)
+        ir_position: "RIGHT"          # LEFT, RIGHT, TOP, BOTTOM (for side-by-side)
+        pip_size: 0.25               # Picture-in-picture size (0.1-0.5)
+        pip_position: "TOP_RIGHT"     # TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
+      
+      # Stream URLs (auto-detected, but can be overridden)
+      stream_urls:
+        rgb_url: ""                   # Auto-detected if empty
+        ir_url: ""                    # Auto-detected if empty  
+        dual_url: ""                  # Auto-detected if empty
+        
+      # Recording Settings
+      recording:
+        auto_record: false            # Auto-start recording with stream
+        record_duration: 300          # Auto-stop recording after seconds (0 = manual stop)
+        record_path: "/tmp/gremsy_recordings"  # Recording output path
+
+    # Override common config if needed
+    node:
+      publish_rate: 30.0              # Stream publish rate (Hz)
+      timeout: 5.0
+
+# Node 3: Camera Movement Control
+gremsy_camera_move_node:
+  ros__parameters:
+    # Inherit all common parameters above, plus:
+    
+    # Movement control topics
+    topics:
+      move_gimbal_angle: "gimbal/camera/move"
+      move_gimbal_speed: "gimbal/camera/move_speed"
+      camera_zoom: "gimbal/camera/zoom"
+      camera_focus: "gimbal/camera/focus"
+      movement_status: "gimbal/movement/status"
+
+    # Movement settings
+    movement:
+      max_speed: 90.0                 # degrees per second
+      acceleration: 30.0              # degrees per second squared
+      smoothing: true
+      follow_rate: 0.1                # Follow mode responsiveness
+      
+      # Zoom Configuration  
+      zoom:
+        min_zoom: 1.0                 # Minimum zoom level
+        max_zoom: 30.0                # Maximum zoom level
+        zoom_step: 1.0                # Step size for discrete zoom
+        continuous_zoom_speed: 5.0    # Speed for continuous zoom
+        
+      # Focus Configuration
+      focus:
+        auto_focus_enabled: true      # Enable auto-focus by default
+        manual_focus_step: 1.0        # Step size for manual focus
+        continuous_focus_speed: 3.0   # Speed for continuous focus
+
+    # Override common config if needed  
+    node:
+      publish_rate: 100.0             # Movement update rate (Hz)
+      timeout: 5.0
+      timeout: 5.0

@@ -29,7 +29,7 @@ The Gremsy Payload SDK provides a comprehensive Python interface for controlling
 ### 1. Clone the Repository
 ```bash
 git clone -b payloadsdk_v3_python3 https://github.com/Gremsy/PayloadSdk.git
-cd pymavlink
+cd PayloadSdk
 ```
 
 ### 2. Setup Python Environment
@@ -51,7 +51,7 @@ pip install -r requirements.txt
 ## Project Structure
 
 ```
-pymavlink/
+PayloadSdk/
 ├── examples/           # Example applications and use cases
 ├── libs/              # Core SDK libraries
 │   ├── config.py      # Centralized configuration management

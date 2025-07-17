@@ -63,6 +63,13 @@ private:
         
         // Logging Configuration
         this->declare_parameter("logging.level", "INFO");
+
+        // Add default position parameters
+        this->declare_parameter("gimbal.default_position.enable", true);
+        this->declare_parameter("gimbal.default_position.pitch", -45.0);
+        this->declare_parameter("gimbal.default_position.roll", 0.0);
+        this->declare_parameter("gimbal.default_position.yaw", 0.0);
+        this->declare_parameter("gimbal.default_position.delay_ms", 2000);
     }
     
     void load_common_parameters() {
@@ -192,6 +199,13 @@ private:
         
         // Load node configuration
         publish_rate_ = this->get_parameter("node.publish_rate").as_double();
+
+        // Load default position parameters
+        default_position_enabled_ = this->get_parameter("gimbal.default_position.enable").as_bool();
+        default_pitch_ = this->get_parameter("gimbal.default_position.pitch").as_double();
+        default_roll_ = this->get_parameter("gimbal.default_position.roll").as_double();
+        default_yaw_ = this->get_parameter("gimbal.default_position.yaw").as_double();
+        default_position_delay_ = this->get_parameter("gimbal.default_position.delay_ms").as_int();
     }
     
     void setup_publishers_subscribers() {
@@ -225,14 +239,21 @@ private:
         }
         
         try {
+            // FIRST: Set RC mode (like in the working example)
+            RCLCPP_INFO(this->get_logger(), "Setting gimbal RC mode to STANDARD");
+            payload_interface_->setPayloadCameraParam(
+                PAYLOAD_CAMERA_RC_MODE, 
+                PAYLOAD_CAMERA_RC_MODE_STANDARD, 
+                PARAM_TYPE_UINT32);
+            usleep(100000); // 100ms delay like in example
+            
             RCLCPP_INFO(this->get_logger(), "Setting gimbal to %s mode", default_mode_.c_str());
             
-            // FIXED: Use exact same pattern as reference code
+            // THEN: Set gimbal mode
             if (default_mode_ == "FOLLOW") {
-                // 🎯 SET GIMBAL TO FOLLOW MODE - this makes it move with drone body
                 payload_interface_->setPayloadCameraParam(
-                    PAYLOAD_CAMERA_GIMBAL_MODE,           // Parameter name "GB_MODE"
-                    PAYLOAD_CAMERA_GIMBAL_MODE_FOLLOW,    // Value = 2 (follow vehicle)
+                    PAYLOAD_CAMERA_GIMBAL_MODE,
+                    PAYLOAD_CAMERA_GIMBAL_MODE_FOLLOW,
                     PARAM_TYPE_UINT32);
                 RCLCPP_INFO(this->get_logger(), "✅ Gimbal set to FOLLOW mode - will move with drone body");
             } else if (default_mode_ == "LOCK") {
@@ -256,13 +277,21 @@ private:
                 RCLCPP_INFO(this->get_logger(), "✅ Gimbal set to FOLLOW mode (default)");
             }
             
+            usleep(100000); // 100ms delay like in example
+            
+            // FINALLY: Set default position if enabled
+            if (default_position_enabled_) {
+                RCLCPP_INFO(this->get_logger(), "Setting default position after mode setup");
+                set_default_position_delayed();
+            }
+            
         } catch (const std::exception& e) {
             RCLCPP_ERROR(this->get_logger(), "❌ Failed to set gimbal mode: %s", e.what());
         } catch (...) {
             RCLCPP_ERROR(this->get_logger(), "❌ Unknown error setting gimbal mode");
         }
     }
-    
+
     void publish_status() {
         if (!connection_established_ || !payload_interface_) {
             auto status_msg = std_msgs::msg::String();
@@ -291,12 +320,12 @@ private:
             return;
         }
         
-        RCLCPP_INFO(this->get_logger(), "Move Gimbal Request: x=%f y=%f z=%f", msg->x, msg->y, msg->z);
+        RCLCPP_INFO(this->get_logger(), "Move Gimbal Request: roll=%f pitch=%f yaw=%f", msg->x, msg->y, msg->z);
         
         try {
-            // Use setGimbalSpeed with INPUT_ANGLE like reference code
+            // Use exact same pattern as working example
             payload_interface_->setGimbalSpeed(msg->x, msg->y, msg->z, INPUT_ANGLE);
-            RCLCPP_DEBUG(this->get_logger(), "Gimbal movement command sent");
+            RCLCPP_INFO(this->get_logger(), "✅ Gimbal movement command sent");
         } catch (const std::exception& e) {
             RCLCPP_ERROR(this->get_logger(), "❌ Failed to move gimbal: %s", e.what());
         }
@@ -318,6 +347,13 @@ private:
                     PAYLOAD_CAMERA_GIMBAL_MODE_FOLLOW,    // Value = 2 (follow vehicle)
                     PARAM_TYPE_UINT32);
                 RCLCPP_INFO(this->get_logger(), "✅ Gimbal set to FOLLOW mode - will move with drone body");
+                
+                // ADD: Set default position after setting to FOLLOW mode
+                if (default_position_enabled_) {
+                    RCLCPP_INFO(this->get_logger(), "Mode changed to FOLLOW - setting default position");
+                    set_default_position_delayed();
+                }
+                
             } else if (msg->data == "LOCK") {
                 payload_interface_->setPayloadCameraParam(
                     PAYLOAD_CAMERA_GIMBAL_MODE,
@@ -357,6 +393,53 @@ private:
             RCLCPP_ERROR(this->get_logger(), "❌ Unknown error changing gimbal mode");
         }
     }
+
+    void set_default_position_delayed() {
+        // Create a one-shot timer to set position after delay
+        auto timer = this->create_wall_timer(
+            std::chrono::milliseconds(default_position_delay_),
+            [this]() {
+                set_default_position();
+            });
+            
+        // Store timer to prevent it from being destroyed
+        position_timer_ = timer;
+    }
+    
+    void set_default_position() {
+        if (!connection_established_ || !payload_interface_) {
+            RCLCPP_WARN(this->get_logger(), "Cannot set default position - not connected");
+            return;
+        }
+        
+        try {
+            RCLCPP_INFO(this->get_logger(), "Setting gimbal to default position: roll=%.1f°, pitch=%.1f°, yaw=%.1f°", 
+                    default_roll_, default_pitch_, default_yaw_);
+            
+            // Use exact same pattern as working example
+            payload_interface_->setGimbalSpeed(default_roll_, default_pitch_, default_yaw_, INPUT_ANGLE);
+            
+            RCLCPP_INFO(this->get_logger(), "✅ Gimbal positioned: roll=%.1f°, pitch=%.1f°, yaw=%.1f°", 
+                    default_roll_, default_pitch_, default_yaw_);
+            
+            // Cancel the timer since we only want this to run once
+            if (position_timer_) {
+                position_timer_->cancel();
+                position_timer_.reset();
+            }
+            
+        } catch (const std::exception& e) {
+            RCLCPP_ERROR(this->get_logger(), "❌ Failed to set default position: %s", e.what());
+        }
+    }
+
+    // Add these member variables:
+    bool default_position_enabled_ = true;
+    double default_pitch_ = -45.0;
+    double default_roll_ = 0.0;
+    double default_yaw_ = 0.0;
+    int default_position_delay_ = 2000;  // 2 seconds delay
+    rclcpp::TimerBase::SharedPtr position_timer_;
 
     // Common parameters (previously in base class)
     std::string udp_ip_target_;

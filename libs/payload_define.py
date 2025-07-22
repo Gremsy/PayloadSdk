@@ -207,12 +207,7 @@ class payload_camera_ir_isotherms(IntEnumBase):
 PAYLOAD_CAMERA_IR_ISOTHERMS_GAIN =                                      "ISOTHERMS_GAIN"
 class payload_camera_ir_isotherms_gain(IntEnumBase):
     PAYLOAD_CAMERA_IR_ISOTHERMS_HIGH_GAIN =                             0                                        
-    PAYLOAD_CAMERA_IR_ISOTHERMS_LOW_GAIN  =                             1   
-
-PAYLOAD_CAMERA_IR_ISOTHERMS_GAIN =                                      "ISOTHERMS_GAIN"
-class payload_camera_ir_isotherms_gain(IntEnumBase):
-    PAYLOAD_CAMERA_IR_ISOTHERMS_HIGH_GAIN =                             0                                        
-    PAYLOAD_CAMERA_IR_ISOTHERMS_LOW_GAIN  =                             1   
+    PAYLOAD_CAMERA_IR_ISOTHERMS_LOW_GAIN  =                             1
 
 # ICR Mode: AutoICR vs Manual
 PAYLOAD_CAMERA_VIDEO_ICR_MODE =                                         "C_V_ICR"

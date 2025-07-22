@@ -208,3 +208,24 @@ PAYLOAD_CAMERA_IR_ISOTHERMS_GAIN =                                      "ISOTHER
 class payload_camera_ir_isotherms_gain(IntEnumBase):
     PAYLOAD_CAMERA_IR_ISOTHERMS_HIGH_GAIN =                             0                                        
     PAYLOAD_CAMERA_IR_ISOTHERMS_LOW_GAIN  =                             1   
+
+PAYLOAD_CAMERA_IR_ISOTHERMS_GAIN =                                      "ISOTHERMS_GAIN"
+class payload_camera_ir_isotherms_gain(IntEnumBase):
+    PAYLOAD_CAMERA_IR_ISOTHERMS_HIGH_GAIN =                             0                                        
+    PAYLOAD_CAMERA_IR_ISOTHERMS_LOW_GAIN  =                             1   
+
+# ICR Mode: AutoICR vs Manual
+PAYLOAD_CAMERA_VIDEO_ICR_MODE =                                         "C_V_ICR"
+class payload_camera_video_icr_mode(IntEnumBase):
+    PAYLOAD_CAMERA_VIDEO_ICR_MODE_AUTO   =                              2  # Auto ICR (excludes C_V_ICR_MAN)
+    PAYLOAD_CAMERA_VIDEO_ICR_MODE_MANUAL =                              3  # Manual ICR (excludes C_V_ICR_THR)
+
+# ICR Manual Control: On or Off
+PAYLOAD_CAMERA_VIDEO_ICR_MANUAL =                                       "C_V_ICR_MAN"
+class payload_camera_video_icr_manual(IntEnumBase):
+    PAYLOAD_CAMERA_VIDEO_ICR_MANUAL_ON  =                               2  # ICR manual ON
+    PAYLOAD_CAMERA_VIDEO_ICR_MANUAL_OFF =                               3  # ICR manual OFF
+
+# ICR Threshold Value (0–255)
+PAYLOAD_CAMERA_VIDEO_ICR_THRESHOLD      =                               "C_V_ICR_THR"
+# Numeric range: 0 <= C_V_ICR_THR <= 255 (step = 1)

@@ -83,6 +83,54 @@ def main():
     my_payload.getPayloadCameraSettingList()
     time.sleep(3)  
 
+    # Set ICR to AUTO mode
+    print("------------------------> Setting ICR mode to AUTO")
+    my_payload.setPayloadCameraParam(
+        PAYLOAD_CAMERA_VIDEO_ICR_MODE,
+        payload_camera_video_icr_mode.PAYLOAD_CAMERA_VIDEO_ICR_MODE_AUTO,
+        mavutil.mavlink.MAV_PARAM_TYPE_UINT32
+    )
+    time.sleep(2)
+
+    # Switch to MANUAL ICR mode
+    print("------------------------> Setting ICR mode to MANUAL")
+    my_payload.setPayloadCameraParam(
+        PAYLOAD_CAMERA_VIDEO_ICR_MODE,
+        payload_camera_video_icr_mode.PAYLOAD_CAMERA_VIDEO_ICR_MODE_MANUAL,
+        mavutil.mavlink.MAV_PARAM_TYPE_UINT32
+    )
+    time.sleep(2)
+
+    # Enable manual ICR control
+    print("------------------------> Enabling manual ICR")
+    my_payload.setPayloadCameraParam(
+        PAYLOAD_CAMERA_VIDEO_ICR_MANUAL,
+        payload_camera_video_icr_manual.PAYLOAD_CAMERA_VIDEO_ICR_MANUAL_ON,
+        mavutil.mavlink.MAV_PARAM_TYPE_UINT32
+    )
+    time.sleep(2)
+
+    # Set ICR threshold
+    threshold = 128  # Value between 0 and 255
+    print(f"------------------------> Setting ICR threshold to {threshold}")
+    my_payload.setPayloadCameraParam(
+        PAYLOAD_CAMERA_VIDEO_ICR_THRESHOLD,
+        threshold,
+        mavutil.mavlink.MAV_PARAM_TYPE_UINT32
+    )
+    time.sleep(2)
+
+    # Disable manual ICR control
+    print("------------------------> Disabling manual ICR")
+    my_payload.setPayloadCameraParam(
+        PAYLOAD_CAMERA_VIDEO_ICR_MANUAL,
+        payload_camera_video_icr_manual.PAYLOAD_CAMERA_VIDEO_ICR_MANUAL_OFF,
+        mavutil.mavlink.MAV_PARAM_TYPE_UINT32
+    )
+    time.sleep(2)
+
+    print("------------------------> ICR example finished!")
+
     # Close payload interface
     try:
         my_payload.sdkQuit()

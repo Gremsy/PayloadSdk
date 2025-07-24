@@ -140,11 +140,41 @@ target_link_libraries(gremsy_camera_move_node
                     stdc++fs
                     )
 
+# === Node 4: Camera Stream (IR) ===
+add_executable(gremsy_camera_stream_ir src/gremsy_camera_stream_ir.cpp ${COMMON_SOURCES})
+
+# Add dependencies
+ament_target_dependencies(gremsy_camera_stream_ir
+    rclcpp 
+    std_msgs 
+    geometry_msgs
+    sensor_msgs
+    cv_bridge
+    OpenCV
+)
+
+target_include_directories(gremsy_camera_stream_ir PRIVATE
+    ${OpenCV_INCLUDE_DIRS}
+    ${GST_INCLUDE_DIRS}
+)
+
+target_link_libraries(gremsy_camera_stream_ir
+                    PayloadSDK
+                    ${CMAKE_THREAD_LIBS_INIT}
+                    ${GST_LIBRARIES} 
+                    ${JSONCPP_LIBRARIES}
+                    ${CURL_LIBRARIES}
+                    ${OpenCV_LIBS}
+                    stdc++fs
+                    )
+
+
 # Install all executables
 install(TARGETS 
     gremsy_gimbal_node
     gremsy_camera_stream_node
     gremsy_camera_move_node
+    gremsy_camera_stream_ir
     DESTINATION lib/${PROJECT_NAME}
 )
 

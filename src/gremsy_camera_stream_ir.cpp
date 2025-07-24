@@ -96,9 +96,9 @@ private:
         this->declare_parameter("topics.storage_info", "gimbal/camera/storage_info");
         
         // Camera parameters
-        this->declare_parameter("camera.stream_mode", "RGB");
+        this->declare_parameter("camera.stream_mode", "IR");
         this->declare_parameter("camera.rgb_enabled", true);
-        this->declare_parameter("camera.ir_enabled", false);
+        this->declare_parameter("camera.ir_enabled", true);
         this->declare_parameter("camera.auto_start_stream", true);
         this->declare_parameter("camera.stream_quality", "HD");
         this->declare_parameter("camera.framerate", 30);

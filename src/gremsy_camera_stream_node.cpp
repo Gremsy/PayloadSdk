@@ -289,6 +289,17 @@ private:
                 gst_init(nullptr, nullptr);
                 RCLCPP_INFO(this->get_logger(), "🎬 GStreamer initialized");
             }
+
+            // **DISABLE CAMERA OSD - CORRECT PARAMETER NAMES**
+            try {
+                payload_interface_->setPayloadCameraParam(
+                    PAYLOAD_CAMERA_VIDEO_OSD_MODE, 
+                    PAYLOAD_CAMERA_VIDEO_OSD_MODE_DISABLE, 
+                    PARAM_TYPE_UINT32);
+                RCLCPP_INFO(this->get_logger(), "🚫 Camera OSD disabled");
+            } catch (const std::exception& e) {
+                RCLCPP_WARN(this->get_logger(), "Could not disable OSD: %s", e.what());
+            }
             
             // Set stream mode based on configuration
             if (stream_mode_ == "DUAL" || (rgb_enabled_ && ir_enabled_)) {

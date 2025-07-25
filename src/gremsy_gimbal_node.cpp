@@ -66,8 +66,8 @@ private:
 
         // Add default position parameters
         this->declare_parameter("gimbal.default_position.enable", true);
-        this->declare_parameter("gimbal.default_position.pitch", -45.0);
-        this->declare_parameter("gimbal.default_position.roll", 0.0);
+        this->declare_parameter("gimbal.default_position.pitch", 0.0);
+        this->declare_parameter("gimbal.default_position.roll", -45.0);
         this->declare_parameter("gimbal.default_position.yaw", 0.0);
         this->declare_parameter("gimbal.default_position.delay_ms", 2000);
     }

@@ -22,6 +22,12 @@ message("-- ZIO: ${ZIO}")
 add_definitions(-DZIO=${ZIO})
 endif(ZIO)
 
+if (ORUSL)
+set(ORUSL $ENV{ORUSL})
+message("-- ORUSL: ${ORUSL}")
+add_definitions(-DVIO=${ORUSL})
+endif(ORUSL)
+
 find_package(PkgConfig REQUIRED)
 #Use Pkg-config to configure GStreamer
 pkg_search_module(GLIB REQUIRED glib-2.0) 

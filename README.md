@@ -42,6 +42,7 @@ cmake -D<b>payload</b> ../
 <i>e.g. cmake -DVIO=1 ../</i>
 <i>     cmake -DGHADRON=1 ../</i>
 <i>     cmake -DZIO=1 ../</i>
+<i>     cmake -DORUSL=1 ../</i>
 
 make -j6
 

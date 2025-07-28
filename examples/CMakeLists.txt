@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5)
 set(PAYLOADSDKLIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../libs)
 # set(PAYLOADSDKLIB_COMPILED ${CMAKE_CURRENT_SOURCE_DIR}/../build/libs)
 
-if (VIO)
+if (VIO OR ORUSL)
 set(EXAMPLES
     check_connect.cpp
 
@@ -37,7 +37,7 @@ set(EXAMPLES
     payload_extract_tiff_file.cpp
     payload_set_stream_bitrate.cpp
 )
-endif(VIO)
+endif()
 
 if (ZIO)
 set(EXAMPLES

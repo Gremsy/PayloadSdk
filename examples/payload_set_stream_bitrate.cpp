@@ -47,7 +47,7 @@ int main(int argc, char *argv[]){
 
 	while(1){
 		
-		uint32_t bitrate = 8000000; // bit per second
+		uint32_t bitrate = 1000000; // bit per second
 		my_payload->setPayloadStreamBitrate(bitrate);
 
 		printf("The stream bitrate was set to %d. Exit \n", bitrate);

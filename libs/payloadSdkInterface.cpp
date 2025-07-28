@@ -848,6 +848,40 @@ setPayloadCameraFFCTrigg(){
     payload_interface->push_message_to_queue(message);
 }
 
+void 
+PayloadSdkInterface::
+setPayloadStreamBitrate(uint32_t bitrate){
+    mavlink_command_long_t msg = {0};
+
+    msg.target_system = PAYLOAD_SYSTEM_ID;
+    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.command = MAV_CMD_USER_4;
+    msg.param1 = 4;
+    msg.param2 = 2;
+    msg.param3 = bitrate;
+    msg.confirmation = 1;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+uint32_t 
+PayloadSdkInterface::
+getPayloadStreamBitrate(){
+
+}
+
 void
 PayloadSdkInterface::
 requestParamValue(uint8_t pIndex){

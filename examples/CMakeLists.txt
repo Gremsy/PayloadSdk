@@ -35,6 +35,7 @@ set(EXAMPLES
     payload_get_status.cpp
     payload_get_video_streaming.cpp
     payload_extract_tiff_file.cpp
+    payload_set_stream_bitrate.cpp
 )
 endif(VIO)
 

@@ -287,6 +287,13 @@ public:
      **/
     void setPayloadCameraFFCTrigg();
 
+    // set stream bitrate
+    // bitrate is in bit per second
+    void setPayloadStreamBitrate(uint32_t bitrate);
+
+    // get the current stream bitrate
+    uint32_t getPayloadStreamBitrate(); 
+
     void requestParamValue(uint8_t pIndex);
     void setParamRate(uint8_t pIndex, uint16_t time_ms);
     void requestMessageStreamInterval();    

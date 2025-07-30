@@ -1,5 +1,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include "sensor_msgs/msg/image.hpp"
+#include "sensor_msgs/msg/compressed_image.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/float64_multi_array.hpp"
@@ -62,6 +63,8 @@ public:
         RCLCPP_INFO(this->get_logger(), "Gremsy Camera Stream Node initialized");
         RCLCPP_INFO(this->get_logger(), "Stream mode: %s", stream_mode_.c_str());
         RCLCPP_INFO(this->get_logger(), "Auto-start streaming: %s", auto_start_stream_ ? "enabled" : "disabled");
+        RCLCPP_INFO(this->get_logger(), "Image compression: %s (JPEG quality: %d%%)", 
+                   enable_compression_ ? "enabled" : "disabled", jpeg_quality_);
     }
     
     ~GremsyCameraStreamNode() {
@@ -89,6 +92,8 @@ private:
         // Topic parameters
         this->declare_parameter("topics.rgb_camera_stream", "gimbal/camera/rgb/image");
         this->declare_parameter("topics.ir_camera_stream", "gimbal/camera/ir/image");
+        this->declare_parameter("topics.rgb_camera_stream_compressed", "gimbal/camera/rgb/image/compressed");
+        this->declare_parameter("topics.ir_camera_stream_compressed", "gimbal/camera/ir/image/compressed");
         this->declare_parameter("topics.rgb_camera_info", "gimbal/camera/rgb/camera_info");
         this->declare_parameter("topics.ir_camera_info", "gimbal/camera/ir/camera_info");
         this->declare_parameter("topics.stream_control", "gimbal/camera/stream/control");
@@ -103,6 +108,12 @@ private:
         this->declare_parameter("camera.stream_quality", "HD");
         this->declare_parameter("camera.framerate", 30);
         this->declare_parameter("camera.encoding", "h264");
+        
+        // Compression parameters - ON BY DEFAULT
+        this->declare_parameter("camera.compression.enable", true);
+        this->declare_parameter("camera.compression.jpeg_quality", 80);
+        this->declare_parameter("camera.compression.publish_raw", true);
+        this->declare_parameter("camera.compression.publish_both", true);
         
         // Dual stream parameters
         this->declare_parameter("camera.dual_stream.layout", "SIDE_BY_SIDE");
@@ -137,6 +148,8 @@ private:
         // Load topic names
         rgb_stream_topic_ = this->get_parameter("topics.rgb_camera_stream").as_string();
         ir_stream_topic_ = this->get_parameter("topics.ir_camera_stream").as_string();
+        rgb_stream_compressed_topic_ = this->get_parameter("topics.rgb_camera_stream_compressed").as_string();
+        ir_stream_compressed_topic_ = this->get_parameter("topics.ir_camera_stream_compressed").as_string();
         rgb_camera_info_topic_ = this->get_parameter("topics.rgb_camera_info").as_string();
         ir_camera_info_topic_ = this->get_parameter("topics.ir_camera_info").as_string();
         stream_control_topic_ = this->get_parameter("topics.stream_control").as_string();
@@ -151,6 +164,15 @@ private:
         stream_quality_ = this->get_parameter("camera.stream_quality").as_string();
         framerate_ = this->get_parameter("camera.framerate").as_int();
         encoding_ = this->get_parameter("camera.encoding").as_string();
+        
+        // Load compression settings
+        enable_compression_ = this->get_parameter("camera.compression.enable").as_bool();
+        jpeg_quality_ = this->get_parameter("camera.compression.jpeg_quality").as_int();
+        publish_raw_ = this->get_parameter("camera.compression.publish_raw").as_bool();
+        publish_both_ = this->get_parameter("camera.compression.publish_both").as_bool();
+        
+        // Validate JPEG quality
+        jpeg_quality_ = std::max(1, std::min(100, jpeg_quality_));
         
         // Load dual stream settings
         dual_layout_ = this->get_parameter("camera.dual_stream.layout").as_string();
@@ -256,12 +278,24 @@ private:
 
     void setup_publishers_subscribers() {
         if (rgb_enabled_) {
-            rgb_stream_publisher_ = this->create_publisher<sensor_msgs::msg::Image>(rgb_stream_topic_, 10);
+            // Setup raw and/or compressed publishers based on configuration
+            if (publish_raw_ || publish_both_) {
+                rgb_stream_publisher_ = this->create_publisher<sensor_msgs::msg::Image>(rgb_stream_topic_, 10);
+            }
+            if (enable_compression_ && (!publish_raw_ || publish_both_)) {
+                rgb_stream_compressed_publisher_ = this->create_publisher<sensor_msgs::msg::CompressedImage>(rgb_stream_compressed_topic_, 10);
+            }
             rgb_camera_info_publisher_ = this->create_publisher<sensor_msgs::msg::CameraInfo>(rgb_camera_info_topic_, 10);
         }
         
         if (ir_enabled_) {
-            ir_stream_publisher_ = this->create_publisher<sensor_msgs::msg::Image>(ir_stream_topic_, 10);
+            // Setup raw and/or compressed publishers based on configuration
+            if (publish_raw_ || publish_both_) {
+                ir_stream_publisher_ = this->create_publisher<sensor_msgs::msg::Image>(ir_stream_topic_, 10);
+            }
+            if (enable_compression_ && (!publish_raw_ || publish_both_)) {
+                ir_stream_compressed_publisher_ = this->create_publisher<sensor_msgs::msg::CompressedImage>(ir_stream_compressed_topic_, 10);
+            }
             ir_camera_info_publisher_ = this->create_publisher<sensor_msgs::msg::CameraInfo>(ir_camera_info_topic_, 10);
         }
         
@@ -483,16 +517,17 @@ private:
             cv::Mat rgb_frame, ir_frame;
             split_dual_frame(frame, rgb_frame, ir_frame);
             
-            // Publish both frames
-            if (rgb_enabled_ && rgb_stream_publisher_) {
-                publish_opencv_image(rgb_frame, rgb_stream_publisher_, "rgb8");
+            // Publish RGB frames
+            if (rgb_enabled_) {
+                publish_image_with_compression(rgb_frame, rgb_stream_publisher_, rgb_stream_compressed_publisher_, "rgb8");
             }
             
-            if (ir_enabled_ && ir_stream_publisher_) {
+            // Publish IR frames
+            if (ir_enabled_) {
                 // Convert RGB IR to grayscale for IR topic
                 cv::Mat ir_gray;
                 cv::cvtColor(ir_frame, ir_gray, cv::COLOR_RGB2GRAY);
-                publish_opencv_image(ir_gray, ir_stream_publisher_, "mono8");
+                publish_image_with_compression(ir_gray, ir_stream_publisher_, ir_stream_compressed_publisher_, "mono8");
             }
             
             // Cleanup
@@ -515,10 +550,11 @@ private:
         }
         
         try {
-            auto image_msg = gst_sample_to_ros_image(sample, "rgb8");
-            if (rgb_stream_publisher_) {
-                rgb_stream_publisher_->publish(*image_msg);
-            }
+            // Convert GStreamer sample to OpenCV Mat
+            cv::Mat frame = gst_sample_to_opencv_mat(sample);
+            
+            // Publish with compression options
+            publish_image_with_compression(frame, rgb_stream_publisher_, rgb_stream_compressed_publisher_, "rgb8");
             
             gst_sample_unref(sample);
             return GST_FLOW_OK;
@@ -537,10 +573,11 @@ private:
         }
         
         try {
-            auto image_msg = gst_sample_to_ros_image(sample, "mono8");
-            if (ir_stream_publisher_) {
-                ir_stream_publisher_->publish(*image_msg);
-            }
+            // Convert GStreamer sample to OpenCV Mat (grayscale)
+            cv::Mat frame = gst_sample_to_opencv_mat(sample);
+            
+            // Publish with compression options
+            publish_image_with_compression(frame, ir_stream_publisher_, ir_stream_compressed_publisher_, "mono8");
             
             gst_sample_unref(sample);
             return GST_FLOW_OK;
@@ -549,6 +586,128 @@ private:
             RCLCPP_ERROR(this->get_logger(), "Error processing IR frame: %s", e.what());
             gst_sample_unref(sample);
             return GST_FLOW_ERROR;
+        }
+    }
+    
+    cv::Mat gst_sample_to_opencv_mat(GstSample* sample) {
+        GstBuffer* buffer = gst_sample_get_buffer(sample);
+        GstCaps* caps = gst_sample_get_caps(sample);
+        
+        // Get video info from caps
+        GstVideoInfo video_info;
+        if (!gst_video_info_from_caps(&video_info, caps)) {
+            throw std::runtime_error("Failed to get video info from caps");
+        }
+        
+        // Map the buffer for reading
+        GstMapInfo map_info;
+        if (!gst_buffer_map(buffer, &map_info, GST_MAP_READ)) {
+            throw std::runtime_error("Failed to map GStreamer buffer");
+        }
+        
+        cv::Mat frame;
+        if (video_info.finfo->format == GST_VIDEO_FORMAT_RGB) {
+            frame = cv::Mat(video_info.height, video_info.width, CV_8UC3, map_info.data).clone();
+        } else if (video_info.finfo->format == GST_VIDEO_FORMAT_GRAY8) {
+            frame = cv::Mat(video_info.height, video_info.width, CV_8UC1, map_info.data).clone();
+        } else {
+            // Default to RGB
+            frame = cv::Mat(video_info.height, video_info.width, CV_8UC3, map_info.data).clone();
+        }
+        
+        gst_buffer_unmap(buffer, &map_info);
+        return frame;
+    }
+    
+    void publish_image_with_compression(const cv::Mat& cv_image, 
+                                       rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr raw_publisher,
+                                       rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_publisher,
+                                       const std::string& encoding) {
+        auto timestamp = this->get_clock()->now();
+        
+        // Publish raw image if enabled
+        if ((publish_raw_ || publish_both_) && raw_publisher) {
+            publish_raw_image(cv_image, raw_publisher, encoding, timestamp);
+        }
+        
+        // Publish compressed image if enabled
+        if (enable_compression_ && (!publish_raw_ || publish_both_) && compressed_publisher) {
+            publish_compressed_image(cv_image, compressed_publisher, encoding, timestamp);
+        }
+    }
+    
+    void publish_raw_image(const cv::Mat& cv_image, 
+                          rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr publisher,
+                          const std::string& encoding,
+                          const rclcpp::Time& timestamp) {
+        try {
+            auto image_msg = cv_bridge::CvImage(std_msgs::msg::Header(), encoding, cv_image).toImageMsg();
+            image_msg->header.stamp = timestamp;
+            image_msg->header.frame_id = "gimbal_camera";
+            publisher->publish(*image_msg);
+        } catch (const std::exception& e) {
+            RCLCPP_ERROR(this->get_logger(), "Error publishing raw image: %s", e.what());
+        }
+    }
+    
+    void publish_compressed_image(const cv::Mat& cv_image, 
+                                 rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr publisher,
+                                 const std::string& encoding,
+                                 const rclcpp::Time& timestamp) {
+        try {
+            std::vector<uchar> buffer;
+            std::vector<int> compression_params;
+            std::string format;
+            
+            if (encoding == "mono8" || encoding == "8UC1") {
+                // For grayscale/IR images, use PNG for lossless compression
+                compression_params = {cv::IMWRITE_PNG_COMPRESSION, 6}; // Compression level 0-9
+                if (!cv::imencode(".png", cv_image, buffer, compression_params)) {
+                    throw std::runtime_error("Failed to encode PNG image");
+                }
+                format = "png";
+            } else {
+                // For RGB images, use JPEG with configurable quality
+                compression_params = {cv::IMWRITE_JPEG_QUALITY, jpeg_quality_};
+                if (!cv::imencode(".jpg", cv_image, buffer, compression_params)) {
+                    throw std::runtime_error("Failed to encode JPEG image");
+                }
+                format = "jpeg";
+            }
+            
+            auto compressed_msg = std::make_shared<sensor_msgs::msg::CompressedImage>();
+            compressed_msg->header.stamp = timestamp;
+            compressed_msg->header.frame_id = "gimbal_camera";
+            compressed_msg->format = format;
+            compressed_msg->data = buffer;
+            
+            publisher->publish(*compressed_msg);
+            
+            // Log compression statistics periodically
+            static int frame_count = 0;
+            static size_t total_raw_size = 0;
+            static size_t total_compressed_size = 0;
+            
+            frame_count++;
+            size_t raw_size = cv_image.total() * cv_image.elemSize();
+            total_raw_size += raw_size;
+            total_compressed_size += buffer.size();
+            
+            if (frame_count % 300 == 0) { // Log every 10 seconds at 30fps
+                double compression_ratio = static_cast<double>(total_raw_size) / total_compressed_size;
+                double bandwidth_reduction = (1.0 - static_cast<double>(total_compressed_size) / total_raw_size) * 100.0;
+                
+                RCLCPP_INFO(this->get_logger(), "📊 Compression stats (%s): %.1fx smaller, %.1f%% bandwidth reduction", 
+                           format.c_str(), compression_ratio, bandwidth_reduction);
+                
+                // Reset counters
+                frame_count = 0;
+                total_raw_size = 0;
+                total_compressed_size = 0;
+            }
+            
+        } catch (const std::exception& e) {
+            RCLCPP_ERROR(this->get_logger(), "Error publishing compressed image: %s", e.what());
         }
     }
     
@@ -591,54 +750,6 @@ private:
             rgb_frame = dual_frame.clone();
             ir_frame = dual_frame.clone();
         }
-    }
-    
-    void publish_opencv_image(const cv::Mat& cv_image, 
-                             rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr publisher,
-                             const std::string& encoding) {
-        try {
-            auto image_msg = cv_bridge::CvImage(std_msgs::msg::Header(), encoding, cv_image).toImageMsg();
-            image_msg->header.stamp = this->get_clock()->now();
-            image_msg->header.frame_id = "gimbal_camera";
-            publisher->publish(*image_msg);
-        } catch (const std::exception& e) {
-            RCLCPP_ERROR(this->get_logger(), "Error publishing OpenCV image: %s", e.what());
-        }
-    }
-    
-    sensor_msgs::msg::Image::SharedPtr gst_sample_to_ros_image(GstSample* sample, const std::string& encoding) {
-        GstBuffer* buffer = gst_sample_get_buffer(sample);
-        GstCaps* caps = gst_sample_get_caps(sample);
-        
-        // Get video info from caps
-        GstVideoInfo video_info;
-        if (!gst_video_info_from_caps(&video_info, caps)) {
-            throw std::runtime_error("Failed to get video info from caps");
-        }
-        
-        // Map the buffer for reading
-        GstMapInfo map_info;
-        if (!gst_buffer_map(buffer, &map_info, GST_MAP_READ)) {
-            throw std::runtime_error("Failed to map GStreamer buffer");
-        }
-        
-        auto image_msg = std::make_shared<sensor_msgs::msg::Image>();
-        image_msg->header.stamp = this->get_clock()->now();
-        image_msg->header.frame_id = "gimbal_camera";
-        image_msg->width = video_info.width;
-        image_msg->height = video_info.height;
-        image_msg->encoding = encoding;
-        image_msg->is_bigendian = false;
-        image_msg->step = encoding == "mono8" ? video_info.width : video_info.width * 3;
-        
-        // Copy data
-        size_t data_size = image_msg->step * image_msg->height;
-        image_msg->data.resize(data_size);
-        std::memcpy(image_msg->data.data(), map_info.data, data_size);
-        
-        gst_buffer_unmap(buffer, &map_info);
-        
-        return image_msg;
     }
     
     void cleanup_gstreamer() {
@@ -714,6 +825,20 @@ private:
                        rgb_position_.c_str(), ir_position_.c_str());
         }
         
+        // Log compression settings
+        if (enable_compression_) {
+            RCLCPP_INFO(this->get_logger(), "🗜️ Image compression enabled (JPEG quality: %d%%)", jpeg_quality_);
+            if (publish_both_) {
+                RCLCPP_INFO(this->get_logger(), "📤 Publishing both raw and compressed streams");
+            } else if (publish_raw_) {
+                RCLCPP_INFO(this->get_logger(), "📤 Publishing raw streams only");
+            } else {
+                RCLCPP_INFO(this->get_logger(), "📤 Publishing compressed streams only");
+            }
+        } else {
+            RCLCPP_INFO(this->get_logger(), "📤 Publishing raw streams only (compression disabled)");
+        }
+        
         RCLCPP_INFO(this->get_logger(), "🎬 Use this command to view the stream:");
         RCLCPP_INFO(this->get_logger(), "   gst-launch-1.0 rtspsrc location=%s ! decodebin ! autovideosink", stream_uri_.c_str());
         RCLCPP_INFO(this->get_logger(), "   OR");
@@ -749,7 +874,11 @@ private:
         // Publish stream status
         auto status_msg = std_msgs::msg::String();
         if (streaming_state_ == processing_frames) {
-            status_msg.data = "✅ Stream active (" + stream_mode_ + "): " + stream_uri_ + 
+            std::string compression_info = "";
+            if (enable_compression_) {
+                compression_info = " (compressed)";
+            }
+            status_msg.data = "✅ Stream active (" + stream_mode_ + ")" + compression_info + ": " + stream_uri_ + 
                              " (" + std::to_string((int)stream_resolution_h_) + "x" + 
                              std::to_string((int)stream_resolution_v_) + ")";
         } else {
@@ -874,9 +1003,16 @@ private:
             } else if (msg->data == "STOP_RECORDING") {
                 RCLCPP_INFO(this->get_logger(), "⏹️ Stopping recording");
                 // Add recording stop logic here
+            } else if (msg->data == "TOGGLE_COMPRESSION") {
+                enable_compression_ = !enable_compression_;
+                RCLCPP_INFO(this->get_logger(), "🗜️ Compression %s", enable_compression_ ? "enabled" : "disabled");
+            } else if (msg->data.substr(0, 13) == "SET_QUALITY_") {
+                int quality = std::stoi(msg->data.substr(13));
+                jpeg_quality_ = std::max(1, std::min(100, quality));
+                RCLCPP_INFO(this->get_logger(), "📷 JPEG quality set to %d%%", jpeg_quality_);
             } else {
                 RCLCPP_WARN(this->get_logger(), "Unknown command: %s", msg->data.c_str());
-                RCLCPP_INFO(this->get_logger(), "Available commands: START_RGB, START_IR, START_DUAL, GET_STREAM_INFO, START_RECORDING, STOP_RECORDING");
+                RCLCPP_INFO(this->get_logger(), "Available commands: START_RGB, START_IR, START_DUAL, GET_STREAM_INFO, START_RECORDING, STOP_RECORDING, TOGGLE_COMPRESSION, SET_QUALITY_XX");
             }
         } catch (const std::exception& e) {
             RCLCPP_ERROR(this->get_logger(), "Failed to execute stream control: %s", e.what());
@@ -964,7 +1100,9 @@ private:
     double timeout_;
     
     // Topic names
-    std::string rgb_stream_topic_, ir_stream_topic_, rgb_camera_info_topic_, ir_camera_info_topic_;
+    std::string rgb_stream_topic_, ir_stream_topic_;
+    std::string rgb_stream_compressed_topic_, ir_stream_compressed_topic_;
+    std::string rgb_camera_info_topic_, ir_camera_info_topic_;
     std::string stream_control_topic_, stream_status_topic_, storage_info_topic_;
     
     // Camera configuration from config file
@@ -973,6 +1111,12 @@ private:
     std::string stream_quality_, encoding_;
     int framerate_;
     double publish_rate_;
+    
+    // Compression settings
+    bool enable_compression_;
+    int jpeg_quality_;
+    bool publish_raw_;
+    bool publish_both_;
     
     // Dual stream configuration
     std::string dual_layout_, rgb_position_, ir_position_, pip_position_;
@@ -1011,6 +1155,8 @@ private:
     // ROS2 publishers and subscribers
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr rgb_stream_publisher_;
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr ir_stream_publisher_;
+    rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr rgb_stream_compressed_publisher_;
+    rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr ir_stream_compressed_publisher_;
     rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr rgb_camera_info_publisher_;
     rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr ir_camera_info_publisher_;
     rclcpp::Publisher<std_msgs::msg::Float64MultiArray>::SharedPtr storage_info_publisher_;
@@ -1052,10 +1198,13 @@ int main(int argc, char * argv[])
         
         RCLCPP_INFO(node->get_logger(), "🎥 Gremsy Camera Stream Node is running...");
         RCLCPP_INFO(node->get_logger(), "📡 Stream commands: START_RGB, START_IR, START_DUAL, GET_STREAM_INFO, START_RECORDING, STOP_RECORDING");
+        RCLCPP_INFO(node->get_logger(), "🗜️ Compression commands: TOGGLE_COMPRESSION, SET_QUALITY_XX (XX=1-100)");
         RCLCPP_INFO(node->get_logger(), "📺 Stream info published to: /gimbal/camera/stream_status");
         RCLCPP_INFO(node->get_logger(), "💾 Storage info published to: /gimbal/camera/storage_info");
         RCLCPP_INFO(node->get_logger(), "🎬 RGB images published to: /gimbal/camera/rgb/image");
         RCLCPP_INFO(node->get_logger(), "🌡️ IR images published to: /gimbal/camera/ir/image");
+        RCLCPP_INFO(node->get_logger(), "🗜️ Compressed RGB images published to: /gimbal/camera/rgb/image/compressed");
+        RCLCPP_INFO(node->get_logger(), "🗜️ Compressed IR images published to: /gimbal/camera/ir/image/compressed");
         RCLCPP_INFO(node->get_logger(), "📷 RGB camera info published to: /gimbal/camera/rgb/camera_info");
         RCLCPP_INFO(node->get_logger(), "📷 IR camera info published to: /gimbal/camera/ir/camera_info");
         RCLCPP_INFO(node->get_logger(), "Press Ctrl+C to exit");

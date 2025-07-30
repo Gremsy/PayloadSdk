@@ -1,0 +1,155 @@
+# Complete Gremsy ROS2 Configuration
+# This file replaces hardcoded values in payloadsdk.h
+
+# Common network configuration for all nodes
+gremsy_common:
+  ros__parameters:
+    # Network Configuration - replaces hardcoded values in payloadsdk.h
+    network:
+      udp_ip_target: "10.4.1.23"     # Replaces udp_ip_target in payloadsdk.h
+      udp_port_target: 14566          # Replaces udp_port_target in payloadsdk.h
+
+    # UART Configuration - replaces hardcoded values in payloadsdk.h
+    uart:
+      port: "/dev/ttyUSB0"            # Replaces payload_uart_port in payloadsdk.h
+      baudrate: 115200                # Replaces payload_uart_baud in payloadsdk.h
+
+    # Connection Method - replaces CONTROL_METHOD in payloadsdk.h
+    connection:
+      control_method: 1               # 0 = UART, 1 = UDP (replaces CONTROL_METHOD)
+
+    # MAVLink Configuration - replaces hardcoded values in payloadsdk.h
+    mavlink:
+      payload_system_id: 1            # Replaces PAYLOAD_SYSTEM_ID
+      payload_component_id: 100       # Replaces PAYLOAD_COMPONENT_ID (MAV_COMP_ID_CAMERA2)
+      gimbal_system_id: 1             # Replaces GIMBAL_SYSTEM_ID
+      gimbal_component_id: 154        # Replaces GIMBAL_COMPONENT_ID (MAV_COMP_ID_GIMBAL)
+
+    # Node Configuration
+    node:
+      publish_rate: 50.0              # Default publishing rate (Hz)
+      timeout: 5.0                    # Connection timeout (seconds)
+
+    # Logging Configuration
+    logging:
+      level: "INFO"                   # DEBUG, INFO, WARN, ERROR
+      enable_file_log: false
+      log_file_path: "/tmp/gremsy_nodes.log"
+
+# Node 1: Gimbal Control and Status
+gremsy_gimbal_node:
+  ros__parameters:
+    # Inherit all common parameters above, plus:
+    
+    # Gimbal-specific topics
+    topics:
+      gimbal_status: "gimbal/status"
+      gimbal_attitude: "gimbal/attitude"
+      gimbal_encoder: "gimbal/encoder"
+      gimbal_imu: "gimbal/imu"
+      gimbal_motor: "gimbal/motor"
+      gimbal_mode_cmd: "gimbal/mode/cmd"
+
+    # Gimbal Settings
+    gimbal:
+      lock_mode: 0                    # 0 = LOCK_MODE_OFF, 1 = LOCK_MODE_ON
+      input_mode: 1                   # 1 = INPUT_ANGLE, 2 = INPUT_SPEED
+      default_mode: "FOLLOW"          # LOCK, FOLLOW, MAPPING, OFF
+
+    # Override common config if needed
+    node:
+      publish_rate: 50.0              # Status publishing rate (Hz)
+      timeout: 5.0                    # Connection timeout (seconds)
+
+# Node 2: Camera Streaming
+gremsy_camera_stream_node:
+  ros__parameters:
+    # Inherit all common parameters above, plus:
+    
+    # Camera stream topics
+    topics:
+      rgb_camera_stream: "gimbal/camera/rgb/image"
+      ir_camera_stream: "gimbal/camera/ir/image"
+      camera_info: "gimbal/camera/info"
+      stream_control: "gimbal/camera/stream/control"
+      stream_status: "gimbal/camera/stream_status"
+      storage_info: "gimbal/camera/storage_info"
+
+    # Camera stream settings
+    camera:
+      # Stream Type Configuration
+      stream_mode: "DUAL"             # RGB, IR, DUAL
+      rgb_enabled: true               # Enable RGB stream
+      ir_enabled: true                # Enable IR stream
+      
+      # Auto-start streaming on node startup
+      auto_start_stream: true         # Start streaming automatically when node starts
+      
+      # Stream Quality Settings
+      stream_quality: "HD"            # HD, FHD, 4K
+      framerate: 30                   # Target framerate
+      encoding: "h264"                # Video encoding
+      
+      # Dual Stream Configuration
+      dual_stream:
+        layout: "SIDE_BY_SIDE"        # SIDE_BY_SIDE, PICTURE_IN_PICTURE, SEPARATE_URLS
+        rgb_position: "LEFT"          # LEFT, RIGHT, TOP, BOTTOM (for side-by-side)
+        ir_position: "RIGHT"          # LEFT, RIGHT, TOP, BOTTOM (for side-by-side)
+        pip_size: 0.25               # Picture-in-picture size (0.1-0.5)
+        pip_position: "TOP_RIGHT"     # TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
+      
+      # Stream URLs (auto-detected, but can be overridden)
+      stream_urls:
+        rgb_url: ""                   # Auto-detected if empty
+        ir_url: ""                    # Auto-detected if empty  
+        dual_url: ""                  # Auto-detected if empty
+        
+      # Recording Settings
+      recording:
+        auto_record: false            # Auto-start recording with stream
+        record_duration: 300          # Auto-stop recording after seconds (0 = manual stop)
+        record_path: "/tmp/gremsy_recordings"  # Recording output path
+
+    # Override common config if needed
+    node:
+      publish_rate: 30.0              # Stream publish rate (Hz)
+      timeout: 5.0
+
+# Node 3: Camera Movement Control
+gremsy_camera_move_node:
+  ros__parameters:
+    # Inherit all common parameters above, plus:
+    
+    # Movement control topics
+    topics:
+      move_gimbal_angle: "gimbal/camera/move"
+      move_gimbal_speed: "gimbal/camera/move_speed"
+      camera_zoom: "gimbal/camera/zoom"
+      camera_focus: "gimbal/camera/focus"
+      movement_status: "gimbal/movement/status"
+
+    # Movement settings
+    movement:
+      max_speed: 90.0                 # degrees per second
+      acceleration: 30.0              # degrees per second squared
+      smoothing: true
+      follow_rate: 0.1                # Follow mode responsiveness
+      
+      # Zoom Configuration  
+      zoom:
+        min_zoom: 1.0                 # Minimum zoom level
+        max_zoom: 30.0                # Maximum zoom level
+        zoom_step: 1.0                # Step size for discrete zoom
+        continuous_zoom_speed: 5.0    # Speed for continuous zoom
+        
+      # Focus Configuration
+      focus:
+        auto_focus_enabled: true      # Enable auto-focus by default
+        manual_focus_step: 1.0        # Step size for manual focus
+        continuous_focus_speed: 3.0   # Speed for continuous focus
+
+    # Override common config if needed  
+    node:
+      publish_rate: 100.0             # Movement update rate (Hz)
+      timeout: 5.0
+      timeout: 5.0

@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>PayloadSDK</name>
+  <version>0.0.0</version>
+  <description>Gremsy Payload SDK with ROS2 integration and drone heading following capability</description>
+  <maintainer email="ian@youremail.com">ian</maintainer>
+  <license>Apache-2.0</license>
+  
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  
+  <!-- Core ROS2 dependencies -->
+  <depend>rclcpp</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>nav_msgs</depend>
+  
+  <!-- Configuration and utilities -->
+  <depend>yaml-cpp</depend>
+  <depend>ament_index_cpp</depend>
+  
+  <!-- TF2 dependencies for quaternion/orientation handling -->
+  <depend>tf2</depend>
+  <depend>tf2_geometry_msgs</depend>
+  
+  <!-- System dependencies -->
+  <build_depend>pkg-config</build_depend>
+  
+  <!-- GStreamer dependencies (for video streaming) -->
+  <build_depend>libgstreamer1.0-dev</build_depend>
+  <build_depend>libgstreamer-plugins-base1.0-dev</build_depend>
+  
+  <!-- JSON and CURL dependencies -->
+  <build_depend>libjsoncpp-dev</build_depend>
+  <build_depend>libcurl4-openssl-dev</build_depend>
+  
+  <!-- Testing dependencies -->
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

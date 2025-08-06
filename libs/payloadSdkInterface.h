@@ -314,6 +314,8 @@ private:
 
     bool is_send_stream_request = false;
 
+    uint32_t current_gimbal_mode;
+    uint16_t current_attitude_flags;
 public:
     /*!<@brief: used to rotate gimbal for each axis depend on angular rate or angle mode
      * @para1,2,3 : value for each axis
@@ -381,5 +383,6 @@ public:
     void _handle_msg_camera_stream_information(mavlink_message_t* msg);
     void _handle_msg_camera_information(mavlink_message_t* msg);
 
+    void _handle_msg_device_attitude(mavlink_message_t* msg);
 };
 #endif

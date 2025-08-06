@@ -168,6 +168,8 @@ PayloadSdkInterface::
 setPayloadCameraParam(char param_id[], uint32_t param_value, uint8_t param_type){
     mavlink_param_ext_set_t msg={0};
 
+    current_gimbal_mode = param_value;
+
     strcpy((char *)msg.param_id, param_id);
 
     cam_param_union_t u;
@@ -938,6 +940,28 @@ setGimbalSpeed(float spd_pitch, float spd_roll, float spd_yaw, input_mode_t mode
     mavlink_gimbal_device_set_attitude_t attitude = { 0 };
     attitude.target_system    = GIMBAL_SYSTEM_ID;
     attitude.target_component = GIMBAL_COMPONENT_ID;
+
+
+    switch (current_gimbal_mode){
+        case(PAYLOAD_CAMERA_GIMBAL_MODE_OFF):
+            attitude.flags = current_attitude_flags | GIMBAL_DEVICE_FLAGS_RETRACT;
+            break;
+        case(PAYLOAD_CAMERA_GIMBAL_MODE_RESET):
+            attitude.flags = current_attitude_flags | GIMBAL_DEVICE_FLAGS_NEUTRAL;
+            break;
+        case(PAYLOAD_CAMERA_GIMBAL_MODE_LOCK):
+            attitude.flags = current_attitude_flags | GIMBAL_DEVICE_FLAGS_YAW_LOCK;
+            break;
+        case(PAYLOAD_CAMERA_GIMBAL_MODE_FOLLOW):
+            attitude.flags = current_attitude_flags & (~GIMBAL_DEVICE_FLAGS_YAW_LOCK);
+            break;
+        case(PAYLOAD_CAMERA_GIMBAL_MODE_MAPPING):
+            #define MESSAGE_FLAG_MAPPING 0x4000
+            attitude.flags = current_attitude_flags | MESSAGE_FLAG_MAPPING;
+            break;
+        default: break;
+    }    
+
     if (mode == INPUT_ANGLE) {
         /* Convert target to quaternion */
         if (spd_yaw > 180.f || spd_yaw < -180.f)
@@ -1280,6 +1304,10 @@ payload_recv_handle()
                 _handle_msg_command_ext_ack(&msg);
                 break;
             }
+            case MAVLINK_MSG_ID_GIMBAL_DEVICE_ATTITUDE_STATUS:{
+                _handle_msg_device_attitude(&msg);
+                break;  
+            }            
             default: break;
             }
         }else{
@@ -1398,7 +1426,11 @@ _handle_msg_mount_orientation(mavlink_message_t* msg){
     mavlink_msg_mount_orientation_decode(msg, &packet);
 
     if(__notifyPayloadStatusChanged != NULL){
-        double params[3] = {packet.pitch, packet.roll, packet.yaw};
+        double pitch_ = packet.pitch;
+        double roll_ = packet.roll;
+        double yaw_ = (current_gimbal_mode == PAYLOAD_CAMERA_GIMBAL_MODE_LOCK) ? packet.yaw_absolute : packet.yaw;
+
+        double params[3] = {pitch_, roll_, yaw_};
         __notifyPayloadStatusChanged(PAYLOAD_GB_ATTITUDE, params);
     }
 }
@@ -1443,5 +1475,53 @@ _handle_msg_debug(mavlink_message_t* msg){
             double params[2] = {value.ind, value.value};
             __notifyPayloadParamChanged(PAYLOAD_GB_PARAMS, "", params);
         }
+    }
+}
+
+void
+PayloadSdkInterface::
+_handle_msg_device_attitude(mavlink_message_t* msg)
+{
+    mavlink_gimbal_device_attitude_status_t attitude = {0};
+    mavlink_msg_gimbal_device_attitude_status_decode(msg, &attitude);
+
+    if(__notifyPayloadParamChanged != NULL)
+    {
+        double param[6];
+        char param_mode[16];
+        float roll, pitch, yaw;
+        mavlink_quaternion_to_euler(attitude.q, &roll, &pitch, &yaw);
+
+        param[0] = to_deg(pitch);
+        param[1] = to_deg(roll);
+        param[2] = to_deg(yaw);
+        param[3] = attitude.angular_velocity_x;
+        param[4] = attitude.angular_velocity_y;
+        param[5] = attitude.angular_velocity_z;
+
+        // Save the current attitude flag 
+        current_attitude_flags = attitude.flags;
+
+        if(current_attitude_flags & GIMBAL_DEVICE_FLAGS_YAW_LOCK)
+        {
+            strcpy(param_mode, "LOCK_MODE");
+        }
+        else if(current_attitude_flags & GIMBAL_DEVICE_FLAGS_RETRACT)
+        {
+            strcpy(param_mode, "OFF_MODE");
+        }
+        else if(current_attitude_flags & GIMBAL_DEVICE_FLAGS_NEUTRAL)
+        {
+            strcpy(param_mode, "RESET_MODE");
+        }
+        else if(current_attitude_flags & 0x4000)
+        {
+            strcpy(param_mode, "MAPPING_MODE");
+        }
+        else 
+        {   
+            strcpy(param_mode, "FOLLOW_MODE");
+        }            
+        __notifyPayloadParamChanged(PAYLOAD_GB_ATTITUDE, param_mode, (double *)param);
     }
 }

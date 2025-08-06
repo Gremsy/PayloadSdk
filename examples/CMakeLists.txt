@@ -26,7 +26,8 @@ set(EXAMPLES
     gimbal_change_settings.cpp
     gimbal_do_calib.cpp
     gimbal_set_mode.cpp
-    
+    gimbal_control_example.cpp
+        
     payload_download_media_files.cpp
     payload_do_object_tracking.cpp
     payload_do_object_detection.cpp
@@ -57,7 +58,8 @@ set(EXAMPLES
     gimbal_move_angle.cpp
     gimbal_move_speed.cpp
     gimbal_set_mode.cpp
-    
+    gimbal_control_example.cpp
+
     payload_get_status.cpp
     payload_get_video_streaming.cpp
     payload_download_media_files.cpp
@@ -84,7 +86,8 @@ set(EXAMPLES
     gimbal_move_angle.cpp
     gimbal_move_speed.cpp
     gimbal_set_mode.cpp
-    
+    gimbal_control_example.cpp
+
     payload_get_status.cpp
     payload_download_media_files.cpp
     payload_do_object_tracking.cpp

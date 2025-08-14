@@ -65,7 +65,7 @@ set(EXAMPLES
 )
 endif(ZIO)
 
-if (GHADRON)
+if (MB1)
 set(EXAMPLES
     check_connect.cpp
 
@@ -92,7 +92,7 @@ set(EXAMPLES
     payload_get_video_streaming.cpp
     payload_extract_tiff_file.cpp
 )
-endif(GHADRON)
+endif(MB1)
 
 find_package( Threads )
 

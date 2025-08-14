@@ -45,7 +45,7 @@ int main(int argc, char *argv[]){
     usleep(1000000);
 
     printf("Set zoom level to 1x ! \n");
-    #if defined GHADRON
+    #if defined MB1
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_FACTOR, ZOOM_EO_1X, PARAM_TYPE_UINT32);
     #elif defined VIO || defined ZIO
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);

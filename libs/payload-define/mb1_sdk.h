@@ -1,5 +1,5 @@
-#ifndef GHADRON_SDK_H
-#define GHADRON_SDK_H
+#ifndef MB1_SDK_H
+#define MB1_SDK_H
 
 // Zoom super resolution value can be set from 1x to 12x
 #define PAYLOAD_CAMERA_VIDEO_ZOOM_FACTOR              "C_V_ZOOM"

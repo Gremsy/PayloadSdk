@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(ghadron_project LANGUAGES CXX)
+project(mb1_project LANGUAGES CXX)
 
 
 # Source

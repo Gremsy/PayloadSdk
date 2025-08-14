@@ -56,22 +56,6 @@ static std::string ir_vid_dev_get() {
     return ret;
 }
 
-bool isCameraAvailable() {
-    // IR Check
-    std::string ir_vid_str = ir_vid_dev_get();
-	bool IRcheck = true;
-
-    if (ir_vid_str.empty()) {
-        IRcheck = false;
-    }
-
-    if (!IRcheck) printf("Boson camera is NOT available!\n");
-    else printf("Boson camera is available!\n");
-    if (!IRcheck)
-        return 0;
-    return 1;
-}
-
 /*!<@brief: 
  * 
  * */
@@ -420,8 +404,6 @@ int main(int argc,char** argv){
 		PRINT_ERR("Payload Interface Init failed,close the program!!!!");
 		exit(1);
 	}
-
-	isCamAvai = isCameraAvailable();
 
 	while(!time_to_exit){
 

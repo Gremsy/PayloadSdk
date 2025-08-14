@@ -59,10 +59,10 @@ int main(int argc, char *argv[]){
 
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_RECORD_SRC, PAYLOAD_CAMERA_RECORD_EO, PARAM_TYPE_UINT32);
 
-    #if defined GHADRON
+    #if defined MB1
 	// set photo storage to Internal
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_STORAGE, PAYLOAD_CAMERA_STORAGE_INTERNAL, PARAM_TYPE_UINT32);
-    #endif /* GHADRON */
+    #endif /* MB1 */
 
 	my_capture = check_storage;
 	while(1){

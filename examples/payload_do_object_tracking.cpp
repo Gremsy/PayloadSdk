@@ -198,7 +198,7 @@ void onPayloadStatusChanged(int event, double* param){
 			track_pos_h = param[1];
 		}
 		else if(param[0] == PARAM_TRACK_STATUS){
-			track_status = (float)(param[1] & 0xff);
+			track_status = param[1];
 		}
 		else{
 			break;

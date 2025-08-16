@@ -11,11 +11,13 @@
 #include "payload_enum.h"
 
 #if defined MB1
-#include "mb1_sdk.h"
+    #include "mb1_sdk.h"
 #elif defined VIO
-#include "vio_sdk.h"
+    #include "vio_sdk.h"
 #elif defined ZIO
-#include "zio_sdk.h"
+    #include "zio_sdk.h"
+#elif defined ORUSL
+    #include "orusl_sdk.h"
 #endif
 
 static uint8_t SYS_ID = 1;

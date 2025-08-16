@@ -146,9 +146,9 @@ int8_t psdk_run_sample(){
 			/*! Set shutter speed to 1/1000*/
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED,PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_1000,PARAM_TYPE_UINT32);
 			/*! Set Apertture value to 10*/
-			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_APERTURE_VALUE,10,PARAM_TYPE_UINT32);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_APERTURE_VALUE, PAYLOAD_CAMERA_EO_APERTURE_F7_3 ,PARAM_TYPE_UINT32);
 			/*! Set Bright value value to 20*/
-			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_BRIGHT_VALUE,20,PARAM_TYPE_UINT32);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_BRIGHT_VALUE, PAYLOAD_CAMERA_EO_APERTURE_F3_1 ,PARAM_TYPE_UINT32);
 			/*! Set Auto White Balance mode*/
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_WHITE_BALANCE,PAYLOAD_CAMERA_VIDEO_WHITE_BALANCE_AUTO,PARAM_TYPE_UINT32);
 			/*! Set Superresolution for Zoom mode */

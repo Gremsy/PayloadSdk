@@ -47,10 +47,6 @@ set(EXAMPLES
     camera_change_settings.cpp
     camera_eo_capture_image.cpp
     camera_eo_record_video.cpp
-    # camera_ir_set_zoom.cpp
-    # camera_ir_capture_image.cpp
-    # camera_ir_record_video.cpp
-    # camera_ir_set_palette.cpp
     camera_time_lapse_photography.cpp
     camera_eo_set_zoom_focus.cpp
 
@@ -61,7 +57,7 @@ set(EXAMPLES
     payload_get_status.cpp
     payload_get_video_streaming.cpp
     payload_download_media_files.cpp
-    # payload_do_object_tracking.cpp
+    payload_do_object_tracking.cpp
 )
 endif(ZIO)
 

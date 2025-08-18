@@ -19,6 +19,7 @@ set(EXAMPLES
     camera_eo_set_zoom_focus.cpp
     camera_time_lapse_photography.cpp
     camera_do_setzoom_individual.cpp
+    camera_eo_set_shutter_speed.cpp
 
     gimbal_move_angle.cpp
     gimbal_move_speed.cpp

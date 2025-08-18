@@ -32,6 +32,11 @@ git clone -b payloadsdk_v3_python3 https://github.com/Gremsy/PayloadSdk.git
 cd PayloadSdk
 ```
 
+#### Install required system dependencies
+```bash
+sudo apt install -y gobject-introspection libgirepository1.0-dev libcairo2-dev libglib2.0-dev pkg-config meson ninja-build gir1.2-gtk-3.0
+```
+
 ### 2. Setup Python Environment
 
 #### Option A: Using Conda (Recommended)

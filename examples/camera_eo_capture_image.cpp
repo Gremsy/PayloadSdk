@@ -57,7 +57,9 @@ int main(int argc, char *argv[]){
 	// set payload to IMAGE mode for testing
 	my_payload->setPayloadCameraMode(CAMERA_MODE_IMAGE);
 
+	#ifndef ZIO
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_RECORD_SRC, PAYLOAD_CAMERA_RECORD_EO, PARAM_TYPE_UINT32);
+	#endif
 
     #if defined MB1
 	// set photo storage to Internal

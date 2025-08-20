@@ -71,11 +71,15 @@ int main(int argc, char *argv[]){
 	my_payload->checkPayloadConnection();
 
 	// Init the environment
+	#ifndef ZIO
 	// change view mode to EO
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_EO, PARAM_TYPE_UINT32);
+	#endif
 	// change tracking mode to Object tracking
-    #if defined VIO || defined ZIO
+    #if defined VIO
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE, PAYLOAD_CAMERA_TRACKING_OBJ_TRACKING, PARAM_TYPE_UINT32);
+	#elif defined MB1 || defined ZIO
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_OBJECT_DETECTION, PAYLOAD_CAMERA_OBJECT_DETECTION_DISABLE, PARAM_TYPE_UINT32);
     #endif
 	// change OSD mode to Status
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_OSD_MODE, PAYLOAD_CAMERA_VIDEO_OSD_MODE_STATUS, PARAM_TYPE_UINT32);
@@ -141,21 +145,27 @@ void all_threads_init(){
 
 void handle_tracking(){
 	while(!time_to_exit){
-		int random_w = std::rand() % (1921 - 20); // 1920 + 1 to include 1920
-		int random_h = std::rand() % (1079 - 20); // 1080 + 1 to include 1080
+		int random_x = std::rand() % (1921 - 20); // 1920 + 1 to include 1920
+		int random_y = std::rand() % (1079 - 20); // 1080 + 1 to include 1080
 
 		printf("Active the tracker \n");
 		my_payload->setPayloadObjectTrackingMode(TRACK_ACTIVE);
 
 		printf("Start tracking new object \n");
 		// if you send the postion while the tracker is not actived, the payload will move by the EagleEyes feature (only move, without tracking)
-		my_payload->setPayloadObjectTrackingPosition(random_w, random_h, 64, 128);
+		// Zio Payload only use random_x and random_y
+		my_payload->setPayloadObjectTrackingPosition(random_x, random_y, 64, 128);
 
 		// if you want to track the object at the center of the screen, just use
 		// my_payload->setPayloadObjectTrackingPosition();
-
+		
+		#ifdef ZIO
+		// sleep for 2s
+		usleep(2000000);
+		#else
 		// sleep for 200ms
 		usleep(200000);
+		#endif
 
 		// check tracking status
 		if(track_status == TRACK_TRACKED){
@@ -198,7 +208,7 @@ void onPayloadStatusChanged(int event, double* param){
 			track_pos_h = param[1];
 		}
 		else if(param[0] == PARAM_TRACK_STATUS){
-			track_status = param[1];
+			track_status = (float)((int)param[1] & 0xff);
 		}
 		else{
 			break;

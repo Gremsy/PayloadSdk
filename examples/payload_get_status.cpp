@@ -64,6 +64,7 @@ int main(int argc, char *argv[]){
 		my_payload->setParamRate(PARAM_CAM_REC_SOURCE, 1000);
 		my_payload->setParamRate(PARAM_CAM_IR_TYPE, 1000);
 		my_payload->setParamRate(PARAM_CAM_IR_PALETTE_ID, 1000);
+		
 		my_payload->setParamRate(PARAM_GIMBAL_MODE, 1000);
 
 		my_payload->setParamRate(PARAM_PAYLOAD_GPS_LON, 1000);
@@ -75,6 +76,12 @@ int main(int argc, char *argv[]){
 		my_payload->setParamRate(PARAM_IR_TEMP_MAX, 1000);
 	    my_payload->setParamRate(PARAM_IR_TEMP_MIN, 1000);
 	    my_payload->setParamRate(PARAM_IR_TEMP_MEAN, 1000);
+	#elif defined ZIO
+		my_payload->setParamRate(PARAM_GIMBAL_MODE, 1000);
+
+		my_payload->setParamRate(PARAM_PAYLOAD_GPS_LON, 1000);
+		my_payload->setParamRate(PARAM_PAYLOAD_GPS_LAT, 1000);
+		my_payload->setParamRate(PARAM_PAYLOAD_GPS_ALT, 1000);
     #endif /* VIO */
 
 #else
@@ -133,7 +140,7 @@ void onPayloadStatusChanged(int event, double* param){
 		else if(param[0] == PARAM_IR_ZOOM_LEVEL){
 			SDK_LOG("Payload IR_ZOOM_LEVEL: %.2f ", param[1]);
 		}
-    #if defined VIO
+    // #if defined VIO
 		else if(param[0] == PARAM_LRF_RANGE){
 			SDK_LOG("Payload LRF_RANGE: %.2f ", param[1]);
 		}
@@ -190,7 +197,7 @@ void onPayloadStatusChanged(int event, double* param){
 		else if(param[0] == PARAM_IR_TEMP_MEAN){
 			SDK_LOG("Payload PARAM_IR_TEMP_MEAN: %.2f ", param[1]);
 		}
-    #endif /* VIO */
+    // #endif /* VIO */
 		break;
 	}
 	default: break;

@@ -38,9 +38,11 @@ int main(int argc, char *argv[]){
 
 	my_payload->checkPayloadConnection();
 
+    #ifndef ZIO
 	// set view source
     printf("Set view source to EO! \n");
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_EO, PARAM_TYPE_UINT32);
+    #endif
 
     usleep(1000000);
 

@@ -77,9 +77,10 @@ int main(int argc, char *argv[]){
 	// check connection
 	my_payload->checkPayloadConnection();
 
-
+	#ifndef ZIO
 	// set record source
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_IREO, PARAM_TYPE_UINT32);
+	#endif
 	
 	usleep(500000);
 

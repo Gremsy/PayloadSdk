@@ -49,18 +49,24 @@ set(EXAMPLES
     camera_change_settings.cpp
     camera_eo_capture_image.cpp
     camera_eo_record_video.cpp
-    camera_time_lapse_photography.cpp
+    camera_eo_set_shutter_speed.cpp
     camera_eo_set_zoom_focus.cpp
+    camera_time_lapse_photography.cpp
 
     gimbal_move_angle.cpp
     gimbal_move_speed.cpp
     gimbal_set_mode.cpp
     gimbal_control_example.cpp
+    gimbal_load_settings.cpp
+    gimbal_change_settings.cpp
 
     payload_get_status.cpp
     payload_get_video_streaming.cpp
     payload_download_media_files.cpp
     payload_do_object_tracking.cpp
+    payload_do_object_detection.cpp
+    payload_set_gps.cpp
+    payload_set_system_time.cpp
 )
 endif(ZIO)
 

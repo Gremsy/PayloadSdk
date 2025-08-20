@@ -59,8 +59,10 @@ int main(int argc, char *argv[]){
 	// set payload to video mode for testing
 	my_payload->setPayloadCameraMode(CAMERA_MODE_VIDEO);
 
+	#ifndef ZIO
 	// Change PAYLOAD_CAMERA_RECORD_EO or PAYLOAD_CAMERA_RECORD_IR here
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_RECORD_SRC, PAYLOAD_CAMERA_RECORD_IR, PARAM_TYPE_UINT32);
+	#endif
 
 	my_capture = check_storage;
 	while(1){

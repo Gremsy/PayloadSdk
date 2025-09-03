@@ -11,7 +11,7 @@
 #define INFO_LEVEL      2
 #define DEBUG_LEVEL     3
 
-#define LOG_LEVEL       DEBUG_LEVEL
+#define LOG_LEVEL       INFO_LEVEL
 
 void PRINT_ERR(const char* msg,...){
 #if (LOG_LEVEL >= ERR_LEVEL)

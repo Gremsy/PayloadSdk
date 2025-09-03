@@ -153,8 +153,13 @@ int8_t psdk_run_sample(){
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_WHITE_BALANCE,PAYLOAD_CAMERA_VIDEO_WHITE_BALANCE_AUTO,PARAM_TYPE_UINT32);
 			/*! Set Superresolution for Zoom mode */
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_MODE,PAYLOAD_CAMERA_VIDEO_ZOOM_MODE_SUPER_RESOLUTION,PARAM_TYPE_UINT32);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);
 			/*!< Set Gimbal Mode*/
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, PAYLOAD_CAMERA_GIMBAL_MODE_FOLLOW, PARAM_TYPE_UINT32);
+
+			// stop the gimbal
+			my_payload->setGimbalSpeed(0, 0, 0, INPUT_SPEED);
+			usleep(1000000);
 
 		#endif	
 			usleep(2000000);
@@ -200,11 +205,10 @@ int8_t psdk_run_sample(){
 		{
 			PRINT_INFO("%s | %s | Recenter gimbal postion",__func__,state_name[s_proc._state]);
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, PAYLOAD_CAMERA_GIMBAL_MODE_RESET, PARAM_TYPE_UINT32);
-			usleep(300000);
-			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);
+			usleep(2000000);
+			
 
-			usleep(1000000); // wait for 1 secs
-
+			PRINT_INFO("%s | %s | Change the IR palettes",__func__,state_name[s_proc._state]);
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_PALETTE, PAYLOAD_CAMERA_IR_PALETTE_3, PARAM_TYPE_UINT32);
 			usleep(100000);
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_IR, PARAM_TYPE_UINT32);
@@ -228,21 +232,20 @@ int8_t psdk_run_sample(){
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_PALETTE, PAYLOAD_CAMERA_IR_PALETTE_10, PARAM_TYPE_UINT32);
 			usleep(100000);
 
-
-			// my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_SYNC, PARAM_TYPE_UINT32);
-			// usleep(2000000);
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_PALETTE, PAYLOAD_CAMERA_IR_PALETTE_3, PARAM_TYPE_UINT32);
 			usleep(2000000);
 
-			my_payload->setGimbalSpeed(0, 0, 0, INPUT_SPEED);
 			s_proc._state = STATE_MOVEMENT_1;
 		}
 		break;
 	case STATE_MOVEMENT_1:
 		{
-			PRINT_INFO("%s | %s | Zoom in to 30x 5 seconds and Zoom out to 1x 5 seconds",__func__,state_name[s_proc._state]);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_EO, PARAM_TYPE_UINT32);
+			PRINT_INFO("%s | %s | Zoom in to 30x, keep in 5 seconds",__func__,state_name[s_proc._state]);
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_30X, PARAM_TYPE_UINT32);	
 			usleep(5000000);
+
+			PRINT_INFO("%s | %s | Zoom in to 1x, keep in 5 seconds",__func__,state_name[s_proc._state]);
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);	
 			usleep(5000000);
 			s_proc._state = STATE_MOVEMENT_2;	
@@ -250,17 +253,21 @@ int8_t psdk_run_sample(){
 		break;
 	case STATE_MOVEMENT_2:
 		{	
-			PRINT_INFO("%s | %s | Set yaw to 60 degree and Zoom in to 2x",__func__,state_name[s_proc._state]);
+			PRINT_INFO("%s | %s | Set yaw to 60 degree, keep in 2 seconds",__func__,state_name[s_proc._state]);
 			my_payload->setGimbalSpeed(0, 0, 60, INPUT_ANGLE);
+			usleep(2000000);
+
+			PRINT_INFO("%s | %s | Set zoom to 2x, , keep in 2 seconds",__func__,state_name[s_proc._state]);
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_2X, PARAM_TYPE_UINT32);
-			usleep(1500000);
+			usleep(2000000);
+
 			s_proc._state = STATE_MOVEMENT_3;
 			s_proc._time_usec = _get_time_usec();
 		}	
 		break;	
 	case STATE_MOVEMENT_3:
 		{			
-			PRINT_INFO("%s | %s | Rotate yaw axis with speed of 100 degree/s counter-clockwise direction with 20x resolution for 8 seconds",__func__,state_name[s_proc._state]);
+			PRINT_INFO("%s | %s | Rotate yaw axis with speed of 100 degree/s counter-clockwise direction with 2x resolution for 8 seconds",__func__,state_name[s_proc._state]);
 			/**/
 			uint64_t curr_time = _get_time_usec();
 			if((curr_time - s_proc._time_usec) > 8000000){
@@ -273,7 +280,7 @@ int8_t psdk_run_sample(){
 		break;
 	case STATE_MOVEMENT_4:
 		{
-			PRINT_INFO("%s | %s | Rotate yaw axis with speed 100 degree/s clockwise direction with 20x resolution for 8 seconds ",__func__,state_name[s_proc._state]);
+			PRINT_INFO("%s | %s | Rotate yaw axis with speed 100 degree/s clockwise direction with 2x resolution for 8 seconds ",__func__,state_name[s_proc._state]);
 			uint64_t curr_time = _get_time_usec();
 			if((curr_time - s_proc._time_usec) > 8000000){
 				s_proc._time_usec = _get_time_usec();
@@ -299,7 +306,7 @@ int8_t psdk_run_sample(){
 			/**/
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_SIDE_BY_SIDE, PARAM_TYPE_UINT32);
 			usleep(2000000);
-			my_payload->setGimbalSpeed(0.0f,20.0f,-60.0f, INPUT_ANGLE);
+			my_payload->setGimbalSpeed(0.0f, 0.0f,-60.0f, INPUT_ANGLE);
 			usleep(2000000);
 			// uint8_t _zoom_level = ZOOM_SUPER_RESOLUTION_4X;
 			// my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, _zoom_level, PARAM_TYPE_UINT32);

@@ -27,14 +27,14 @@ static uint8_t PAYLOAD_SYSTEM_ID = 1;
 static uint8_t PAYLOAD_COMPONENT_ID = MAV_COMP_ID_USER2; // Do not change
 
 static uint8_t CAMERA_SYSTEM_ID = 1;
-static uint8_t CAMERA_COMPONENT_ID = MAV_COMP_ID_CAMERA; // auto update when got the message from the payload
+static uint8_t CAMERA_COMPONENT_ID = MAV_COMP_ID_CAMERA2; // auto update when got the message from the payload
 
 static uint8_t GIMBAL_SYSTEM_ID = 1;
 static uint8_t GIMBAL_COMPONENT_ID = MAV_COMP_ID_GIMBAL;  // auto update when got the message from the payload
 
 #define CONTROL_UART    0
 #define CONTROL_UDP     1
-#define CONTROL_METHOD CONTROL_UART
+#define CONTROL_METHOD CONTROL_UDP
 
 static char *payload_uart_port = (char*)"/dev/ttyUSB0";
 static int payload_uart_baud = 115200;

@@ -47,6 +47,12 @@ if (VIO)
 add_subdirectory(tests/demo_project)
 add_subdirectory(tests/parse_thermal_stream)
 endif(VIO)
+
+if (ORUSL)
+add_subdirectory(tests/demo_project)
+add_subdirectory(tests/parse_thermal_stream)
+endif(ORUSL)
+
 if (MB1)
 add_subdirectory(tests/mb1_project)
 endif(MB1)

@@ -273,6 +273,7 @@ class PayloadSdkInterface:
         self.is_send_stream_request = False
         self.receive_thread         = None
         self.last_heartbeat_time    = 0  
+        self._hb_last_sent          = 0.0
         self.time_to_exit           = False
         self.ping_seq               = config.communication.PING_INITIAL_SEQ
         
@@ -304,6 +305,11 @@ class PayloadSdkInterface:
                     0
                 )
                 self.ping_seq += 1
+
+                try:
+                    self._send_heartbeat()
+                except Exception:
+                    pass
 
                 print("[INFO] Starting receive thread")
                 self.receive_thread = threading.Thread(target=self.payload_recv_handle)
@@ -361,6 +367,11 @@ class PayloadSdkInterface:
                     0
                 )
                 self.ping_seq += 1
+
+                try:
+                    self._send_heartbeat()
+                except Exception:
+                    pass
 
                 print("[INFO] Starting receive thread")
                 self.receive_thread = threading.Thread(target=self.payload_recv_handle)
@@ -1008,6 +1019,10 @@ class PayloadSdkInterface:
 
     # Send a request for the message rate of a parameter.
     def sendPayloadRequestStreamRate(self, index: int, time_ms: int) -> None:
+        # If not connected yet, just return; the stored msg_rate will be applied
+        # when requestMessageStreamInterval() runs after payload is discovered.
+        if self.master is None:
+            return
         self.master.mav.command_long_send(
             self.payload_system_id,
             self.payload_component_id,
@@ -1148,14 +1163,25 @@ class PayloadSdkInterface:
         while self.time_to_exit == False:
             current_time = time.time()
 
+            # Periodically send a HEARTBEAT so receivers see msg id 0
+            if current_time - self._hb_last_sent >= config.communication.HEARTBEAT_INTERVAL:
+                try:
+                    self._send_heartbeat()
+                except Exception:
+                    pass
+
+            # Keep sending PINGs as before
             if current_time - self.last_heartbeat_time >= config.communication.HEARTBEAT_INTERVAL:
-                self.master.mav.ping_send(
-                    int(time.time() * 1000),
-                    self.ping_seq,
-                    0,
-                    0  
-                )
-                self.ping_seq += 1
+                try:
+                    self.master.mav.ping_send(
+                        int(time.time() * 1000),
+                        self.ping_seq,
+                        0,
+                        0  
+                    )
+                    self.ping_seq += 1
+                except Exception:
+                    pass
 
             msg = self.master.recv_match(blocking=True, timeout=config.communication.MESSAGE_TIMEOUT)
 
@@ -1278,3 +1304,14 @@ class PayloadSdkInterface:
             raise ValueError("Callback must be a callable object")
         
         self._notifyPayloadStreamChanged = callback
+
+    def _send_heartbeat(self) -> None:
+        """Send a MAVLink HEARTBEAT like the C++ SDK to announce presence."""
+        self.master.mav.heartbeat_send(
+            mavutil.mavlink.MAV_TYPE_ONBOARD_CONTROLLER,
+            mavutil.mavlink.MAV_AUTOPILOT_INVALID,
+            0,  # base_mode
+            0,  # custom_mode
+            mavutil.mavlink.MAV_STATE_ACTIVE,
+        )
+        self._hb_last_sent = time.time()

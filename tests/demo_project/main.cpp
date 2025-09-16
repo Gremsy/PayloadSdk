@@ -157,6 +157,9 @@ int8_t psdk_run_sample(){
 			/*!< Set Gimbal Mode*/
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, PAYLOAD_CAMERA_GIMBAL_MODE_FOLLOW, PARAM_TYPE_UINT32);
 
+			// IR zoom to 1x
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, ZOOM_IR_1X, PARAM_TYPE_UINT32);
+
 			// stop the gimbal
 			my_payload->setGimbalSpeed(0, 0, 0, INPUT_SPEED);
 			usleep(1000000);
@@ -333,21 +336,44 @@ int8_t psdk_run_sample(){
 			uint64_t curr_time = _get_time_usec();
 			if((curr_time - s_proc._time_usec) > 8000000){
 				s_proc._time_usec = _get_time_usec();
-				s_proc._state = STATE_DONE;
+				s_proc._state = STATE_MOVEMENT_9_OBJECT_DETECTION;
 			}else{
 				my_payload->setGimbalSpeed(0.0f,0.0f ,-100.0f, INPUT_SPEED);
 			}
 		}
 		break;
-	case STATE_DONE:
+	case STATE_MOVEMENT_9_OBJECT_DETECTION:
 		{
+			PRINT_INFO("%s | %s | Set view to EO",__func__,state_name[s_proc._state]);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_EO, PARAM_TYPE_UINT32);
+			usleep(1000000);
+
 			PRINT_INFO("%s | %s | Stop gimbal, Zoom in to 1x",__func__,state_name[s_proc._state]);
 			my_payload->setGimbalSpeed(0.0f, 0.0f , 0.0f, INPUT_SPEED);	
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_1X, PARAM_TYPE_UINT32);
 			usleep(1000000);
-			s_proc._state = STATE_START_MOVEMENT;
+
+			PRINT_INFO("%s | %s | Recenter gimbal postion",__func__,state_name[s_proc._state]);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_MODE, PAYLOAD_CAMERA_GIMBAL_MODE_RESET, PARAM_TYPE_UINT32);
+			usleep(5000000);
+
+			// enable AI object detection in 10 seconds
+			PRINT_INFO("%s | %s | Enable AI object detection in 30 seconds",__func__,state_name[s_proc._state]);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE, PAYLOAD_CAMERA_TRACKING_OBJ_DETECTION, PARAM_TYPE_UINT32);
+
+			usleep(30000000);
+
+			s_proc._state = STATE_DONE;
 			/**/
 		}
+		break;
+	case STATE_DONE:
+		// disable AI object detection
+		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE, PAYLOAD_CAMERA_TRACKING_OBJ_TRACKING, PARAM_TYPE_UINT32);
+
+		usleep(100000);
+
+		s_proc._state = STATE_START_MOVEMENT;
 		break;
 	default:
 		break;

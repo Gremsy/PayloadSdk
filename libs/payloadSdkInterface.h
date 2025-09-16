@@ -21,6 +21,8 @@ enum payload_status_event_t{
 
     PAYLOAD_PARAMS,
     PAYLOAD_PARAM_EXT_ACK,
+
+    PAYLOAD_PARAM_CAM_FOV_STATUS
 };
 
 enum {
@@ -294,6 +296,9 @@ public:
     // get the current stream bitrate
     uint32_t getPayloadStreamBitrate(); 
 
+    /// get payload camera fov status
+    float getPayloadCameraFOVStatus(camera_type_t cam_type);
+
     void requestParamValue(uint8_t pIndex);
     void setParamRate(uint8_t pIndex, uint16_t time_ms);
     void requestMessageStreamInterval();    
@@ -384,5 +389,6 @@ public:
     void _handle_msg_camera_information(mavlink_message_t* msg);
 
     void _handle_msg_device_attitude(mavlink_message_t* msg);
+    void _handle_request_camera_fov_status(mavlink_message_t* msg);
 };
 #endif

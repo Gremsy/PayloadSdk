@@ -38,6 +38,7 @@ set(EXAMPLES
     payload_get_video_streaming.cpp
     payload_extract_tiff_file.cpp
     payload_set_stream_bitrate.cpp
+    payload_get_fov_status.cpp
 )
 endif()
 

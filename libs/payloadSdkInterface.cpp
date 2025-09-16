@@ -884,6 +884,36 @@ getPayloadStreamBitrate(){
 
 }
 
+float 
+PayloadSdkInterface::
+getPayloadCameraFOVStatus(camera_type_t cam_type){
+    mavlink_command_long_t msg = {0};
+
+    msg.target_system = CAMERA_SYSTEM_ID;
+    msg.target_component = CAMERA_COMPONENT_ID;
+    msg.command = MAV_CMD_REQUEST_MESSAGE;
+    msg.param1 = MAVLINK_MSG_ID_CAMERA_FOV_STATUS;
+
+    // we will use the param2 for camera id
+    msg.param2 = (float)cam_type;
+
+    msg.confirmation = 1;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
 void
 PayloadSdkInterface::
 requestParamValue(uint8_t pIndex){
@@ -1307,7 +1337,11 @@ payload_recv_handle()
             case MAVLINK_MSG_ID_GIMBAL_DEVICE_ATTITUDE_STATUS:{
                 _handle_msg_device_attitude(&msg);
                 break;  
-            }            
+            }    
+            case MAVLINK_MSG_ID_CAMERA_FOV_STATUS:{
+                _handle_request_camera_fov_status(&msg);
+                break;
+            }        
             default: break;
             }
         }else{
@@ -1523,5 +1557,22 @@ _handle_msg_device_attitude(mavlink_message_t* msg)
             strcpy(param_mode, "FOLLOW_MODE");
         }            
         __notifyPayloadParamChanged(PAYLOAD_GB_ATTITUDE, param_mode, (double *)param);
+    }
+}
+
+void 
+PayloadSdkInterface::
+_handle_request_camera_fov_status(mavlink_message_t* msg){
+    mavlink_camera_fov_status_t cam_fov{0};
+
+    mavlink_msg_camera_fov_status_decode(msg, &(cam_fov));
+
+    if(__notifyPayloadStatusChanged != NULL){
+        double params[3] = {
+            cam_fov.camera_device_id,
+            cam_fov.hfov,
+            cam_fov.vfov
+        };
+        __notifyPayloadStatusChanged(PAYLOAD_PARAM_CAM_FOV_STATUS, params);
     }
 }

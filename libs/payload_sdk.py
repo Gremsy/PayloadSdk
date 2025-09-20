@@ -180,11 +180,17 @@ class calib_type_t(IntEnumBase):
     CALIB_MOTOR =                                                          3
     SEARCH_HOME =                                                          4
 
-# Tracking cmd enum
-class tracking_cmd_t(FloatEnumBase):
-    TRACK_IDLE =                                                           0
-    TRACK_ACT  =                                                           1
-    TRACK_LOST =                                                           2
+# Tracking mode enum
+class tracking_mode_t(IntEnumBase):
+    TRACK_STOP      =                                                      0
+    TRACK_ACTIVE    =                                                      1
+    TRACK_EAGLEEYES =                                                      2    
+
+# Tracking status enum
+class tracking_status_t(IntEnumBase):
+    TRACK_IDLE     =                                                       0
+    TRACK_TRACKED  =                                                       1
+    TRACK_LOST     =                                                       2
 
 # Stream sequence enum
 class get_stream_sequence_t(IntEnumBase):
@@ -994,6 +1000,42 @@ class PayloadSdkInterface:
             0, 
             0
         )
+
+    # Send object tracking trigger.
+    def setPayloadObjectTrackingPosition(self, pos_x: float=960, pos_y: float=540, width: float=128, height: float=128) -> None:
+        self.master.mav.command_long_send(
+            self.payload_system_id,
+            self.payload_component_id,
+            mavutil.mavlink.MAV_CMD_USER_4,
+            1, 
+            4, 
+            0, 
+            1, 
+            pos_x, 
+            pos_y, 
+            width, 
+            height
+        )
+
+    # Send object tracking mode.
+    # 3 modes: 
+    # - Stop tracking:   0
+    # - Active tracking: 1 (tracking actived but in idle mode, waiting for a trigger command with position)
+    # - EagleEyes:       2 (gimbal move only, no tracking trigger) 
+    def setPayloadObjectTrackingMode(self, mode: float) -> None:
+        self.master.mav.command_long_send(
+            self.payload_system_id,
+            self.payload_component_id,
+            mavutil.mavlink.MAV_CMD_USER_4,
+            1, 
+            4, 
+            0, 
+            0, 
+            mode, 
+            0, 
+            0, 
+            0
+        )    
 
     ''' Parameter Request methods '''
     # Request the value of a specific parameter.

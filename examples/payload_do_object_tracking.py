@@ -14,7 +14,7 @@ import sys
 import threading
 import random
 from pymavlink import mavutil
-from payload_sdk import PayloadSdkInterface, payload_status_event_t, payload_param_t, tracking_cmd_t, PAYLOAD_TYPE
+from payload_sdk import PayloadSdkInterface, payload_status_event_t, payload_param_t, tracking_status_t, tracking_mode_t, PAYLOAD_TYPE
 from payload_define import *
 
 # Global variables
@@ -22,8 +22,12 @@ my_payload = None
 time_to_exit = False
 
 # Tracking parameters
-track_pos_x = track_pos_y = track_pos_w = track_pos_h = track_status = 0.0
-
+track_pos_x = 0
+track_pos_y = 0
+track_pos_w = 0
+track_pos_h = 0
+track_status = 0
+ 
 # Signal handler for quitting
 def quit_handler(sig, frame):
     global my_payload, time_to_exit
@@ -41,7 +45,8 @@ def quit_handler(sig, frame):
 
 # Callback function for payload status changes
 def onPayloadStatusChanged(event: int, param: list):
-    global track_pos_x, track_pos_y, track_status, track_pos_w, track_pos_h
+    global track_pos_x, track_pos_y, track_pos_w, track_pos_h, track_status
+
     if payload_status_event_t(event) == payload_status_event_t.PAYLOAD_PARAMS:
         # param[0]: param index
         # param[1]: value
@@ -58,35 +63,55 @@ def onPayloadStatusChanged(event: int, param: list):
             track_pos_h = param[1]
 
         elif payload_param_t(param[0]) == payload_param_t.PARAM_TRACK_STATUS:
-            track_status = param[1]
+            track_status = float(int(param[1]) & 0xff)
+
+        else:
+            return
 
         print(f"onPayloadStatusChanged, status: {track_status:.2f}, x: {track_pos_x:.2f}, y: {track_pos_y:.2f}, w: {track_pos_w:.2f}, h: {track_pos_h:.2f}")
 
 # Handle tracking 
 def handle_tracking():
-    global time_to_exit
+    global time_to_exit, track_status, my_payload
 
     while not time_to_exit:
         # Random tracking bounding box
-        random_w = random.randint(20, 1920)     
-        random_h = random.randint(20, 1080)    
+        random_x = random.randint(0, 1920 - 20)
+        random_y = random.randint(0, 1080 - 20)
+
+        print("Active the tracker")
+        my_payload.setPayloadObjectTrackingMode(tracking_mode_t.TRACK_ACTIVE)
 
         print("Start tracking new object")
-        my_payload.setPayloadObjectTrackingParams(tracking_cmd_t.TRACK_ACT, random_w, random_h)
-        time.sleep(0.2) 
+        # if you send the postion while the tracker is not actived, the payload will move by the EagleEyes feature (only move, without tracking)
+		# Zio Payload only use random_x and random_y
+        my_payload.setPayloadObjectTrackingPosition(random_x, random_y, 128, 128)
+
+        # if you want to track the object at the center of the screen, just use
+		# my_payload.setPayloadObjectTrackingPosition()
+
+        if PAYLOAD_TYPE == "ZIO":
+            time.sleep(2)
+        else:
+            time.sleep(0.2)
 
         # Check tracking status
-        if track_status:
+        if track_status == tracking_status_t.TRACK_TRACKED:
             print("Object was tracked. Keep this object for 5 seconds...")
             time.sleep(5)  
+
             # Release object
-            my_payload.setPayloadObjectTrackingParams(tracking_cmd_t.TRACK_IDLE, random_w, random_h)
+            my_payload.setPayloadObjectTrackingMode(tracking_mode_t.TRACK_STOP)
             print("Object was released. Wait 3 seconds...")
             time.sleep(3)
 
-        else:
-            print("Lost object. Try catch another object")
-            my_payload.setPayloadObjectTrackingParams(tracking_cmd_t.TRACK_IDLE, random_w, random_h)
+        elif track_status == tracking_status_t.TRACK_IDLE:
+            print("Tracker in IDLE mode.")
+            time.sleep(1)
+
+        elif track_status == tracking_status_t.TRACK_LOST:
+            print("Lost object. Release the tracker then Try catch another object")
+            my_payload.setPayloadObjectTrackingMode(tracking_mode_t.TRACK_STOP)
             time.sleep(1) 
 
 def all_threads_init():
@@ -115,12 +140,16 @@ def main():
     my_payload.checkPayloadConnection()
 
     # Initialize environment for object tracking
-	# Change view mode to EO
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_EO, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
 
-    if PAYLOAD_TYPE in ["VIO", "ZIO"]:
+    if PAYLOAD_TYPE != "ZIO":
+	# Change view mode to EO
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_EO, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+
+    if PAYLOAD_TYPE == "VIO":
         # Change tracking mode to Object tracking
         my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE, payload_camera_tracking_mode.PAYLOAD_CAMERA_TRACKING_OBJ_TRACKING, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+    elif PAYLOAD_TYPE in ["MB1", "ZIO"]:
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_OBJECT_DETECTION, payload_camera_tracking_mode.PAYLOAD_CAMERA_OBJECT_DETECTION_DISABLE, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
 
     # Change OSD mode to Status
     my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_OSD_MODE, payload_camera_osd_mode.PAYLOAD_CAMERA_VIDEO_OSD_MODE_STATUS, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
@@ -135,6 +164,9 @@ def main():
 
     # Init threads
     all_threads_init()
+
+    # Initialize random seed
+    random.seed(time.time())
 
     # Keep program running to process tracking
     while not time_to_exit:

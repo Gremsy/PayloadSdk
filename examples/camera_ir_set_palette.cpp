@@ -34,6 +34,9 @@ int main(int argc, char *argv[]){
 
 	my_payload->checkPayloadConnection();
 
+    printf("[IR] Forcing view source to IR...\n");
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_IR, PARAM_TYPE_UINT32);
+
     usleep(1000000);
 
 	printf("Starting set palete example...\n");

@@ -154,7 +154,8 @@ void handle_tracking(){
 		printf("Start tracking new object \n");
 		// if you send the postion while the tracker is not actived, the payload will move by the EagleEyes feature (only move, without tracking)
 		// Zio Payload only use random_x and random_y
-		my_payload->setPayloadObjectTrackingPosition(random_x, random_y, 64, 128);
+
+		my_payload->setPayloadObjectTrackingPosition(random_x, random_y, 128, 128);
 
 		// if you want to track the object at the center of the screen, just use
 		// my_payload->setPayloadObjectTrackingPosition();

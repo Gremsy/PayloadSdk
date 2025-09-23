@@ -42,6 +42,9 @@ int main(int argc, char *argv[]){
 
     // Only handle for VIO/ZIO where shutter param is defined
     #if defined VIO || defined ZIO
+        printf("[EO] Forcing view source to EO...\n");
+	    my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_EO, PARAM_TYPE_UINT32);
+        
         // Read current shutter speed only (by ID)
         my_payload->getPayloadCameraSettingByID((char*)PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED);
         usleep(1000000);

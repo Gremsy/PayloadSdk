@@ -200,6 +200,18 @@ void onPayloadStatusChanged(int event, double* param){
 		}
 		break;
 	}
+	case PAYLOAD_ACK:{
+		if(param[0] == MAV_CMD_SET_CAMERA_MODE){
+			// param[0]: command
+			// param[1]: result
+			// param[2]: progress
+			printf("Got PAYLOAD_ACK for command %.2f with status %.2f, progress: %.2f\n", param[0], param[1], param[2]);
+			my_capture = do_capture;
+			printf("   ---> Payload in Image mode, do capture image \n");
+		}
+		break;
+	}
+
 	default: break;
 	}
 }

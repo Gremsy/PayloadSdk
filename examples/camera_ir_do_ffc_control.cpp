@@ -43,6 +43,9 @@ int main(int argc, char *argv[]){
 	// check connection
 	my_payload->checkPayloadConnection();
 
+	printf("[IR] Forcing view source to IR...\n");
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_IR, PARAM_TYPE_UINT32);
+
 	// change FFC mode to Auto
 	my_payload->setPayloadCameraFFCMode(FFC_MODE_AUTO);
 	SDK_LOG("Change FFC to Auto, waiting for 5secs.");

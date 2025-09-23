@@ -52,6 +52,9 @@ int main(int argc, char *argv[]){
 
 	// check connection
 	my_payload->checkPayloadConnection();
+
+	printf("[IR] Forcing view source to IR...\n");
+	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_IR, PARAM_TYPE_UINT32);
 	
 	// set payload to video mode for testing
 	my_payload->setPayloadCameraMode(CAMERA_MODE_VIDEO);
@@ -189,6 +192,17 @@ void onPayloadStatusChanged(int event, double* param){
 				my_capture = change_camera_mode;
 				printf("   ---> Payload in Video mode, change camera mode \n");
 			}
+		}
+		break;
+	}
+	case PAYLOAD_ACK:{
+		if(param[0] == MAV_CMD_SET_CAMERA_MODE){
+			// param[0]: command
+			// param[1]: result
+			// param[2]: progress
+			printf("Got PAYLOAD_ACK for command %.2f with status %.2f, progress: %.2f\n", param[0], param[1], param[2]);
+			my_capture = do_capture;
+			printf("   ---> Payload in Image mode, do capture image \n");
 		}
 		break;
 	}

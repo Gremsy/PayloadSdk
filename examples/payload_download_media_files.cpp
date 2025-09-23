@@ -195,7 +195,7 @@ int main(int argc, char* argv[]) {
             std::cout << "" << std::endl;
             std::cout << "----" << std::endl;
             std::cout << "Select an option:" << std::endl;
-            std::cout << "  1. List meida files" << std::endl;
+            std::cout << "  1. List media files" << std::endl;
             std::cout << "  2. Download a Image or a Video " << std::endl;
             std::cout << "  3. Download all Images" << std::endl;
             std::cout << "  4. Download all Videos" << std::endl;

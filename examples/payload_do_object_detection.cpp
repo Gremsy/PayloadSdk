@@ -44,13 +44,13 @@ int main(int argc, char *argv[]){
 	usleep(500000);
 	#endif
 
-	printf("Enable object detection, delay in 5 secs \n");
+	printf("Enable object detection, delay in 10 secs \n");
     #if defined VIO 
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE, PAYLOAD_CAMERA_TRACKING_OBJ_DETECTION, PARAM_TYPE_UINT32);
     #elif defined MB1 || defined ZIO
 	my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_OBJECT_DETECTION, PAYLOAD_CAMERA_OBJECT_DETECTION_ENABLE, PARAM_TYPE_UINT32);
     #endif
-	usleep(5000000);
+	usleep(10000000);
 
 	printf("Disable object detection. Exit! \n");
     #if defined VIO 

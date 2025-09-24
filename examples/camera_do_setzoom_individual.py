@@ -17,7 +17,7 @@ from payload_define import *
 my_payload = None
 time_to_exit = False
 
-# Signal handler for quitting
+# Handle SIGINT so the example can close cleanly
 def quit_handler(sig, frame):
     global my_payload, time_to_exit
     print("\nTERMINATING AT USER REQUEST")
@@ -41,8 +41,8 @@ def onPayloadStatusChanged(event, param):
         print(f" --> Got ext_ack, result {param[0]:.2f}")
 
     elif payload_status_event_t(event) == payload_status_event_t.PAYLOAD_PARAMS:
-        # param[0]: param index
-		# param[1]: value
+        # param[0]: payload_param_t enum value
+        # param[1]: parameter value
         if payload_param_t(param[0]) == payload_param_t.PARAM_EO_ZOOM_LEVEL:  
             print(f"Payload EO_ZOOM_LEVEL: {param[1]:.2f}")
 
@@ -72,37 +72,88 @@ def main():
     # Register to receive zoom status updates
     my_payload.setParamRate(payload_param_t.PARAM_EO_ZOOM_LEVEL, 1000)  
     my_payload.setParamRate(payload_param_t.PARAM_IR_ZOOM_LEVEL, 1000)  
-    
-    # Set view source to EO/IR
-    print("Set view source to EO/IR!")
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_EOIR, mavutil.mavlink.MAV_PARAM_TYPE_UINT32) 
-    
-    # Change EO zoom mode to Super Resolution
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_MODE, payload_camera_video_zoom_mode.PAYLOAD_CAMERA_VIDEO_ZOOM_MODE_SUPER_RESOLUTION, mavutil.mavlink.MAV_PARAM_TYPE_UINT32) 
 
     # Perform zoom operations in a loop
     while not time_to_exit:
 
+        # Set view source to EO
+        print("Switching view source to EO")
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_EO, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+        time.sleep(1)
+
+        # Change EO zoom mode to Super Resolution
+        print("Setting EO zoom mode to Super Resolution")
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_MODE, payload_camera_video_zoom_mode.PAYLOAD_CAMERA_VIDEO_ZOOM_MODE_SUPER_RESOLUTION, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+        time.sleep(1)
+
         # Zoom EO to 1x
-        print("zoom EO to 1x")
-        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, payload_camera_video_zoom_super_resolution_factor.ZOOM_SUPER_RESOLUTION_1X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)  
-        time.sleep(3)
-        
+        print("Set EO super-resolution zoom to 1x")
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, payload_camera_video_zoom_super_resolution_factor.ZOOM_SUPER_RESOLUTION_1X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+        time.sleep(4)
+
         # Zoom EO to 4x
-        print("zoom EO to 4x")
+        print("Set EO super-resolution zoom to 4x")
         my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, payload_camera_video_zoom_super_resolution_factor.ZOOM_SUPER_RESOLUTION_4X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
-        time.sleep(3) 
-        
+        time.sleep(4)
+
+        # Zoom EO to 30x
+        print("Set EO super-resolution zoom to 30x")
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, payload_camera_video_zoom_super_resolution_factor.ZOOM_SUPER_RESOLUTION_30X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+        time.sleep(4)
+
+        # Zoom EO to 1x
+        print("Reset EO super-resolution zoom to 1x")
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, payload_camera_video_zoom_super_resolution_factor.ZOOM_SUPER_RESOLUTION_1X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+        time.sleep(4)
+
+        # Change EO zoom mode to Combine mode
+        print("Setting EO zoom mode to Combine")
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_MODE, payload_camera_video_zoom_mode.PAYLOAD_CAMERA_VIDEO_ZOOM_MODE_COMBINE, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+
+        # Zoom EO to 1x
+        print("Set EO combine zoom to 1x")
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_COMBINE_FACTOR, payload_camera_video_zoom_combine_factor.ZOOM_COMBINE_1X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+        time.sleep(4)
+
+        # Zoom EO to 40x
+        print("Set EO combine zoom to 40x")
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_COMBINE_FACTOR, payload_camera_video_zoom_combine_factor.ZOOM_COMBINE_40X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+        time.sleep(6)
+
+        # Zoom EO to 240x
+        print("Set EO combine zoom to 240x")
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_COMBINE_FACTOR, payload_camera_video_zoom_combine_factor.ZOOM_COMBINE_240X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+        time.sleep(5)
+
+        # Zoom EO to 1x
+        print("Reset EO combine zoom to 1x")
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_COMBINE_FACTOR, payload_camera_video_zoom_combine_factor.ZOOM_COMBINE_1X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+        time.sleep(4)
+
+        # Set view source to IR
+        print("Switching view source to IR")
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_IR, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+
         # Zoom IR to 1x
-        print("zoom IR to 1x")
-        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, payload_camera_ir_zoom_factor.ZOOM_IR_1X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32) 
-        time.sleep(3)  
-        
+        print("Set IR zoom to 1x")
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, payload_camera_ir_zoom_factor.ZOOM_IR_1X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+        time.sleep(4)
+
         # Zoom IR to 4x
-        print("zoom IR to 4x")
-        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, payload_camera_ir_zoom_factor.ZOOM_IR_4X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32) 
-        time.sleep(3)  
-        
+        print("Set IR zoom to 4x")
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, payload_camera_ir_zoom_factor.ZOOM_IR_4X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+        time.sleep(4)
+
+        # Zoom IR to 8x
+        print("Set IR zoom to 8x")
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, payload_camera_ir_zoom_factor.ZOOM_IR_8X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+        time.sleep(4)
+
+        # Zoom IR to 1x
+        print("Reset IR zoom to 1x")
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_IR_ZOOM_FACTOR, payload_camera_ir_zoom_factor.ZOOM_IR_1X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+        time.sleep(4)
+
         # Short delay to prevent high CPU usage
         time.sleep(0.001)
 

@@ -481,6 +481,23 @@ class PayloadSdkInterface:
 
         print(f"{config.debug.INFO_PREFIX} Connection closed.")
 
+    ''' Stream Bitrate Control methods '''
+    # Set stream bitrate.
+    def setPayloadStreamBitrate(self, bitrate: int) -> None:
+        self.master.mav.command_long_send(
+            self.payload_system_id,
+            self.payload_component_id,
+            mavutil.mavlink.MAV_CMD_USER_4,
+            1, 
+            4,
+            2, 
+            bitrate,  
+            0, 
+            0, 
+            0, 
+            0
+        ) 
+
     ''' Camera Control methods '''
     # Set the parameter value for the payload's camera.
     def setPayloadCameraParam(self, param_id: str, param_value: int, param_type: int) -> None:

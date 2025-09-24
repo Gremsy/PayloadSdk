@@ -297,7 +297,7 @@ public:
     uint32_t getPayloadStreamBitrate(); 
 
     /// get payload camera fov status
-    float getPayloadCameraFOVStatus(camera_type_t cam_type);
+    void getPayloadCameraFOVStatus(camera_type_t cam_type);
 
     void requestParamValue(uint8_t pIndex);
     void setParamRate(uint8_t pIndex, uint16_t time_ms);

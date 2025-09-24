@@ -884,7 +884,7 @@ getPayloadStreamBitrate(){
 
 }
 
-float 
+void 
 PayloadSdkInterface::
 getPayloadCameraFOVStatus(camera_type_t cam_type){
     mavlink_command_long_t msg = {0};

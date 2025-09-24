@@ -95,6 +95,16 @@ def onPayloadStatusChanged(event: int, param: list):
                 my_capture = time_lapse_capture_sequence_t.CHANGE_CAMERA_MODE
                 print("   ---> Payload in Video mode, change camera mode")
 
+    elif payload_status_event_t(event) == payload_status_event_t.PAYLOAD_ACK:
+        if param[0] == mavutil.mavlink.MAV_CMD_SET_CAMERA_MODE:
+            # param[0]: command
+            # param[1]: result
+            # param[2]: progress
+
+            print(f"Got PAYLOAD_ACK for command {param[0]:.2f} with status {param[1]:.2f}, progress: {param[2]:.2f}")
+            my_capture = time_lapse_capture_sequence_t.DO_CAPTURE
+            print("   ---> Payload in Image mode, do capture image")            
+
 def main():
     global my_payload, my_capture, time_to_capturing, time_to_exit
 

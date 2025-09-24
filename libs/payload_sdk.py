@@ -46,17 +46,18 @@ GIMBAL_COMPONENT_ID = config.mavlink.GIMBAL_COMPONENT_ID
 
 # Payload status event enum
 class payload_status_event_t(IntEnumBase):
-    PAYLOAD_CAM_CAPTURE_STATUS =                                           0
-    PAYLOAD_CAM_STORAGE_INFO   =                                           1
-    PAYLOAD_CAM_SETTINGS       =                                           2
-    PAYLOAD_CAM_PARAMS         =                                           3
-    PAYLOAD_GB_ATTITUDE        =                                           4
-    PAYLOAD_GB_PARAMS          =                                           5
-    PAYLOAD_ACK                =                                           6
-    PAYLOAD_CAM_INFO           =                                           7
-    PAYLOAD_CAM_STREAMINFO     =                                           8
-    PAYLOAD_PARAMS             =                                           9
-    PAYLOAD_PARAM_EXT_ACK      =                                           10
+    PAYLOAD_CAM_CAPTURE_STATUS   =                                           0
+    PAYLOAD_CAM_STORAGE_INFO     =                                           1
+    PAYLOAD_CAM_SETTINGS         =                                           2
+    PAYLOAD_CAM_PARAMS           =                                           3
+    PAYLOAD_GB_ATTITUDE          =                                           4
+    PAYLOAD_GB_PARAMS            =                                           5
+    PAYLOAD_ACK                  =                                           6
+    PAYLOAD_CAM_INFO             =                                           7
+    PAYLOAD_CAM_STREAMINFO       =                                           8
+    PAYLOAD_PARAMS               =                                           9
+    PAYLOAD_PARAM_EXT_ACK        =                                           10
+    PAYLOAD_PARAM_CAM_FOV_STATUS =                                           11
 
 # Payload param enum
 class payload_param_t(IntEnumBase):
@@ -132,6 +133,11 @@ PAYLOAD_PARAMS = [
 class input_mode_t(IntEnumBase):
     INPUT_ANGLE =                                                          1
     INPUT_SPEED =                                                          2
+
+# Camera type enum
+class camera_type_t(IntEnumBase):
+    CAMERA_EO =                                                            0
+    CAMERA_IR =                                                            1
 
 # FFC mode enum
 class ffc_mode_t(IntEnumBase):
@@ -1017,6 +1023,23 @@ class PayloadSdkInterface:
             height
         )
 
+    ''' FOV Control methods '''  
+    # Get payload camera fov status.
+    def getPayloadCameraFOVStatus(self, cam_type: int) -> None:
+        self.master.mav.command_long_send(
+            self.camera_system_id,
+            self.camera_component_id,
+            mavutil.mavlink.MAV_CMD_REQUEST_MESSAGE,
+            1, 
+            mavutil.mavlink.MAVLINK_MSG_ID_CAMERA_FOV_STATUS, 
+            cam_type, 
+            0, 
+            0, 
+            0, 
+            0, 
+            0   
+        )
+
     # Send object tracking mode.
     # 3 modes: 
     # - Stop tracking:   0
@@ -1198,6 +1221,13 @@ class PayloadSdkInterface:
             param = [msg.param_result]
             self._notifyPayloadStatusChanged(event, param)
 
+    # Handle the CAM_FOV_STATUS message from MAVLink.
+    def _handle_request_camera_fov_status(self, msg: MAVLink_camera_fov_status_message) -> None:
+        if self._notifyPayloadStatusChanged:
+            event = payload_status_event_t.PAYLOAD_PARAM_CAM_FOV_STATUS
+            param = [msg.id, msg.hfov, msg.vfov]
+            self._notifyPayloadStatusChanged(event, param)        
+
     # Main loop to receive and process MAVLink messages.
     def payload_recv_handle(self) -> None:
         self.last_heartbeat_time = time.time()
@@ -1295,6 +1325,9 @@ class PayloadSdkInterface:
 
             elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_PARAM_EXT_ACK:
                 self._handle_msg_command_ext_ack(msg)
+
+            elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_CAMERA_FOV_STATUS:
+                self._handle_request_camera_fov_status(msg)    
 
             time.sleep(config.communication.RECV_THREAD_SLEEP)
 

@@ -60,6 +60,10 @@ def main():
     if not my_payload.checkPayloadConnection():
         print("Failed to connect to payload. Exiting...")
         sys.exit(1)
+
+    # Set view source to EO
+    print("Set view source to EO!")
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_EO, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)    
     
     # Change setting of RC_MODE to STANDARD
     my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_RC_MODE, payload_camera_rc_mode.PAYLOAD_CAMERA_RC_MODE_STANDARD, mavutil.mavlink.MAV_PARAM_TYPE_UINT32) 

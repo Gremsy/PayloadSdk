@@ -37,13 +37,14 @@ def quit_handler(sig, frame):
 
 # Callback function for payload status changes
 def onPayloadStatusChanged(event, param):
-    global my_capture, image_to_capture, time_to_exit
+    global my_capture, image_to_capture, time_to_exit, my_payload
 
     if payload_status_event_t(event) == payload_status_event_t.PAYLOAD_CAM_CAPTURE_STATUS:      
         # param[0]: image_status
 		# param[1]: video_status
 		# param[2]: image_count
 		# param[3]: recording_time_ms
+
         if my_capture == capture_sequence_t.CHECK_CAPTURE_STATUS:
             print(f"Got payload capture status: image_status: {param[0]:.2f}, video_status: {param[1]:.2f}")
 
@@ -62,7 +63,7 @@ def onPayloadStatusChanged(event, param):
                 print(f"   ---> Payload is completed capture image, Do next sequence {image_to_capture}")
 
                 if image_to_capture == 0:
-                    # Can't call sys.exit(0) in callback function.
+                    # Close payload interface
                     time_to_exit = True
             else:
                 print("   ---> Payload is busy")
@@ -72,6 +73,7 @@ def onPayloadStatusChanged(event, param):
 		# param[1]: used_capacity
 		# param[2]: available_capacity
 		# param[3]: status
+
         if my_capture == capture_sequence_t.CHECK_STORAGE:
             print(f"Got payload storage info: total: {param[0]:.2f} MB, used: {param[1]:.2f} MB, available: {param[2]:.2f} MB")
 
@@ -87,15 +89,26 @@ def onPayloadStatusChanged(event, param):
         # param[0]: mode_id
 		# param[1]: zoomLevel
 		# param[2]: focusLevel
+
         if my_capture == capture_sequence_t.CHECK_CAMERA_MODE:
             print(f"Got camera mode: {param[0]:.2f}")
-            if param[0] == 0:  
+            
+            if param[0] == mavutil.mavlink.CAMERA_MODE_IMAGE:  
                 my_capture = capture_sequence_t.DO_CAPTURE
                 print("   ---> Payload in Image mode, do capture image")
             else:
                 my_capture = capture_sequence_t.CHANGE_CAMERA_MODE
                 print("   ---> Payload in Video mode, change camera mode")
 
+    elif payload_status_event_t(event) == payload_status_event_t.PAYLOAD_ACK:
+        if param[0] == mavutil.mavlink.MAV_CMD_SET_CAMERA_MODE:
+            # param[0]: command
+            # param[1]: result
+            # param[2]: progress
+
+            print(f"Got PAYLOAD_ACK for command {param[0]:.2f} with status {param[1]:.2f}, progress: {param[2]:.2f}")
+            my_capture = capture_sequence_t.DO_CAPTURE
+            print("   ---> Payload in Image mode, do capture image")
 
 def main():
     global my_payload, my_capture, time_to_exit
@@ -115,20 +128,25 @@ def main():
 
     # Check connection
     my_payload.checkPayloadConnection()
+
+    print("Change view source to EO!\n")
+    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_EO, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     
     # Set payload to IMAGE mode for testing
     my_payload.setPayloadCameraMode(mavutil.mavlink.CAMERA_MODE_IMAGE)  
-    my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_RECORD_SRC, payload_camera_record_src.PAYLOAD_CAMERA_RECORD_EO, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+
+    if PAYLOAD_TYPE != "ZIO": 
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_RECORD_SRC, payload_camera_record_src.PAYLOAD_CAMERA_RECORD_EO, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     
     # Set photo storage to Internal
-    if PAYLOAD_TYPE == "GHADRON":
+    if PAYLOAD_TYPE == "MB1":
         my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_STORAGE, payload_camera_storage.PAYLOAD_CAMERA_STORAGE_INTERNAL, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
 
     while not time_to_exit:
 
-        # Capture image with payload following this sequence
+        # To capture image with payload, follow this sequence
         if my_capture == capture_sequence_t.IDLE:
-            # Wait in idle state
+            # Do nothing
             pass  
 
         elif my_capture == capture_sequence_t.CHECK_STORAGE:
@@ -150,6 +168,9 @@ def main():
 
         elif my_capture == capture_sequence_t.WAIT_CAPTURE_DONE:
             my_payload.getPayloadCaptureStatus()
+        
+        else:
+            break
 
         time.sleep(0.3)  
         

@@ -134,7 +134,7 @@ void applyPalette(std::vector<uint16_t> data, cv::Mat& result, std::vector<std::
 
 int main(int argc, char** argv) {
     if (argc != 2) {
-        std::cout << "Usage: ./get_raw_temp_data <path_to_image>" << std::endl;
+        std::cout << "Usage: ./payload_extract_tiff_file <path_to_image>" << std::endl;
         return -1;
     }
 

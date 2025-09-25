@@ -288,6 +288,9 @@ class PayloadSdkInterface:
         self._hb_last_sent          = 0.0
         self.time_to_exit           = False
         self.ping_seq               = config.communication.PING_INITIAL_SEQ
+
+        self.current_attitude_flags: int = 0
+        self.current_gimbal_mode = None
         
         # Print configuration summary
         config.print_config_summary()
@@ -501,6 +504,9 @@ class PayloadSdkInterface:
     ''' Camera Control methods '''
     # Set the parameter value for the payload's camera.
     def setPayloadCameraParam(self, param_id: str, param_value: int, param_type: int) -> None:
+
+        self.current_gimbal_mode = param_value
+
         msg = {
             'param_id': bytearray(16),  
             'param_value': bytearray(128),  
@@ -764,6 +770,27 @@ class PayloadSdkInterface:
 
     # Set the speed or angle for move gimbal.
     def setGimbalSpeed(self, spd_pitch: float, spd_roll: float, spd_yaw: float, mode: input_mode_t) -> None:
+
+        flags = self.current_attitude_flags
+        # flags = self.current_attitude_flags if self.current_attitude_flags is not None else 0
+
+        if(self.current_gimbal_mode):
+            if self.current_gimbal_mode == payload_camera_gimbal_mode.PAYLOAD_CAMERA_GIMBAL_MODE_OFF:
+                flags |= mavutil.mavlink.GIMBAL_DEVICE_FLAGS_RETRACT
+
+            elif self.current_gimbal_mode == payload_camera_gimbal_mode.PAYLOAD_CAMERA_GIMBAL_MODE_RESET:
+                flags |= mavutil.mavlink.GIMBAL_DEVICE_FLAGS_NEUTRAL
+
+            elif self.current_gimbal_mode == payload_camera_gimbal_mode.PAYLOAD_CAMERA_GIMBAL_MODE_LOCK:
+                flags |= mavutil.mavlink.GIMBAL_DEVICE_FLAGS_YAW_LOCK
+
+            elif self.current_gimbal_mode == payload_camera_gimbal_mode.PAYLOAD_CAMERA_GIMBAL_MODE_FOLLOW:
+                flags &= ~mavutil.mavlink.GIMBAL_DEVICE_FLAGS_YAW_LOCK
+
+            elif self.current_gimbal_mode == payload_camera_gimbal_mode.PAYLOAD_CAMERA_GIMBAL_MODE_MAPPING:
+                MESSAGE_FLAG_MAPPING = 0x4000
+                flags |= MESSAGE_FLAG_MAPPING
+
         if mode == input_mode_t.INPUT_ANGLE:
             # Use config validation instead of hardcoded limits
             if not config.validator.validate_gimbal_angles(spd_yaw, spd_pitch, spd_roll):
@@ -785,7 +812,7 @@ class PayloadSdkInterface:
             self.master.mav.gimbal_device_set_attitude_send(
                 self.gimbal_system_id,
                 self.gimbal_component_id,
-                0,
+                flags,
                 q,
                 angular_velocity_x,
                 angular_velocity_y,
@@ -1201,8 +1228,16 @@ class PayloadSdkInterface:
     # Handle the MOUNT_ORIENTATION message from MAVLink.
     def _handle_msg_mount_orientation(self, msg: MAVLink_mount_orientation_message) -> None:
         if self._notifyPayloadStatusChanged:
+            pitch = msg.pitch
+            roll  = msg.roll
+            yaw   = 0
+            if self.current_gimbal_mode == payload_camera_gimbal_mode.PAYLOAD_CAMERA_GIMBAL_MODE_LOCK:
+                yaw = msg.yaw_absolute
+            else:
+                yaw = msg.yaw
+
             event = payload_status_event_t.PAYLOAD_GB_ATTITUDE
-            param = [msg.pitch, msg.roll, msg.yaw]
+            param = [pitch, roll, yaw]
             self._notifyPayloadStatusChanged(event, param)
 
     # Handle the PARAM_VALUE message from MAVLink.
@@ -1243,7 +1278,50 @@ class PayloadSdkInterface:
         if self._notifyPayloadStatusChanged:
             event = payload_status_event_t.PAYLOAD_PARAM_CAM_FOV_STATUS
             param = [msg.id, msg.hfov, msg.vfov]
-            self._notifyPayloadStatusChanged(event, param)        
+            self._notifyPayloadStatusChanged(event, param)      
+
+    # Handle the GIMBAL_DEVICE_ATTITUDE message from MAVLink.
+    def _handle_msg_device_attitude(self, msg: MAVLink_gimbal_device_attitude_status_message) -> None:
+        if self._notifyPayloadParamChanged:
+            # Decode quaternion -> Euler (rad)
+            roll, pitch, yaw = self.mavlink_quaternion_to_euler(msg.q)
+
+            # Convert to degree
+            pitch_deg = self.to_deg(pitch)
+            roll_deg  = self.to_deg(roll)
+            yaw_deg   = self.to_deg(yaw)
+
+            # Create param
+            params = [
+                pitch_deg,
+                roll_deg,
+                yaw_deg,
+                msg.angular_velocity_x,
+                msg.angular_velocity_y,
+                msg.angular_velocity_z,
+            ]
+
+            # Save the current attitude flag 
+            self.current_attitude_flags = msg.flags
+
+            if self.current_attitude_flags & mavutil.mavlink.GIMBAL_DEVICE_FLAGS_YAW_LOCK:
+                param_mode = "LOCK_MODE"
+            elif self.current_attitude_flags & mavutil.mavlink.GIMBAL_DEVICE_FLAGS_RETRACT:
+                param_mode = "OFF_MODE"
+            elif self.current_attitude_flags & mavutil.mavlink.GIMBAL_DEVICE_FLAGS_NEUTRAL:
+                param_mode = "RESET_MODE"
+            elif self.current_attitude_flags & 0x4000:  # custom mapping flag
+                param_mode = "MAPPING_MODE"
+            else:
+                param_mode = "FOLLOW_MODE"
+
+            event = payload_status_event_t.PAYLOAD_GB_ATTITUDE
+
+            self._notifyPayloadParamChanged(
+                event,
+                param_mode,
+                params
+            )       
 
     # Main loop to receive and process MAVLink messages.
     def payload_recv_handle(self) -> None:
@@ -1346,6 +1424,9 @@ class PayloadSdkInterface:
             elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_CAMERA_FOV_STATUS:
                 self._handle_request_camera_fov_status(msg)    
 
+            elif msgid == mavutil.mavlink.MAVLINK_MSG_ID_GIMBAL_DEVICE_ATTITUDE_STATUS:
+                self._handle_msg_device_attitude(msg)      
+
             time.sleep(config.communication.RECV_THREAD_SLEEP)
 
     ''' Helper functions '''
@@ -1374,6 +1455,53 @@ class PayloadSdkInterface:
         q[3] = sy * cp * cr - cy * sp * sr  # z
 
         return q
+    
+
+    # Convert quaternion [w, x, y, z] to euler angles (roll, pitch, yaw in radians)
+    def mavlink_quaternion_to_euler(self, q: list) -> tuple:
+        w, x, y, z = q
+        a = float(w)
+        b = float(x)
+        c = float(y)
+        d = float(z)
+
+        aSq = a * a
+        bSq = b * b
+        cSq = c * c
+        dSq = d * d
+
+        # Build DCM (Direction Cosine Matrix)
+        dcm = [[0.0] * 3 for _ in range(3)]
+        dcm[0][0] = aSq + bSq - cSq - dSq
+        dcm[0][1] = 2 * (b * c - a * d)
+        dcm[0][2] = 2 * (a * c + b * d)
+        dcm[1][0] = 2 * (b * c + a * d)
+        dcm[1][1] = aSq - bSq + cSq - dSq
+        dcm[1][2] = 2 * (c * d - a * b)
+        dcm[2][0] = 2 * (b * d - a * c)
+        dcm[2][1] = 2 * (a * b + c * d)
+        dcm[2][2] = aSq - bSq - cSq + dSq
+
+        # Convert DCM -> Euler (phi=roll, theta=pitch, psi=yaw)
+        theta = math.asin(-dcm[2][0])
+
+        if abs(theta - math.pi/2) < 1.0e-3:
+            phi = 0.0
+            psi = math.atan2(dcm[1][2] - dcm[0][1],
+                             dcm[0][2] + dcm[1][1]) + phi
+        elif abs(theta + math.pi/2) < 1.0e-3:
+            phi = 0.0
+            psi = math.atan2(dcm[1][2] - dcm[0][1],
+                             dcm[0][2] + dcm[1][1] - phi)
+        else:
+            phi = math.atan2(dcm[2][1], dcm[2][2])
+            psi = math.atan2(dcm[1][0], dcm[0][0])
+
+        roll = phi
+        pitch = theta
+        yaw = psi
+
+        return roll, pitch, yaw
 
     ''' Callback registration methods '''
     # Register a callback to receive notifications when the payload status changes.

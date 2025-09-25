@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import os
+import time
 
 # Add the libs directory to the path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'libs'))
@@ -47,6 +48,7 @@ def main():
 
     # Format SD card
     my_payload.setFormatSDCard()
+    time.sleep(3)
 
     # Close payload interface
     try:

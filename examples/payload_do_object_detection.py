@@ -57,18 +57,18 @@ def main():
     time.sleep(1)  
 
     # Enable object detection
-    print("Enable object detection, delay in 5 secs to load model")
-    if PAYLOAD_TYPE in ["VIO", "ZIO"]:
+    print("Enable object detection, delay in 10 secs to load model")
+    if PAYLOAD_TYPE == "VIO":
         my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE, payload_camera_tracking_mode.PAYLOAD_CAMERA_TRACKING_OBJ_DETECTION, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
-    elif PAYLOAD_TYPE == "GHADRON":
+    elif PAYLOAD_TYPE in ["MB1", "ZIO"]:
         my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_OBJECT_DETECTION, payload_camera_object_detection.PAYLOAD_CAMERA_OBJECT_DETECTION_ENABLE, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
-    time.sleep(5) 
+    time.sleep(10) 
 
     # Disable object detection
     print("Disable object detection. Exit!")
-    if PAYLOAD_TYPE in ["VIO", "ZIO"]:
+    if PAYLOAD_TYPE == "VIO":
         my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_TRACKING_MODE, payload_camera_tracking_mode.PAYLOAD_CAMERA_TRACKING_OBJ_TRACKING, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
-    elif PAYLOAD_TYPE == "GHADRON":
+    elif PAYLOAD_TYPE in ["MB1", "ZIO"]:
         my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_OBJECT_DETECTION, payload_camera_object_detection.PAYLOAD_CAMERA_OBJECT_DETECTION_DISABLE, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(0.5)  
 

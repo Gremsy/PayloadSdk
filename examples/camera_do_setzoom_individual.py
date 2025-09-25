@@ -76,15 +76,15 @@ def main():
     # Perform zoom operations in a loop
     while not time_to_exit:
 
-        # Change EO zoom mode to Super Resolution
-        print("\n[EO] Switching zoom mode to Super Resolution...\n")
-        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_MODE, payload_camera_video_zoom_mode.PAYLOAD_CAMERA_VIDEO_ZOOM_MODE_SUPER_RESOLUTION, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
-        time.sleep(1)
-
         # Set view source to EO/IR
         print("[EO] Forcing view source to EO over IR composite...\n")
         my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, payload_camera_view_src.PAYLOAD_CAMERA_VIEW_EOIR, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
         time.sleep(1)  
+
+        # Change EO zoom mode to Super Resolution
+        print("\n[EO] Switching zoom mode to Super Resolution...\n")
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_MODE, payload_camera_video_zoom_mode.PAYLOAD_CAMERA_VIDEO_ZOOM_MODE_SUPER_RESOLUTION, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
+        time.sleep(1)
 
         # Zoom EO to 1x
         print("[EO] Setting Super Resolution zoom to 1x.\n")
@@ -113,12 +113,14 @@ def main():
         # Zoom EO to 40x
         print("[EO] Combine zoom: jumping to 40x.\n")
         my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_COMBINE_FACTOR, payload_camera_video_zoom_combine_factor.ZOOM_COMBINE_40X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
-        time.sleep(6)
+        time.sleep(4)
 
         # Zoom EO to 240x
         print("[EO] Combine zoom: pushing to 240x.\n")
         my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_COMBINE_FACTOR, payload_camera_video_zoom_combine_factor.ZOOM_COMBINE_240X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
-        time.sleep(5)
+        time.sleep(4)
+
+
 
         # Set view source to IR/EO
         print("[IR] Switching view source to IR over EO composite...\n")

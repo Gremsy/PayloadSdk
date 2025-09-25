@@ -1,3 +1,8 @@
+'''
+ * This sample will send the command to change the config for the bitrate of the video stream
+ * The change will be applied immediately
+'''
+
 #!/usr/bin/env python3
 import sys
 import os

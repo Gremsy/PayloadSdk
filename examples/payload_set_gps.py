@@ -1,3 +1,27 @@
+'''
+ * This sample will send the GPS position to the payload
+ * 
+ * Logic:
+ * 1. Always send GPS_RAW_INT to allow GPS to get fix
+ * 2. Only send GLOBAL_POSITION_INT when GPS fix is successful (GPS_FIX_TYPE_DGPS)
+ * 3. GPS coordinates change continuously to simulate movement
+ * 
+ * The GPS information will include:
+ * 1. Latitude (changing continuously)
+ * 2. Longitude (changing continuously)
+ * 3. Altitude (changing continuously)
+ * 4. Heading
+ * 5. GPS Fix Type
+ * 
+ * This example simulates GPS fix progression and movement:
+ * - Messages 0-19:  NO_FIX (send GPS_RAW_INT only)
+ * - Messages 20+:   DGPS (send GPS_RAW_INT + GLOBAL_POSITION_INT)
+ * 
+ * Movement simulation: From New York to Philadelphia
+ * 
+ * In a real application, you would get the GPS fix status from your actual GPS hardware.
+'''
+
 #!/usr/bin/env python3
 import sys
 import os

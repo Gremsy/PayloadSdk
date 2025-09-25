@@ -1,3 +1,7 @@
+'''
+ * This sample will show you how to get the FOV_STATUS from the payload
+'''
+
 #!/usr/bin/env python3
 import sys
 import os

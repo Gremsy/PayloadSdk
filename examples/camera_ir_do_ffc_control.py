@@ -1,3 +1,9 @@
+'''
+ * This sample will show you how to control the FFC in the thermal camera of the payload
+ * 1. Set/Get FFC mode: Auto / Manual
+ * 2. Trigger FFC, you will hear the "click" from the camera 
+'''
+
 #!/usr/bin/env python3
 import sys
 import os

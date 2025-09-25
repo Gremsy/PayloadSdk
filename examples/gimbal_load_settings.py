@@ -77,10 +77,10 @@ def main():
     my_payload.getPayloadGimbalSettingList()
     
     # Request to read a specific param by index
-    my_payload.getPayloadGimbalSettingByIndex(0)
+    # my_payload.getPayloadGimbalSettingByIndex(0)
 
     # Request to read a specific param by ID
-    my_payload.getPayloadGimbalSettingByID("VERSION_X")
+    # my_payload.getPayloadGimbalSettingByID("VERSION_X")
 
     while True:
         time.sleep(10)

@@ -1,3 +1,9 @@
+'''
+ * This sample will show you how to change the gimbal's param
+ * You can refer to the sample load_gimbal_settings.cpp to get all params index and id_string. After that, you can change value for the param correctly.
+ * This sample only support for the Vio and OrusL payload for now 
+'''
+
 #!/usr/bin/env python3
 import sys
 import os
@@ -16,7 +22,7 @@ from payload_sdk import PayloadSdkInterface, payload_status_event_t
 from payload_define import *
 
 my_payload = None
-STIFF_TILT_VALUE = 80.0
+STIFF_TILT_VALUE = 0
 step_num = 0
 
 # Signal handler for quitting

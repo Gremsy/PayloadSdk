@@ -61,10 +61,11 @@ def main():
     time.sleep(1) 
     
     print("Set zoom level to 1x!")
-    if PAYLOAD_TYPE == "GHADRON":
+    if PAYLOAD_TYPE == "MB1":
         my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_FACTOR, payload_camera_video_zoom_factor.ZOOM_EO_1X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32) 
     
     elif PAYLOAD_TYPE in ["VIO", "ZIO"]:
+        my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_MODE, payload_camera_video_zoom_mode.PAYLOAD_CAMERA_VIDEO_ZOOM_MODE_SUPER_RESOLUTION, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
         my_payload.setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, payload_camera_video_zoom_super_resolution_factor.ZOOM_SUPER_RESOLUTION_1X, mavutil.mavlink.MAV_PARAM_TYPE_UINT32)
     time.sleep(3)
     

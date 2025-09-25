@@ -1,3 +1,7 @@
+'''
+ * This sample will send the SYSTEM TIME to the payload
+'''
+
 #!/usr/bin/env python3
 import sys
 import os

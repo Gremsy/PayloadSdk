@@ -1,3 +1,17 @@
+'''
+ * Calibration is very sensitive. Please consider carefully before performing it. 
+ * PLEASE IGNORE THIS SAMPLE IF YOU DO NOT FULLY UNDERSTAND WHAT YOU ARE DOING!!!
+ * 
+ * NOTE: Currently, calibration is only supported for the VIO 360 payload.
+ *
+ * This sample demonstrates how to send commands to perform gimbal calibration:
+ * 1. Calibrate Gyro
+ * 2. Calibrate Accel
+ * 3. Auto Tune
+ * 4. Calibrate Motor
+ * 5. Search Home
+'''
+
 #!/usr/bin/env python3
 import sys
 import os

@@ -1,3 +1,14 @@
+'''
+ * This example wil show you how to execute the object tracking feature on the Payload
+ * Only run this example when connect with the Vio payload for now
+ * This example will:
+ * 1. Change the view mode to EO
+ * 2. Change the Tracking Mode to Object Tracking
+ * 3. Turn the OSD mode to Status
+ * 4. Send some position for the bounding box
+ * 5. Trigger the Object tracking feature Start/Stop
+'''
+
 #!/usr/bin/env python3
 import sys
 import os

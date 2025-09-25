@@ -84,7 +84,6 @@ set(EXAMPLES
     camera_ir_capture_image.cpp
     camera_ir_record_video.cpp
     camera_ir_set_palette.cpp
-    camera_ir_set_isotherms.cpp
     camera_time_lapse_photography.cpp
 
     gimbal_move_angle.cpp

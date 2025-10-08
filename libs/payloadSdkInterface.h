@@ -289,6 +289,11 @@ public:
      **/
     void setPayloadCameraFFCTrigg();
 
+    /**
+     * Set WB trigger
+     **/
+    void setPayloadCameraWBTrigg();
+
     // set stream bitrate
     // bitrate is in bit per second
     void setPayloadStreamBitrate(uint32_t bitrate);

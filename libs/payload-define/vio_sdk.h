@@ -117,6 +117,10 @@ enum _zoom_super_resolution_factor{
     ZOOM_SUPER_RESOLUTION_30X
 };
 
+// EO Zoom Speed
+// values can be set from 0 to 7, step 1
+#define PAYLOAD_CAMERA_EO_ZOOM_SPEED    "C_V_Z_SPD"
+
 // Image freeze
 #define PAYLOAD_CAMERA_EO_FREEZE        "C_V_FREEZE"
 #define PAYLOAD_CAMERA_EO_FREEZE_OFF       3
@@ -146,6 +150,7 @@ enum _zoom_super_resolution_factor{
 #define PAYLOAD_CAMERA_VIDEO_EXPOSURE_SHUTTER               10
 #define PAYLOAD_CAMERA_VIDEO_EXPOSURE_IRIS                  11
 #define PAYLOAD_CAMERA_VIDEO_EXPOSURE_BRIGHT                13
+#define PAYLOAD_CAMERA_VIDEO_EXPOSURE_GAIN                  14
 
 // Shutter speeds
 #define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED              "C_V_SP"
@@ -217,7 +222,7 @@ enum _zoom_super_resolution_factor{
 #define PAYLOAD_CAMERA_EO_APERTURE_F11_0                 5  
 
 // EO Gain in High Sensitivity mode, PAYLOAD_CAMERA_EO_HS = PAYLOAD_CAMERA_EO_HS_ON
-#define PAYLOAD_CAMERA_EO_GAIN_HS           ""
+#define PAYLOAD_CAMERA_EO_GAIN_HS           "C_V_GAIN_HS"
 #define PAYLOAD_CAMERA_EO_GAIN_HS_48DB      17
 #define PAYLOAD_CAMERA_EO_GAIN_HS_45DB      16
 #define PAYLOAD_CAMERA_EO_GAIN_HS_42DB      15
@@ -237,7 +242,7 @@ enum _zoom_super_resolution_factor{
 #define PAYLOAD_CAMERA_EO_GAIN_HS_0DB      1
 
 // EO Gain in High Sensitivity mode, PAYLOAD_CAMERA_EO_HS = PAYLOAD_CAMERA_EO_HS_OFF
-#define PAYLOAD_CAMERA_EO_GAIN_LS           ""
+#define PAYLOAD_CAMERA_EO_GAIN_LS           "C_V_GAIN_LS"
 #define PAYLOAD_CAMERA_EO_GAIN_LS_36DB      13
 #define PAYLOAD_CAMERA_EO_GAIN_LS_33DB      12
 #define PAYLOAD_CAMERA_EO_GAIN_LS_30DB      11
@@ -284,6 +289,10 @@ enum _zoom_super_resolution_factor{
 
 // EO Manual focus value can be set from 0 to 61440, step 10
 #define PAYLOAD_CAMERA_VIDEO_FOCUS_VALUE              "C_V_FV"
+
+// EO Focus Speed
+// values can be set from 0 to 7, step 1
+#define PAYLOAD_CAMERA_EO_FOCUS_SPEED    "C_V_F_SPD"
 
 // EO ICR modes
 #define PAYLOAD_CAMERA_EO_ICR_MODE      "C_V_ICR"

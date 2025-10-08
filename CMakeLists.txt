@@ -46,6 +46,7 @@ add_subdirectory(examples)
 if (VIO)
 add_subdirectory(tests/demo_project)
 add_subdirectory(tests/parse_thermal_stream)
+add_subdirectory(tests/ui_demo)
 endif(VIO)
 
 if (ORUSL)

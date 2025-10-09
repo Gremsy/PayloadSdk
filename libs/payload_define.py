@@ -117,6 +117,10 @@ class payload_camera_video_zoom_super_resolution_factor(IntEnumBase):
     ZOOM_SUPER_RESOLUTION_20X =                                         10
     ZOOM_SUPER_RESOLUTION_30X =                                         11
 
+# EO Zoom Speed
+# values can be set from 0 to 7, step 1
+PAYLOAD_CAMERA_EO_ZOOM_SPEED            =                               "C_V_Z_SPD"
+
 # Image freeze
 PAYLOAD_CAMERA_EO_FREEZE                =                               "C_V_FREEZE"
 class payload_camera_eo_freeze(IntEnumBase):
@@ -225,6 +229,44 @@ class payload_camera_video_aperture_value(IntEnumBase):
     PAYLOAD_CAMERA_EO_APERTURE_F10_0        =                           6
     PAYLOAD_CAMERA_EO_APERTURE_F11_0        =                           5
 
+# EO Gain in High Sensitivity mode, PAYLOAD_CAMERA_EO_HS = PAYLOAD_CAMERA_EO_HS_ON
+PAYLOAD_CAMERA_EO_GAIN_HS                   =                           "C_V_GAIN_HS"
+class payload_camera_eo_gain_hs(IntEnumBase):
+    PAYLOAD_CAMERA_EO_GAIN_HS_48DB          =                           17
+    PAYLOAD_CAMERA_EO_GAIN_HS_45DB          =                           16
+    PAYLOAD_CAMERA_EO_GAIN_HS_42DB          =                           15
+    PAYLOAD_CAMERA_EO_GAIN_HS_39DB          =                           14
+    PAYLOAD_CAMERA_EO_GAIN_HS_36DB          =                           13
+    PAYLOAD_CAMERA_EO_GAIN_HS_33DB          =                           12
+    PAYLOAD_CAMERA_EO_GAIN_HS_30DB          =                           11
+    PAYLOAD_CAMERA_EO_GAIN_HS_27DB          =                           10
+    PAYLOAD_CAMERA_EO_GAIN_HS_24DB          =                           9
+    PAYLOAD_CAMERA_EO_GAIN_HS_21DB          =                           8
+    PAYLOAD_CAMERA_EO_GAIN_HS_18DB          =                           7
+    PAYLOAD_CAMERA_EO_GAIN_HS_15DB          =                           6
+    PAYLOAD_CAMERA_EO_GAIN_HS_12DB          =                           5
+    PAYLOAD_CAMERA_EO_GAIN_HS_9DB           =                           4
+    PAYLOAD_CAMERA_EO_GAIN_HS_6DB           =                           3
+    PAYLOAD_CAMERA_EO_GAIN_HS_3DB           =                           2
+    PAYLOAD_CAMERA_EO_GAIN_HS_0DB           =                           1
+
+# EO Gain in High Sensitivity mode, PAYLOAD_CAMERA_EO_HS = PAYLOAD_CAMERA_EO_HS_OFF
+PAYLOAD_CAMERA_EO_GAIN_LS                   =                           "C_V_GAIN_LS"
+class payload_camera_eo_gain_ls(IntEnumBase):
+    PAYLOAD_CAMERA_EO_GAIN_LS_36DB          =                           13
+    PAYLOAD_CAMERA_EO_GAIN_LS_33DB          =                           12
+    PAYLOAD_CAMERA_EO_GAIN_LS_30DB          =                           11
+    PAYLOAD_CAMERA_EO_GAIN_LS_27DB          =                           10
+    PAYLOAD_CAMERA_EO_GAIN_LS_24DB          =                           9
+    PAYLOAD_CAMERA_EO_GAIN_LS_21DB          =                           8
+    PAYLOAD_CAMERA_EO_GAIN_LS_18DB          =                           7
+    PAYLOAD_CAMERA_EO_GAIN_LS_15DB          =                           6
+    PAYLOAD_CAMERA_EO_GAIN_LS_12DB          =                           5
+    PAYLOAD_CAMERA_EO_GAIN_LS_9DB           =                           4
+    PAYLOAD_CAMERA_EO_GAIN_LS_6DB           =                           3
+    PAYLOAD_CAMERA_EO_GAIN_LS_3DB           =                           2
+    PAYLOAD_CAMERA_EO_GAIN_LS_0DB           =                           1
+
 # EO white-balance modes
 PAYLOAD_CAMERA_VIDEO_WHITE_BALANCE              =                       "C_V_WB"
 class payload_camera_video_white_balance(IntEnumBase):
@@ -252,6 +294,10 @@ class payload_camera_video_focus_mode(IntEnumBase):
 
 # EO Manual focus value can be set from 0 to 61440, step 10
 PAYLOAD_CAMERA_VIDEO_FOCUS_VALUE            =                           "C_V_FV"
+
+# EO Focus Speed
+# values can be set from 0 to 7, step 1
+PAYLOAD_CAMERA_EO_FOCUS_SPEED               =                           "C_V_F_SPD"
 
 # EO ICR modes
 PAYLOAD_CAMERA_EO_ICR_MODE                  =                           "C_V_ICR"

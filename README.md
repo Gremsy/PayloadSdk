@@ -34,7 +34,12 @@ cd PayloadSdk
 
 #### Install required system dependencies
 ```bash
-sudo apt install -y libxml2-dev libxslt-dev python3-dev gobject-introspection libgirepository1.0-dev libcairo2-dev libglib2.0-dev pkg-config meson ninja-build gir1.2-gtk-3.0 libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+sudo apt-get install libxml2-dev libxslt-dev
+sudo apt-get install python3-dev gobject-introspection libgirepository1.0-dev
+sudo apt-get install libcairo2-dev libglib2.0-dev gir1.2-gtk-3.0 libgtkmm-3.0-dev
+sudo apt-get install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+sudo apt-get install pkg-config meson ninja-build
+sudo apt-get install libcurl4-openssl-dev libjsoncpp-dev
 ```
 
 ### 2. Setup Python Environment

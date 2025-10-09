@@ -971,6 +971,22 @@ class PayloadSdkInterface:
             0                                
         )
 
+    # Set WB trigger.
+    def setPayloadCameraWBTrigg(self) -> None:
+        self.master.mav.command_long_send(
+            self.payload_system_id,          
+            self.payload_component_id,       
+            mavutil.mavlink.MAV_CMD_USER_4,  
+            1,                               
+            2,                               
+            8,                               
+            0,                               
+            0,                               
+            0,                               
+            0,                               
+            0                                
+        )    
+
     ''' GPS methods '''
     # Send the GPS RAW information to the payload.
     def sendPayloadGPSRawInt(self, gps_raw: mavlink_gps_raw_int_t) -> None:

@@ -2,21 +2,51 @@
 
 
 PayloadSettingsTab::PayloadSettingsTab() : Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 10) {
-    set_margin_top(10);
-    set_margin_bottom(10);
     set_margin_start(10);
     set_margin_end(10);
 
-    // Create main groups
-    pack_start(*create_payload_setting_main_group(), Gtk::PACK_SHRINK);
-    pack_start(*create_camera_setting_main_group(), Gtk::PACK_SHRINK);
-    pack_start(*create_gimbal_setting_main_group(), Gtk::PACK_SHRINK);
-    pack_start(*create_info_show_main_group(), Gtk::PACK_SHRINK);
+    // Initialize GStreamer
+    if (!gst_is_initialized()) {
+        gst_init(nullptr, nullptr);
+    }
 
-    // query_payload_param();
-    Glib::signal_idle().connect_once([this]() {
-        query_payload_param();
-    });
+    pack_start(*create_main_tab(), Gtk::PACK_SHRINK);
+
+}
+
+PayloadSettingsTab::~PayloadSettingsTab() {
+    cleanup_gstreamer();
+}
+
+Gtk::Widget* 
+PayloadSettingsTab::
+create_main_tab(){
+    auto frame = Gtk::make_managed<Gtk::Frame>();
+    frame->set_size_request(-1, -1);
+    frame->set_halign(Gtk::ALIGN_START);
+    frame->set_valign(Gtk::ALIGN_START);
+
+    auto mainbox = Gtk::make_managed<Gtk::Box>(Gtk::ORIENTATION_HORIZONTAL, 10);
+    mainbox->set_margin_top(10);
+    mainbox->set_margin_bottom(10);
+    mainbox->set_margin_start(10);
+    mainbox->set_margin_end(10);
+
+    auto box_1 = Gtk::make_managed<Gtk::Box>(Gtk::ORIENTATION_VERTICAL, 10);
+
+    box_1->pack_start(*create_video_interface(), Gtk::PACK_SHRINK);
+    box_1->pack_start(*create_payload_setting_main_group(), Gtk::PACK_SHRINK);
+
+    auto box_2 = Gtk::make_managed<Gtk::Box>(Gtk::ORIENTATION_HORIZONTAL, 10);
+    box_2->pack_start(*create_camera_setting_main_group(), Gtk::PACK_SHRINK);
+    box_2->pack_start(*create_gimbal_setting_main_group(), Gtk::PACK_SHRINK);
+    box_2->pack_start(*create_info_show_main_group(), Gtk::PACK_SHRINK);
+
+    mainbox->pack_start(*box_1, Gtk::PACK_EXPAND_WIDGET);
+    mainbox->pack_start(*box_2, Gtk::PACK_EXPAND_WIDGET);
+
+    frame->add(*mainbox);
+    return frame;
 
 }
 
@@ -24,19 +54,26 @@ PayloadSettingsTab::PayloadSettingsTab() : Gtk::Box(Gtk::ORIENTATION_HORIZONTAL,
 Gtk::Widget* 
 PayloadSettingsTab::
 create_payload_setting_main_group() {
-    auto frame = Gtk::make_managed<Gtk::Frame>("Payload Setting");
+    auto frame = Gtk::make_managed<Gtk::Frame>();
     this->signal_size_allocate().connect([frame](Gtk::Allocation& alloc){
         int parent_width = alloc.get_width();
-        frame->set_size_request(parent_width * 0.20, 50);
+        frame->set_size_request(parent_width * 0.35, 50);
     });
-    frame->set_halign(Gtk::ALIGN_END);
+    frame->set_halign(Gtk::ALIGN_START);
     frame->set_valign(Gtk::ALIGN_START);
 
-    auto box = Gtk::make_managed<Gtk::Box>(Gtk::ORIENTATION_VERTICAL, 10);
-    box->set_margin_top(10);
-    box->set_margin_bottom(10);
-    box->set_margin_start(10);
-    box->set_margin_end(10);
+    auto mainbox = Gtk::make_managed<Gtk::Box>(Gtk::ORIENTATION_HORIZONTAL, 10);
+    mainbox->set_margin_top(10);
+    mainbox->set_margin_bottom(10);
+    mainbox->set_margin_start(10);
+    mainbox->set_margin_end(10);
+
+    auto box_1 = Gtk::make_managed<Gtk::Box>(Gtk::ORIENTATION_VERTICAL, 10);
+    box_1->set_margin_top(10);
+    box_1->set_margin_bottom(10);
+    box_1->set_margin_start(10);
+    box_1->set_margin_end(10);
+    
     
     auto cam_frame = Gtk::make_managed<Gtk::Frame>();
 
@@ -51,14 +88,23 @@ create_payload_setting_main_group() {
 
     cam_frame->add(*hbox);
 
-    box->pack_start(*cam_frame, Gtk::PACK_SHRINK);
+    box_1->pack_start(*cam_frame, Gtk::PACK_SHRINK);
+    box_1->pack_start(*create_capture_record_group(), Gtk::PACK_SHRINK);
 
-    box->pack_start(*create_capture_record_group(), Gtk::PACK_SHRINK);
-    box->pack_start(*create_lrf_mode_group(), Gtk::PACK_SHRINK);
-    box->pack_start(*create_osd_mode_group(), Gtk::PACK_SHRINK);
-    box->pack_start(*create_image_flip_group(), Gtk::PACK_SHRINK);
+    auto box_2 = Gtk::make_managed<Gtk::Box>(Gtk::ORIENTATION_VERTICAL, 10);
+    box_2->set_margin_top(10);
+    box_2->set_margin_bottom(10);
+    box_2->set_margin_start(10);
+    box_2->set_margin_end(10);
 
-    frame->add(*box);
+    box_2->pack_start(*create_lrf_mode_group(), Gtk::PACK_SHRINK);
+    box_2->pack_start(*create_osd_mode_group(), Gtk::PACK_SHRINK);
+    box_2->pack_start(*create_image_flip_group(), Gtk::PACK_SHRINK);
+
+    mainbox->pack_start(*box_1, Gtk::PACK_SHRINK);
+    mainbox->pack_start(*box_2, Gtk::PACK_EXPAND_WIDGET);
+
+    frame->add(*mainbox);
     return frame;
 }
 
@@ -69,7 +115,7 @@ create_camera_setting_main_group() {
     auto frame = Gtk::make_managed<Gtk::Frame>("Camera Setting");
     this->signal_size_allocate().connect([frame](Gtk::Allocation& alloc){
         int parent_width = alloc.get_width();
-        frame->set_size_request(parent_width * 0.20, -1);
+        frame->set_size_request(parent_width * 0.15, -1);
     });
     frame->set_halign(Gtk::ALIGN_START);
     frame->set_valign(Gtk::ALIGN_START);
@@ -96,7 +142,7 @@ create_gimbal_setting_main_group() {
     auto frame = Gtk::make_managed<Gtk::Frame>("Gimbal Setting");
     this->signal_size_allocate().connect([frame](Gtk::Allocation& alloc){
         int parent_width = alloc.get_width();
-        frame->set_size_request(parent_width * 0.20, 50);
+        frame->set_size_request(parent_width * 0.15, 50);
     });
     frame->set_halign(Gtk::ALIGN_START);
     frame->set_valign(Gtk::ALIGN_START);
@@ -121,7 +167,7 @@ create_info_show_main_group() {
     auto frame = Gtk::make_managed<Gtk::Frame>("Payload Info");
     this->signal_size_allocate().connect([frame](Gtk::Allocation& alloc){
         int parent_width = alloc.get_width();
-        frame->set_size_request(parent_width * 0.20, 50);
+        frame->set_size_request(parent_width * 0.15, 50);
     });
     frame->set_halign(Gtk::ALIGN_END);
     frame->set_valign(Gtk::ALIGN_START);
@@ -319,13 +365,24 @@ PayloadSettingsTab::
 create_ir_palette_group() {
     auto frame = Gtk::make_managed<Gtk::Frame>("IR Camera");
 
-    auto box = Gtk::make_managed<Gtk::Box>(Gtk::ORIENTATION_HORIZONTAL, 5);
+    auto box = Gtk::make_managed<Gtk::Box>(Gtk::ORIENTATION_VERTICAL, 5);
     box->set_margin_top(10);
     box->set_margin_bottom(10);
     box->set_margin_start(10);
     box->set_margin_end(10);
 
     box->pack_start(*create_combo_box(ir_palette_combo, "Palette", ir_palette_list, sizeof(ir_palette_list)/sizeof(ir_palette_list[0]), CAM_IR_PALETTE), Gtk::PACK_EXPAND_WIDGET);
+
+    auto hbox = Gtk::make_managed<Gtk::Box>(Gtk::ORIENTATION_HORIZONTAL, 5);
+    hbox->set_margin_top(10);
+    hbox->set_margin_bottom(10);
+    hbox->set_margin_start(10);
+    hbox->set_margin_end(10);
+    
+    hbox->pack_start(*create_combo_box(ffc_mode_combo, "FFC Mode", ffc_mode_list, sizeof(ffc_mode_list)/sizeof(ffc_mode_list[0]), CAM_IR_FFC_MODE), Gtk::PACK_EXPAND_WIDGET);
+    add_button_to_box(*hbox, "FFC Trigger", CAM_IR_FFC_TRIGGER, 1.0);
+
+    box->pack_start(*hbox, Gtk::PACK_EXPAND_WIDGET);
 
     frame->add(*box);
     return frame;
@@ -386,8 +443,6 @@ Gtk::Widget*
 PayloadSettingsTab::
 create_info_row(const std::string& title, Gtk::Label*& label) {
     auto box = Gtk::make_managed<Gtk::Box>(Gtk::ORIENTATION_HORIZONTAL, 5);
-    // box->set_margin_top(5);
-    // box->set_margin_bottom(5);
 
     // Title label
     auto title_label = Gtk::make_managed<Gtk::Label>(title);
@@ -399,7 +454,6 @@ create_info_row(const std::string& title, Gtk::Label*& label) {
     // Value label
     label = Gtk::make_managed<Gtk::Label>("---");
     label->set_halign(Gtk::ALIGN_START);
-    // label->set_markup("<span color='blue'>N/A</span>");
     label->set_markup("---");
     box->pack_start(*label, Gtk::PACK_EXPAND_WIDGET);
 
@@ -593,13 +647,428 @@ create_gimbal_control_angle_group() {
     return frame;
 }
 
+Gtk::Widget*  
+PayloadSettingsTab::
+create_video_interface() {
+    auto frame = Gtk::make_managed<Gtk::Frame>();
+    this->signal_size_allocate().connect([frame](Gtk::Allocation& alloc){
+        int parent_width = alloc.get_width();
+        frame->set_size_request(parent_width * 0.35, 50);
+    });
+    frame->set_halign(Gtk::ALIGN_START);
+    frame->set_valign(Gtk::ALIGN_START);
+
+    auto box = Gtk::make_managed<Gtk::Box>(Gtk::ORIENTATION_VERTICAL, 10);
+    box->set_margin_top(10);
+    box->set_margin_bottom(10);
+    box->set_margin_start(10);
+    box->set_margin_end(10);
+
+    // URL input section
+    auto url_frame = Gtk::make_managed<Gtk::Frame>("RTSP URL");
+    auto url_box = Gtk::make_managed<Gtk::Box>(Gtk::ORIENTATION_HORIZONTAL, 10);
+    url_box->set_margin_top(10);
+    url_box->set_margin_bottom(10);
+    url_box->set_margin_start(10);
+    url_box->set_margin_end(10);
+
+    // URL entry
+    url_entry = Gtk::make_managed<Gtk::Entry>();
+    url_entry->set_placeholder_text("rtsp://example.com:554/stream");
+    url_entry->set_text("rtsp://192.168.55.1:8554/payload"); // Default
+    url_entry->signal_activate().connect(sigc::mem_fun(*this, &PayloadSettingsTab::on_url_entry_activate));
+    url_box->pack_start(*url_entry, Gtk::PACK_EXPAND_WIDGET);
+
+    // Control buttons
+    play_button = Gtk::make_managed<Gtk::Button>("Play");
+    stop_button = Gtk::make_managed<Gtk::Button>("Stop");
+    
+    play_button->signal_clicked().connect(sigc::mem_fun(*this, &PayloadSettingsTab::on_play_button_clicked));
+    stop_button->signal_clicked().connect(sigc::mem_fun(*this, &PayloadSettingsTab::on_stop_button_clicked));
+    
+    stop_button->set_sensitive(false);
+    
+    url_box->pack_start(*play_button, Gtk::PACK_SHRINK);
+    url_box->pack_start(*stop_button, Gtk::PACK_SHRINK);
+    
+    url_frame->add(*url_box);
+    box->pack_start(*url_frame, Gtk::PACK_SHRINK);
+
+    // Video display area
+    auto video_frame = Gtk::make_managed<Gtk::Frame>();
+    video_area = Gtk::make_managed<Gtk::DrawingArea>();
+    video_area->set_size_request(640, 360); // 16:9 ratio (640x360)
+    video_area->set_double_buffered(false);
+    
+    // Set aspect ratio constraint
+    video_area->set_vexpand(true);
+    video_area->set_hexpand(true);
+    
+    video_area->signal_draw().connect(sigc::mem_fun(*this, &PayloadSettingsTab::on_video_area_draw));
+    video_area->signal_realize().connect(sigc::mem_fun(*this, &PayloadSettingsTab::on_video_area_realize));
+    video_area->signal_configure_event().connect(sigc::mem_fun(*this, &PayloadSettingsTab::on_video_area_configure_event));
+    video_area->add_events(Gdk::BUTTON_PRESS_MASK);
+    
+    video_frame->add(*video_area);
+    box->pack_start(*video_frame, Gtk::PACK_EXPAND_WIDGET);
+    video_area->signal_button_press_event().connect(sigc::mem_fun(*this, &PayloadSettingsTab::on_video_area_clicked), false);
+
+
+    touch_button = Gtk::make_managed<Gtk::ToggleButton>("Touch");
+    track_button = Gtk::make_managed<Gtk::ToggleButton>("Track");
+
+    auto css_provider = Gtk::CssProvider::create();
+    css_provider->load_from_data(R"(
+        .toggle-off {
+            background: #444;
+            color: white;
+            border-radius: 6px;
+        }
+        .toggle-on {
+            background: #3a9f3a;
+            color: white;
+            border-radius: 6px;
+        }
+    )");
+
+    auto context_touch_button = touch_button->get_style_context();
+    auto context_track_button = track_button->get_style_context();
+
+    context_touch_button->add_provider(css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
+    context_track_button->add_provider(css_provider, GTK_STYLE_PROVIDER_PRIORITY_USER);
+
+    context_touch_button->add_class("toggle-off");
+    context_track_button->add_class("toggle-off");
+
+    touch_button->signal_toggled().connect([this]() {
+        auto ctx = touch_button->get_style_context();
+        if (touch_button->get_active()) {
+            ctx->remove_class("toggle-off");
+            ctx->add_class("toggle-on");
+            is_touch = true;
+        } else {
+            ctx->remove_class("toggle-on");
+            ctx->add_class("toggle-off");
+            is_touch = false;
+        }
+    });
+
+    track_button->signal_toggled().connect([this]() {
+        auto ctx = track_button->get_style_context();
+        if (track_button->get_active()) {
+            double params[1] = {1.0};
+            on_button_clicked(PAYLOAD_TRACK, params);
+        } 
+        else {
+            double params[1] = {0.0};
+            on_button_clicked(PAYLOAD_TRACK, params);
+        }
+    });
+
+    auto hbox = Gtk::make_managed<Gtk::Box>(Gtk::ORIENTATION_HORIZONTAL, 10);
+    box->set_margin_top(10);
+    box->set_margin_bottom(10);
+    box->set_margin_start(10);
+    box->set_margin_end(10);
+
+    hbox->pack_start(*touch_button, Gtk::PACK_EXPAND_WIDGET);
+    hbox->pack_start(*track_button, Gtk::PACK_EXPAND_WIDGET);
+    hbox->pack_start(*create_combo_box(track_mode_combo, "", track_mode_list, sizeof(track_mode_list)/sizeof(track_mode_list[0]), PAYLOAD_TRACK_MODE), Gtk::PACK_EXPAND_WIDGET);
+    
+    box->pack_start(*hbox, Gtk::PACK_EXPAND_WIDGET);
+
+    frame->add(*box);
+    return frame;
+}
+
+void 
+PayloadSettingsTab::
+setup_gstreamer_pipeline() {
+    std::string url = url_entry->get_text();
+    std::string pipeline_str =
+        "rtspsrc location=" + url + " latency=200 ! decodebin ! videoconvert ! xvimagesink name=vsink sync=false force-aspect-ratio=true";
+
+    GError* error = nullptr;
+    pipeline = gst_parse_launch(pipeline_str.c_str(), &error);
+    if (!pipeline || error) {
+        std::string err_msg = "Failed to create pipeline: ";
+        if (error) {
+            err_msg += error->message;
+            g_error_free(error);
+        }
+        pipeline = nullptr;
+        return;
+    }
+
+    videosink = gst_bin_get_by_name(GST_BIN(pipeline), "vsink");
+    if (!videosink) {
+        return;
+    }
+
+    // Setup bus for message handling
+    bus = gst_element_get_bus(pipeline);
+    gst_bus_add_watch(bus, on_bus_message, this);
+}
+
+void 
+PayloadSettingsTab::
+play_stream(const std::string& rtsp_url) {
+    if (is_playing) {
+        stop_stream();
+    }
+
+    cleanup_gstreamer();
+    setup_gstreamer_pipeline();
+
+    if (!pipeline) {
+        return;
+    }
+
+    // Set video overlay
+    if (video_window_handle != 0) {
+        gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(videosink), video_window_handle);
+    }
+
+    // Start playing
+    GstStateChangeReturn ret = gst_element_set_state(pipeline, GST_STATE_PLAYING);
+    if (ret == GST_STATE_CHANGE_FAILURE) {
+        cleanup_gstreamer();
+        return;
+    }
+
+    is_playing = true;
+    play_button->set_sensitive(false);
+    stop_button->set_sensitive(true);
+    url_entry->set_sensitive(false);
+}
+
+void 
+PayloadSettingsTab::
+stop_stream() {
+    if (pipeline) {
+        gst_element_set_state(pipeline, GST_STATE_NULL);
+    }
+    
+    cleanup_gstreamer();
+    
+    is_playing = false;
+    play_button->set_sensitive(true);
+    stop_button->set_sensitive(false);
+    url_entry->set_sensitive(true);
+    
+    // Clear video area
+    video_area->queue_draw();
+}
+
+void 
+PayloadSettingsTab::
+cleanup_gstreamer() {
+    if (bus) {
+        gst_object_unref(bus);
+        bus = nullptr;
+    }
+    
+    if (pipeline) {
+        gst_element_set_state(pipeline, GST_STATE_NULL);
+        gst_object_unref(pipeline);
+        pipeline = nullptr;
+    }
+    
+    source = nullptr;
+    depay = nullptr;
+    decoder = nullptr;
+    videoconvert = nullptr;
+    videosink = nullptr;
+}
+
+void 
+PayloadSettingsTab::
+on_play_button_clicked() {
+    std::string url = url_entry->get_text();
+    if (url.empty()) {
+        return;
+    }
+    
+    play_stream(url);
+}
+
+void 
+PayloadSettingsTab::
+on_stop_button_clicked() {
+    stop_stream();
+}
+
+void 
+PayloadSettingsTab::
+on_url_entry_activate() {
+    on_play_button_clicked();
+}
+
+bool 
+PayloadSettingsTab::
+on_video_area_draw(const Cairo::RefPtr<Cairo::Context>& cr) {
+    if (!is_playing) {
+        // Draw placeholder when not playing
+        Gtk::Allocation allocation = video_area->get_allocation();
+        const int width = allocation.get_width();
+        const int height = allocation.get_height();
+
+        // Fill with black background
+        cr->set_source_rgb(0.0, 0.0, 0.0);
+        cr->rectangle(0, 0, width, height);
+        cr->fill();
+
+        // Draw text
+        cr->set_source_rgb(0.7, 0.7, 0.7);
+        cr->select_font_face("Sans", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_NORMAL);
+        cr->set_font_size(16);
+        
+        std::string text = "No video stream";
+        Cairo::TextExtents text_extents;
+        cr->get_text_extents(text, text_extents);
+        
+        cr->move_to((width - text_extents.width) / 2, (height + text_extents.height) / 2);
+        cr->show_text(text);
+    }
+    
+    return true;
+}
+
+void 
+PayloadSettingsTab::
+on_video_area_realize() {
+    // Get window handle for video overlay
+    GdkWindow* window = video_area->get_window()->gobj();
+    if (GDK_IS_X11_WINDOW(window)) {
+        video_window_handle = GDK_WINDOW_XID(window);
+    }
+}
+
+gboolean 
+PayloadSettingsTab::
+on_bus_message(GstBus* bus, GstMessage* message, gpointer user_data) {
+    PayloadSettingsTab* self = static_cast<PayloadSettingsTab*>(user_data);
+    
+    switch (GST_MESSAGE_TYPE(message)) {
+        case GST_MESSAGE_ERROR: {
+            GError* err;
+            gchar* debug_info;
+            gst_message_parse_error(message, &err, &debug_info);
+            
+            std::string error_msg = "Error: " + std::string(err->message);
+            if (debug_info) {
+                error_msg += "\nDebug: " + std::string(debug_info);
+            }
+            
+            g_clear_error(&err);
+            g_free(debug_info);
+            
+            // Stop on error
+            Glib::signal_idle().connect_once([self]() {
+                self->stop_stream();
+            });
+            break;
+        }
+        case GST_MESSAGE_EOS:
+            Glib::signal_idle().connect_once([self]() {
+                self->stop_stream();
+            });
+            break;
+        case GST_MESSAGE_STATE_CHANGED: {
+            if (GST_MESSAGE_SRC(message) == GST_OBJECT(self->pipeline)) {
+                GstState old_state, new_state, pending_state;
+                gst_message_parse_state_changed(message, &old_state, &new_state, &pending_state);
+            }
+            break;
+        }
+        default:
+            break;
+    }
+    
+    return TRUE;
+}
+
+void 
+PayloadSettingsTab::
+on_pad_added(GstElement* element, GstPad* pad, gpointer user_data) {
+    PayloadSettingsTab* self = static_cast<PayloadSettingsTab*>(user_data);
+    
+    GstPad* sink_pad = gst_element_get_static_pad(self->depay, "sink");
+    if (gst_pad_is_linked(sink_pad)) {
+        gst_object_unref(sink_pad);
+        return;
+    }
+    
+    GstCaps* new_pad_caps = gst_pad_get_current_caps(pad);
+    GstStructure* new_pad_struct = gst_caps_get_structure(new_pad_caps, 0);
+    const gchar* new_pad_type = gst_structure_get_name(new_pad_struct);
+    
+    if (g_str_has_prefix(new_pad_type, "application/x-rtp")) {
+        GstPadLinkReturn ret = gst_pad_link(pad, sink_pad);
+    }
+    
+    if (new_pad_caps != nullptr) {
+        gst_caps_unref(new_pad_caps);
+    }
+    gst_object_unref(sink_pad);
+}
+
+void 
+PayloadSettingsTab::
+maintain_aspect_ratio(int& width, int& height) {
+    const double aspect_ratio = 16.0 / 9.0;
+    double current_ratio = static_cast<double>(width) / height;
+    
+    if (current_ratio > aspect_ratio) {
+        // Too wide, adjust width
+        width = static_cast<int>(height * aspect_ratio);
+    } else {
+        // Too tall, adjust height
+        height = static_cast<int>(width / aspect_ratio);
+    }
+}
+
+bool 
+PayloadSettingsTab::
+on_video_area_configure_event(GdkEventConfigure* event) {
+    if (!video_area) return false;
+    
+    int width = event->width;
+    int height = event->height;
+    
+    // Maintain 16:9 aspect ratio
+    maintain_aspect_ratio(width, height);
+    
+    // Resize the drawing area if needed
+    if (width != event->width || height != event->height) {
+        video_area->set_size_request(width, height);
+    }
+    
+    return true;
+} 
+
+bool 
+PayloadSettingsTab::
+on_video_area_clicked(GdkEventButton* event){
+    if (is_touch && is_playing) {
+        double x_screen = event->x;
+        double y_screen = event->y;
+        int width = video_area->get_allocated_width();
+        int height = video_area->get_allocated_height();
+
+        double x_send = x_screen / width * 1920;
+        double y_send = y_screen / height * 1080;
+
+        double params[2] = {x_send, y_send};
+        on_button_clicked(PAYLOAD_TOUCH, params);
+    }
+    return true;
+}
+
 Gtk::Widget* 
 PayloadSettingsTab::
 create_combo_box(Gtk::ComboBoxText*& combo, const std::string& title, const list_struct_t* buttons, int size, _index_notify index) {
-
     auto box = Gtk::make_managed<Gtk::Box>(Gtk::ORIENTATION_HORIZONTAL, 5);
-    box->set_margin_top(10);
-    box->set_margin_bottom(10);
     box->set_margin_start(10);
     box->set_margin_end(10);
     box->pack_start(*Gtk::make_managed<Gtk::Label>(title), Gtk::PACK_SHRINK);
@@ -747,34 +1216,65 @@ sigc::signal<void, _index_notify, double*> PayloadSettingsTab::signal_button_cli
 
 void
 PayloadSettingsTab::
-update_storage_info(int status, double total, double used, double available){
-    if (storage_info != nullptr) {
-        if(status == 0){
-            storage_info->set_markup("No SD Card");
-        }
-        else{
-            char buf_text[256] = {0};
-            sprintf(buf_text, "%.2f GB free of %.2f GB", available/1024.0, total/1024.0);
-            storage_info->set_markup(buf_text);
+send_connected(){
+    Glib::signal_idle().connect_once([this]() {
+        query_payload_param();
+    });
+}
 
+void
+PayloadSettingsTab::
+send_disconnected(){
+    if(is_playing == true) stop_stream();
+}
+
+void
+PayloadSettingsTab::
+update_storage_info(int status, double total, double used, double available){
+    Glib::signal_idle().connect_once([this, status, total, available]() {
+        if (!storage_info) return;
+
+        if (status == 0) {
+            storage_info->set_markup("No SD Card");
+        } else {
+            char buf_text[256];
+            snprintf(buf_text, sizeof(buf_text), "%.2f GB free of %.2f GB", available / 1024.0, total / 1024.0);
+            storage_info->set_markup(buf_text);
         }
-    }
+    });
 }
 
 void
 PayloadSettingsTab::
 update_capture_info(int img_status, int video_status, int img_count, int rec_time_ms){
     rec_status = video_status;
-    if (capture_info != nullptr) {
-        char buf_text[256] = {0};
-        sprintf(buf_text, "%d", img_count);
-        capture_info->set_markup(buf_text);
-    }
-    if (record_info != nullptr) {
-        char buf_text[256] = {0};
-        sprintf(buf_text, "%02d:%02d:%02d", (rec_time_ms/1000)/3600, ((rec_time_ms/1000)/3600)/60, (rec_time_ms/1000)%60);
-        record_info->set_markup(buf_text);
-    }
+    Glib::signal_idle().connect_once([this, img_count, rec_time_ms]() {
+        if (capture_info) {
+            char buf_text[64];
+            snprintf(buf_text, sizeof(buf_text), "%d", img_count);
+            capture_info->set_markup(buf_text);
+        }
+
+        if (record_info) {
+            char buf_text[64];
+            snprintf(buf_text, sizeof(buf_text), "%02d:%02d:%02d",
+                     (rec_time_ms / 1000) / 3600,
+                     ((rec_time_ms / 1000) % 3600) / 60,
+                     (rec_time_ms / 1000) % 60);
+            record_info->set_markup(buf_text);
+        }
+    });
+}
+
+void
+PayloadSettingsTab::
+update_url_streaming(const char* url){
+    if(url_entry == nullptr) return;
+    std::string text = url;
+    Glib::signal_idle().connect_once([this, text]() {
+        url_entry->set_text(text);
+        play_stream(text);
+    });
 }
 
 void
@@ -900,6 +1400,7 @@ update_payload_status(double* params){
                     else if(_value == 1) ir_ffc_mode_info->set_markup("Auto");
                     else ir_ffc_mode_info->set_markup("---");
                 }
+                update_combo_by_value(ffc_mode_combo, ffc_mode_list, sizeof(ffc_mode_list)/sizeof(ffc_mode_list[0]), _value);
                 break;
             }
             case PARAM_IR_TEMP_MAX:{
@@ -998,11 +1499,42 @@ update_payload_status(double* params){
                 }
                 break;
             }
+            case PARAM_TRACK_POS_X:{
+                
+                break;
+            }
+            case PARAM_TRACK_POS_Y:{
+                
+                break;
+            }
+            case PARAM_TRACK_POS_W:{
+                
+                break;
+            }
+            case PARAM_TRACK_POS_H:{
+                
+                break;
+            }
+            case PARAM_TRACK_STATUS:{
+                is_track = ((int)_value >> 8 & 0xff);
+                if(track_button != nullptr){
+                    auto ctx = track_button->get_style_context();
+                    if (is_track == 1) {
+                        ctx->remove_class("toggle-off");
+                        ctx->add_class("toggle-on");
+                    }
+                    else if (is_track == 0) {
+                        ctx->remove_class("toggle-on");
+                        ctx->add_class("toggle-off");
+                    }
+                }
+                break;
+            }
+
             default: break;
         }
     });
 }
-
 
 void
 PayloadSettingsTab::
@@ -1051,6 +1583,9 @@ update_payload_param(char* index, double value){
         }
         else if(_index == PAYLOAD_CAMERA_VIDEO_FLIP){
             update_combo_by_value(image_flip_combo, image_flip_list, sizeof(image_flip_list)/sizeof(image_flip_list[0]), _value);
+        }
+        else if(_index == PAYLOAD_CAMERA_TRACKING_MODE){
+            update_combo_by_value(track_mode_combo, track_mode_list, sizeof(track_mode_list)/sizeof(track_mode_list[0]), _value);
         }
         else if(_index == PAYLOAD_CAMERA_GIMBAL_MODE){
             // do nothing

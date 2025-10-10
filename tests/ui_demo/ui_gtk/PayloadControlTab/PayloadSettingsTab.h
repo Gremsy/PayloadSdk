@@ -8,6 +8,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <gst/video/videooverlay.h>
+#include <gst/gst.h>
+#include <gdk/gdkx.h>
 
 #include "payloadSdkInterface.h"
 #include "vio_sdk.h"
@@ -31,13 +34,20 @@ enum _index_notify{
     CAM_WHITE_BALANCE,
     CAM_WHITE_BALANCE_TRIGGER,
     CAM_IR_PALETTE,
+    CAM_IR_FFC_MODE,
+    CAM_IR_FFC_TRIGGER,
     CAM_LRF_MODE,
     CAM_OSD_MODE,
     CAM_IMAGE_FLIP,
+    PAYLOAD_TRACK_MODE,
+    PAYLOAD_TOUCH,
+    PAYLOAD_TRACK,
     GIMBAL_CONTROL_TILT,
     GIMBAL_CONTROL_PAN,
     GIMBAL_CONTROL_ANGLE,
     GIMBAL_MODE,
+    CONNECT_PAYLOAD,
+    DISCONNECT_PAYLOAD,
     QUERY_PAYLOAD_PARAM
 };
 
@@ -53,23 +63,31 @@ struct list_struct_t {
 class PayloadSettingsTab : public Gtk::Box {
 public:
     PayloadSettingsTab();
+    ~PayloadSettingsTab();
 
     sigc::signal<void, _index_notify, double*> signal_button_clicked();
 
+    void send_connected();
+    void send_disconnected();
+
     void update_storage_info(int status, double total, double used, double available);
     void update_capture_info(int img_status, int video_status, int img_count, int rec_time_ms);
+    void update_url_streaming(const char* url);
 
     void query_payload_param();
     void update_gimbal_attitude(float pitch, float roll, float yaw);
     void update_payload_status(double* params);
     void update_payload_param(char* index, double value);
 
+    void play_stream(const std::string& rtsp_url);
+    void stop_stream();
 
 private:
     sigc::signal<void, _index_notify, double*> m_signal_button_clicked;
 
 
 private:
+    Gtk::Widget* create_main_tab();
     // Group creation methods
     Gtk::Widget* create_payload_setting_main_group();
     Gtk::Widget* create_camera_setting_main_group();
@@ -116,6 +134,23 @@ private:
     void on_angle_gimbal_changed();
     void on_eo_focus_speed_changed();
 
+    Gtk::Widget* create_video_interface();
+    void setup_gstreamer_pipeline();
+    void cleanup_gstreamer();
+    void maintain_aspect_ratio(int& width, int& height);
+    
+    void on_play_button_clicked();
+    void on_stop_button_clicked();
+    void on_url_entry_activate();
+    bool on_video_area_draw(const Cairo::RefPtr<Cairo::Context>& cr);
+    void on_video_area_realize();
+    bool on_video_area_configure_event(GdkEventConfigure* event);
+    bool on_video_area_clicked(GdkEventButton* event);
+    
+    // GStreamer callbacks
+    static gboolean on_bus_message(GstBus* bus, GstMessage* message, gpointer user_data);
+    static void on_pad_added(GstElement* element, GstPad* pad, gpointer user_data);
+
 private:
     Gtk::Scale* eo_zoom_speed_range = nullptr;
     Gtk::Scale* eo_focus_speed_range = nullptr;
@@ -134,10 +169,12 @@ private:
     Gtk::ComboBoxText* gain_combo   = nullptr;
     Gtk::ComboBoxText* wb_mode_combo   = nullptr;
     Gtk::ComboBoxText* ir_palette_combo   = nullptr;
+    Gtk::ComboBoxText* ffc_mode_combo   = nullptr;
     Gtk::ComboBoxText* lrf_mode_combo   = nullptr;
     Gtk::ComboBoxText* osd_mode_combo   = nullptr;
     Gtk::ComboBoxText* image_flip_combo   = nullptr;
     Gtk::ComboBoxText* gimbal_mode_combo   = nullptr;
+    Gtk::ComboBoxText* track_mode_combo   = nullptr;
 
     Gtk::Label* storage_info = nullptr;
     Gtk::Label* capture_info = nullptr;
@@ -285,6 +322,11 @@ private:
         {"Palette 10", 9}
     };
 
+    list_struct_t ffc_mode_list[2] = {
+        {"Manual",  0},
+        {"Auto",    1}
+    };
+
     list_struct_t lrf_mode_list[4] = {
         {"OFF",   3},
         {"1 Hz",  0},
@@ -303,10 +345,38 @@ private:
         {"ON",   2}
     };
 
+    list_struct_t track_mode_list[4] = {
+        {"Tracking",  0},
+        {"Detection", 1}
+    };
+
 
     std::map<Gtk::Button*, sigc::connection> m_button_timers;
     double speed_gimbal = 0.0;
     int rec_status = 0;
+
+    Gtk::Entry* url_entry = nullptr;
+    Gtk::Button* play_button = nullptr;
+    Gtk::Button* stop_button = nullptr;
+    Gtk::ToggleButton* touch_button = nullptr;
+    Gtk::ToggleButton* track_button = nullptr;
+    Gtk::DrawingArea* video_area = nullptr;
+    
+    // GStreamer components
+    GstElement* pipeline = nullptr;
+    GstElement* source = nullptr;
+    GstElement* depay = nullptr;
+    GstElement* decoder = nullptr;
+    GstElement* videoconvert = nullptr;
+    GstElement* videosink = nullptr;
+    GstBus* bus = nullptr;
+    
+    // Video window
+    guintptr video_window_handle = 0;
+    bool is_playing = false;
+
+    bool is_touch = false;
+    int is_track = 0;
 
 };
 

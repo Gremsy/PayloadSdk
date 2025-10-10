@@ -6,6 +6,7 @@
 MainWindow* window = nullptr;
 void initPayloadControlUI();
 void onUICommandChanged(int event, double* param);
+void onUIConnectCommandChanged(int event, const char* param);
 
 #include"payloadSdkInterface.h"
 
@@ -19,6 +20,7 @@ PayloadSdkInterface* my_payload = nullptr;
 void initPayloadSDKInterface();
 void onPayloadStatusChanged(int event, double* param);
 void onPayloadParamChanged(int event, char* param_char, double* param);
+void onPayloadStreamChanged(int event, char* param_char, double* param_double);
 
 
 

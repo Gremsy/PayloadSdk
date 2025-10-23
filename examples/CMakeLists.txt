@@ -41,6 +41,7 @@ set(EXAMPLES
     payload_extract_tiff_file.cpp
     payload_set_stream_bitrate.cpp
     payload_get_fov_status.cpp
+    payload_get_component_info.cpp
 )
 endif()
 

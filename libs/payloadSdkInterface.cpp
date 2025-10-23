@@ -34,6 +34,12 @@ PayloadSdkInterface::PayloadSdkInterface(T_ConnInfo data){
 PayloadSdkInterface::~PayloadSdkInterface(){
 }
 
+void 
+PayloadSdkInterface::
+regPayloadInfoChanged(payload_info_callback_t func){
+    __notifyPayloadInfoChanged = func;
+}
+
 void
 PayloadSdkInterface::
 regPayloadStatusChanged(payload_status_callback_t func){
@@ -390,6 +396,35 @@ getPayloadCameraStreamingInformation(){
     mavlink_message_t message;
 
     mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+getPayloadComponentBasicInformation(){
+    mavlink_command_long_t msg = {0};
+
+    msg.target_system = PAYLOAD_SYSTEM_ID;
+    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.command = MAV_CMD_REQUEST_MESSAGE;
+    msg.param1 = MAVLINK_MSG_ID_COMPONENT_INFORMATION_BASIC;
+    msg.confirmation = 1;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    message.sysid = SYS_ID;
+    message.compid = COMP_ID;
 
     // --------------------------------------------------------------------------
     //   WRITE
@@ -1368,7 +1403,11 @@ payload_recv_handle()
             case MAVLINK_MSG_ID_CAMERA_FOV_STATUS:{
                 _handle_request_camera_fov_status(&msg);
                 break;
-            }        
+            }    
+            case MAVLINK_MSG_ID_COMPONENT_INFORMATION_BASIC:{
+                _handle_request_component_info(&msg);
+                break;
+            }    
             default: break;
             }
         }else{
@@ -1601,5 +1640,24 @@ _handle_request_camera_fov_status(mavlink_message_t* msg){
             cam_fov.vfov
         };
         __notifyPayloadStatusChanged(PAYLOAD_PARAM_CAM_FOV_STATUS, params);
+    }
+}
+
+void 
+PayloadSdkInterface::
+_handle_request_component_info(mavlink_message_t* msg){
+    printf("%s \n", __func__);
+
+    mavlink_component_information_basic_t comp_info{0};
+
+    mavlink_msg_component_information_basic_decode(msg, &(comp_info));
+
+    if(__notifyPayloadInfoChanged != NULL){
+        std::vector<std::string> info;
+        info.push_back(comp_info.model_name);
+        info.push_back(comp_info.software_version);
+        info.push_back(comp_info.serial_number);
+
+        __notifyPayloadInfoChanged(PAYLOAD_COMP_INFO, info);
     }
 }

@@ -9,6 +9,7 @@
 enum payload_status_event_t{
     PAYLOAD_CAM_CAPTURE_STATUS = 0,
     PAYLOAD_CAM_STORAGE_INFO,
+    PAYLOAD_COMP_INFO,
     PAYLOAD_CAM_SETTINGS,
     PAYLOAD_CAM_PARAMS,
 
@@ -124,6 +125,7 @@ static long long _getElapsedTimeInMs(){
 class PayloadSdkInterface
 {
 public:
+    typedef std::function<void(int event, std::vector<std::string> info)> payload_info_callback_t;
     typedef std::function<void(int event, double* param)> payload_status_callback_t;
     typedef std::function<void(int event, char* param_char, double* param_double)> payload_param_callback_t;
     typedef std::function<void(int event, char* param_char, double* param_double)> payload_streamInfo_callback_t;
@@ -132,14 +134,17 @@ public:
     PayloadSdkInterface(T_ConnInfo data);
     ~PayloadSdkInterface();
 
+    void regPayloadInfoChanged(payload_info_callback_t func);
+    payload_info_callback_t __notifyPayloadInfoChanged = NULL;
+
     void regPayloadStatusChanged(payload_status_callback_t func);
-      payload_status_callback_t __notifyPayloadStatusChanged = NULL;
+    payload_status_callback_t __notifyPayloadStatusChanged = NULL;
 
-      void regPayloadParamChanged(payload_param_callback_t func);
-      payload_param_callback_t __notifyPayloadParamChanged = NULL;
+    void regPayloadParamChanged(payload_param_callback_t func);
+    payload_param_callback_t __notifyPayloadParamChanged = NULL;
 
-      void regPayloadStreamChanged(payload_streamInfo_callback_t func);
-      payload_streamInfo_callback_t __notifyPayloadStreamChanged = NULL;
+    void regPayloadStreamChanged(payload_streamInfo_callback_t func);
+    payload_streamInfo_callback_t __notifyPayloadStreamChanged = NULL;
 
     /**
      * Init connection to payload
@@ -203,6 +208,12 @@ public:
      * get payload's camera streaming information
      **/
     void getPayloadCameraStreamingInformation();
+
+    /**
+     * get payload's component information
+     * for the serial number
+     **/
+    void getPayloadComponentBasicInformation();
 
     /**
      * set payload's gimbal param
@@ -396,5 +407,6 @@ public:
 
     void _handle_msg_device_attitude(mavlink_message_t* msg);
     void _handle_request_camera_fov_status(mavlink_message_t* msg);
+    void _handle_request_component_info(mavlink_message_t* msg);
 };
 #endif

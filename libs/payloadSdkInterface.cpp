@@ -850,12 +850,9 @@ setPayloadCameraFFCTrigg(){
     payload_interface->push_message_to_queue(message);
 }
 
-/**
- * Set WB trigger
- **/
 void 
 PayloadSdkInterface::
-setPayloadCameraWBTrigg(){
+setPayloadCameraWBOnePushTrigg(){
     mavlink_command_long_t msg = {0};
 
     msg.target_system = PAYLOAD_SYSTEM_ID;

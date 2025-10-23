@@ -16,10 +16,12 @@ set(EXAMPLES
     camera_ir_capture_image.cpp
     camera_ir_record_video.cpp
     camera_ir_set_palette.cpp
+    camera_ir_isotherm_profile.cpp
     camera_eo_set_zoom_focus.cpp
     camera_time_lapse_photography.cpp
     camera_do_setzoom_individual.cpp
     camera_eo_set_shutter_speed.cpp
+    camera_eo_trigger_wb_onepush.cpp
 
     gimbal_move_angle.cpp
     gimbal_move_speed.cpp

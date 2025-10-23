@@ -290,9 +290,10 @@ public:
     void setPayloadCameraFFCTrigg();
 
     /**
-     * Set WB trigger
+
+     * Set EO WB One Push trigger
      **/
-    void setPayloadCameraWBTrigg();
+    void setPayloadCameraWBOnePushTrigg();
 
     // set stream bitrate
     // bitrate is in bit per second

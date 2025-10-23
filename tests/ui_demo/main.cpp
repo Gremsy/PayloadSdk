@@ -150,7 +150,7 @@ void onUICommandChanged(int event, double* param){
         }
         case CAM_WHITE_BALANCE_TRIGGER:{
             if(my_payload != nullptr)
-                my_payload->setPayloadCameraWBTrigg();
+                my_payload->setPayloadCameraWBOnePushTrigg();
             break;
         }
         case CAM_IR_PALETTE:{

@@ -505,7 +505,8 @@ class PayloadSdkInterface:
     # Set the parameter value for the payload's camera.
     def setPayloadCameraParam(self, param_id: str, param_value: int, param_type: int) -> None:
 
-        self.current_gimbal_mode = param_value
+        if param_id == PAYLOAD_CAMERA_GIMBAL_MODE:
+            self.current_gimbal_mode = param_value
 
         msg = {
             'param_id': bytearray(16),  

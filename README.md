@@ -109,9 +109,148 @@ class EnvironmentConfig:
 ### Advanced Configuration Options
 
 - **Camera Settings:** Zoom/focus types, capture intervals, recording parameters
-- **Gimbal Settings:** Angle limits, movement speeds, calibration parameters  
+- **Gimbal Settings:** Angle limits, movement speeds, calibration parameters
 - **Communication:** Timeouts, message rates, heartbeat intervals
 - **Debug Options:** Logging levels, error reporting, diagnostic output
+
+## Payload-Specific Definitions
+
+### Overview
+
+The Python SDK uses a modular system for payload-specific parameter definitions. Each payload model (VIO, ORUSL, ZIO, MB1) has its own definition file with parameters tailored to that hardware's capabilities.
+
+### Supported Payload Types
+
+| Payload Type | Definition File | Key Features |
+|-------------|----------------|--------------|
+| **VIO** | `libs/vio_define.py` | Full-featured payload with tracking, EIS, noise reduction, super resolution zoom (1x-30x), combine zoom (1x-240x), advanced focus modes |
+| **ORUSL** | `libs/orusl_define.py` | Advanced features including **Defog Fan control** (`PAYLOAD_FAN_DEFOG`), similar camera capabilities as VIO |
+| **ZIO** | `libs/zio_define.py` | Simplified payload with basic EO camera controls, zoom, and standard settings |
+| **MB1** | `libs/mb1_define.py` | Mini payload with basic zoom (1x-40x), IR capabilities, and storage selection |
+
+### How Payload Definitions Work
+
+The SDK automatically loads the correct definitions based on `PAYLOAD_TYPE` in `libs/config.py`:
+
+```python
+# In libs/config.py
+PAYLOAD_TYPE = "VIO"  # Change to: "VIO", "ORUSL", "ZIO", or "MB1"
+```
+
+When you import `payload_define`, it automatically:
+1. Reads `PAYLOAD_TYPE` from config
+2. Loads the appropriate definition file (e.g., `vio_define.py` for VIO)
+3. Makes all parameters available for your code
+
+```python
+from payload_define import *
+
+# Now you have access to all payload-specific parameters
+# For VIO/ORUSL:
+PAYLOAD_CAMERA_VIEW_SRC  # Camera source switching
+PAYLOAD_CAMERA_VIDEO_ZOOM_MODE  # Zoom mode selection
+PAYLOAD_CAMERA_TRACKING_MODE  # Object tracking modes
+
+# For ORUSL only:
+PAYLOAD_FAN_DEFOG  # Defog fan control parameter
+```
+
+### ORUSL-Specific: Defog Fan Control
+
+**Important for ORUSL Users:**
+
+The ORUSL payload includes a defog fan feature that is **NOT available** in other payload models. This feature is defined in `libs/orusl_define.py`:
+
+```python
+# Defog fan control (ORUSL only)
+PAYLOAD_FAN_DEFOG = "C_F_DEFOG"
+class payload_fan_defog(IntEnumBase):
+    PAYLOAD_FAN_DEFOG_OFF = 0
+    PAYLOAD_FAN_DEFOG_ON  = 1
+```
+
+**Usage Example:**
+```python
+from config import config, PAYLOAD_TYPE
+from payload_sdk import PayloadSdkInterface
+from payload_define import *
+from pymavlink import mavutil
+
+# Ensure you're using ORUSL payload
+if PAYLOAD_TYPE != "ORUSL":
+    print("Warning: Defog fan is only available on ORUSL payload")
+
+payload = PayloadSdkInterface()
+payload.sdkInitConnection()
+payload.checkPayloadConnection()
+
+# Control defog fan (ORUSL only)
+payload.setPayloadCameraParam(
+    PAYLOAD_FAN_DEFOG,
+    payload_fan_defog.PAYLOAD_FAN_DEFOG_ON,
+    mavutil.mavlink.MAV_PARAM_TYPE_UINT32
+)
+```
+
+### Comparing C++ and Python SDK Definitions
+
+**Question from Customer (Kim Minje):**
+> "The C++ SDK has Defog Fan definitions in `orusl_sdk.h`, but they weren't in the Python SDK's `payload_define.py`. If we add them manually, will it work?"
+
+**Answer:**
+✅ **YES** - As of the latest update, the Python SDK now properly includes all payload-specific definitions:
+
+1. **✅ ORUSL definitions** including `PAYLOAD_FAN_DEFOG` are in `libs/orusl_define.py`
+2. **✅ VIO definitions** with full tracking and zoom features are in `libs/vio_define.py`
+3. **✅ ZIO definitions** with basic camera controls are in `libs/zio_define.py`
+4. **✅ MB1 definitions** with mini payload features are in `libs/mb1_define.py`
+
+The SDK automatically loads the correct file based on your `PAYLOAD_TYPE` configuration. **No manual modification needed.**
+
+### Parameter Compatibility Matrix
+
+| Feature | VIO | ORUSL | ZIO | MB1 |
+|---------|-----|-------|-----|-----|
+| Camera View Source | ✅ | ✅ | ✅ | ✅ |
+| Object Tracking | ✅ | ✅ | ❌ | ❌ |
+| Super Resolution Zoom | ✅ (1-30x) | ✅ (1-30x) | ❌ | ❌ |
+| Combine Zoom | ✅ (1-240x) | ✅ (1-240x) | ❌ | ❌ |
+| IR Zoom | ✅ (1-8x) | ✅ (1-8x) | ✅ (1-8x) | ✅ (1-40x) |
+| **Defog Fan** | ❌ | **✅** | ❌ | ❌ |
+| Defog Image Processing | ✅ | ✅ | ❌ | ❌ |
+| Advanced Focus Modes | ✅ | ✅ | ❌ | ❌ |
+| EIS (Electronic Image Stabilization) | ✅ | ✅ | ❌ | ❌ |
+| Noise Reduction | ✅ | ✅ | ❌ | ❌ |
+| High Sensitivity Mode | ✅ | ✅ | ❌ | ❌ |
+
+### How to Add Custom Parameters
+
+If you need to add custom parameters for testing or development:
+
+1. **Edit the appropriate definition file** (e.g., `libs/orusl_define.py`)
+2. **Add your parameter definition:**
+   ```python
+   # Custom parameter example
+   MY_CUSTOM_PARAM = "PARAM_NAME"
+   class my_custom_param(IntEnumBase):
+       MY_CUSTOM_VALUE_1 = 0
+       MY_CUSTOM_VALUE_2 = 1
+   ```
+3. **The parameter will be automatically exported** by `payload_define.py`
+4. **Use it in your code:**
+   ```python
+   from payload_define import *
+   payload.setPayloadCameraParam(MY_CUSTOM_PARAM, my_custom_param.MY_CUSTOM_VALUE_1, ...)
+   ```
+
+### Troubleshooting Payload Definitions
+
+| Issue | Solution |
+|-------|----------|
+| `NameError: name 'PAYLOAD_CAMERA_VIEW_SRC' is not defined` | Check that `PAYLOAD_TYPE` in `config.py` is set correctly and matches your hardware |
+| Parameter not available | Verify the parameter exists in your payload's definition file (e.g., `PAYLOAD_FAN_DEFOG` only in ORUSL) |
+| Import errors | Ensure you import `from payload_define import *` AFTER `from config import config` |
+| Wrong parameters loaded | Double-check `PAYLOAD_TYPE` matches your actual hardware (VIO/ORUSL/ZIO/MB1) |
 
 ## Quick Start
 

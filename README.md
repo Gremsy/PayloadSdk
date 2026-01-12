@@ -20,7 +20,7 @@ The Gremsy Payload SDK provides a comprehensive Python interface for controlling
 |---------------|---------------------------|---------|
 | VIO Payload   | v2.0.0 or higher         | ✅ Fully Supported |
 | ZIO Payload   | v2.0.0 or higher         | ⚠️ Limited Support |
-| GHardron Payload | v2.0.0 or higher      | ⚠️ Limited Support |
+| GHardron Payload | v2.0.0 or higher      | ✅ Fully Supported |
 
 **Python Compatibility:** 3.7, 3.8, 3.9, 3.10, 3.11, 3.12
 

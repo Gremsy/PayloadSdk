@@ -146,9 +146,9 @@ int8_t psdk_run_sample(){
 			/*! Set shutter speed to 1/1000*/
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED,PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_1000,PARAM_TYPE_UINT32);
 			/*! Set Apertture value to 10*/
-			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_APERTURE_VALUE, PAYLOAD_CAMERA_EO_APERTURE_F7_3 ,PARAM_TYPE_UINT32);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_APERTURE_VALUE, PAYLOAD_CAMERA_EO_APERTURE_F9_6 ,PARAM_TYPE_UINT32);
 			/*! Set Bright value value to 20*/
-			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_BRIGHT_VALUE, PAYLOAD_CAMERA_EO_APERTURE_F3_1 ,PARAM_TYPE_UINT32);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_BRIGHT_VALUE, PAYLOAD_CAMERA_EO_APERTURE_F3_4 ,PARAM_TYPE_UINT32);
 			/*! Set Auto White Balance mode*/
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_WHITE_BALANCE,PAYLOAD_CAMERA_VIDEO_WHITE_BALANCE_AUTO,PARAM_TYPE_UINT32);
 			/*! Set Superresolution for Zoom mode */
@@ -244,8 +244,8 @@ int8_t psdk_run_sample(){
 	case STATE_MOVEMENT_1:
 		{
 			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIEW_SRC, PAYLOAD_CAMERA_VIEW_EO, PARAM_TYPE_UINT32);
-			PRINT_INFO("%s | %s | Zoom in to 30x, keep in 5 seconds",__func__,state_name[s_proc._state]);
-			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_30X, PARAM_TYPE_UINT32);	
+			PRINT_INFO("%s | %s | Zoom in to 20x, keep in 5 seconds",__func__,state_name[s_proc._state]);
+			my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_20X, PARAM_TYPE_UINT32);	
 			usleep(5000000);
 
 			PRINT_INFO("%s | %s | Zoom in to 1x, keep in 5 seconds",__func__,state_name[s_proc._state]);

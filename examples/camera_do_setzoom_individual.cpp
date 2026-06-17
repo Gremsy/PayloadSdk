@@ -61,8 +61,8 @@ int main(int argc, char *argv[]){
 		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_4X, PARAM_TYPE_UINT32);
 		usleep(4000000);
 
-		printf("[EO] Driving Super Resolution zoom to 30x.\n");
-		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_30X, PARAM_TYPE_UINT32);
+		printf("[EO] Driving Super Resolution zoom to 20x.\n");
+		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_SUPER_RESOLUTION_FACTOR, ZOOM_SUPER_RESOLUTION_20X, PARAM_TYPE_UINT32);
 		usleep(4000000);
 
 		printf("[EO] Switching to Combine zoom mode for extended range...\n");
@@ -73,12 +73,12 @@ int main(int argc, char *argv[]){
 		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_COMBINE_FACTOR, ZOOM_COMBINE_1X, PARAM_TYPE_UINT32);
 		usleep(4000000);
 
-		printf("[EO] Combine zoom: jumping to 40x.\n");
-		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_COMBINE_FACTOR, ZOOM_COMBINE_40X, PARAM_TYPE_UINT32);
+		printf("[EO] Combine zoom: jumping to 20x.\n");
+		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_COMBINE_FACTOR, ZOOM_COMBINE_20X, PARAM_TYPE_UINT32);
 		usleep(4000000);
 
-		printf("[EO] Combine zoom: pushing to 240x.\n");
-		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_COMBINE_FACTOR, ZOOM_COMBINE_240X, PARAM_TYPE_UINT32);
+		printf("[EO] Combine zoom: pushing to 200x.\n");
+		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_VIDEO_ZOOM_COMBINE_FACTOR, ZOOM_COMBINE_200X, PARAM_TYPE_UINT32);
 		usleep(4000000);
 
 		printf("[IR] Switching view source to IR over EO composite...\n");

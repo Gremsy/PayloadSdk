@@ -292,25 +292,6 @@ enum _isotherm_color {
 #define PAYLOAD_CAMERA_GIMBAL_FW_FLAG_OVERWRITE         0
 #define PAYLOAD_CAMERA_GIMBAL_FW_FLAG_FORWARD           1
 
-// ============================================================================
-// ZOOM AND FOCUS CONTROLS
-// ============================================================================
-
-enum Camera_Zoom_Value
-{
-   ZOOM_OUT  = -1,
-   ZOOM_STOP = 0,
-   ZOOM_IN   = 1,
-};
-
-enum Camera_Focus_Value
-{
-   FOCUS_OUT  = -1,
-   FOCUS_STOP = 0,
-   FOCUS_IN   = 1,
-   FOCUS_AUTO,
-};
-
 // Zoom value can be set from 1x to 8x for camera thermal
 #define PAYLOAD_CAMERA_IR_ZOOM_FACTOR              "C_T_ZOOM"
 enum _zoom_ir_factor{

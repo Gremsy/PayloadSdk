@@ -77,12 +77,29 @@ enum _zoom_ir_factor{
 #define PAYLOAD_CAMERA_VIDEO_ZOOM_COMBINE_FACTOR              "C_V_ZM_CB_LV"
 enum _zoom_combine_factor{
     ZOOM_COMBINE_1X = 0,
+    ZOOM_COMBINE_2X,
+    ZOOM_COMBINE_4X,
+    ZOOM_COMBINE_6X,
+    ZOOM_COMBINE_8X,
     ZOOM_COMBINE_10X,
+    ZOOM_COMBINE_12X,
+    ZOOM_COMBINE_14X,
+    ZOOM_COMBINE_16X,
+    ZOOM_COMBINE_18X,
     ZOOM_COMBINE_20X,
-    ZOOM_COMBINE_40X,
-    ZOOM_COMBINE_80X,
-    ZOOM_COMBINE_120X,
-    ZOOM_COMBINE_240X
+    ZOOM_COMBINE_22X,
+    ZOOM_COMBINE_25X,
+    ZOOM_COMBINE_50X,
+    ZOOM_COMBINE_75X,
+    ZOOM_COMBINE_100X,
+    ZOOM_COMBINE_125X,
+    ZOOM_COMBINE_150X,
+    ZOOM_COMBINE_175X,
+    ZOOM_COMBINE_200X,
+    ZOOM_COMBINE_225X,
+    ZOOM_COMBINE_250X,
+    ZOOM_COMBINE_275X,
+    ZOOM_COMBINE_300X
 };
 
 // Super Resolution Zoom levels can be set from 1x to 30x
@@ -100,10 +117,7 @@ enum _zoom_super_resolution_factor{
     ZOOM_SUPER_RESOLUTION_18X,
     ZOOM_SUPER_RESOLUTION_20X,   
     ZOOM_SUPER_RESOLUTION_22X,
-    ZOOM_SUPER_RESOLUTION_24X,
-    ZOOM_SUPER_RESOLUTION_26X,
-    ZOOM_SUPER_RESOLUTION_28X,
-    ZOOM_SUPER_RESOLUTION_30X
+    ZOOM_SUPER_RESOLUTION_25X
 };
 
 // EO Zoom Speed
@@ -129,8 +143,8 @@ enum _zoom_super_resolution_factor{
 
 // EO High Sensitivity
 #define PAYLOAD_CAMERA_EO_HS        "C_V_HS"
-#define PAYLOAD_CAMERA_EO_HS_OFF       0
-#define PAYLOAD_CAMERA_EO_HS_ON        1
+#define PAYLOAD_CAMERA_EO_HS_OFF       2
+#define PAYLOAD_CAMERA_EO_HS_ON        3
 
 // Exposure modes
 #define PAYLOAD_CAMERA_VIDEO_AUTO_EXPOSURE              "C_V_AE"
@@ -138,76 +152,49 @@ enum _zoom_super_resolution_factor{
 #define PAYLOAD_CAMERA_VIDEO_EXPOSURE_MANUAL                3
 #define PAYLOAD_CAMERA_VIDEO_EXPOSURE_SHUTTER               10
 #define PAYLOAD_CAMERA_VIDEO_EXPOSURE_IRIS                  11
-#define PAYLOAD_CAMERA_VIDEO_EXPOSURE_BRIGHT                13
 
 // Shutter speeds
 #define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED              "C_V_SP"
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_1             6
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_2_3             7
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_2             8
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_3             9
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_4             10
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_6             11
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_8             12
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_10             13
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_15             14
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_20             15
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_30             16
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_50             17
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_60             18
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_90             19
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_100             20
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_125             21
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_180             22
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_250             23
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_350             24
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_500             25
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_725             26
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_1000             27
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_1500             28
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_2000             29
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_3000             30
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_4000             31
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_6000             32
-#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_10000            33
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_1             0
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_2             1
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_4             2
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_8             3
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_15            4
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_30            5
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_60            6
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_90            7
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_100           8
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_125           9
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_180           10
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_250           11
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_350           12
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_500           13
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_725           14
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_1000          15
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_1500          16
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_2000          17
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_3000          18
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_4000          19
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_6000          20
+#define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_10000         21
 
 // EO shutter min limit
 #define PAYLOAD_CAMERA_EO_SHUTTER_MIN_LIMIT             "C_V_MinSP"
-#define PAYLOAD_CAMERA_EO_SHUTTER_MIN_LIMIT_1_10        13
-#define PAYLOAD_CAMERA_EO_SHUTTER_MIN_LIMIT_1_15        14
-#define PAYLOAD_CAMERA_EO_SHUTTER_MIN_LIMIT_1_20        15
-#define PAYLOAD_CAMERA_EO_SHUTTER_MIN_LIMIT_1_30        16
-#define PAYLOAD_CAMERA_EO_SHUTTER_MIN_LIMIT_1_50        17
-#define PAYLOAD_CAMERA_EO_SHUTTER_MIN_LIMIT_1_60        18
-#define PAYLOAD_CAMERA_EO_SHUTTER_MIN_LIMIT_1_90        19
-#define PAYLOAD_CAMERA_EO_SHUTTER_MIN_LIMIT_1_100        20
-#define PAYLOAD_CAMERA_EO_SHUTTER_MIN_LIMIT_1_125        21
-#define PAYLOAD_CAMERA_EO_SHUTTER_MIN_LIMIT_1_180        22
-#define PAYLOAD_CAMERA_EO_SHUTTER_MIN_LIMIT_1_250        23
-#define PAYLOAD_CAMERA_EO_SHUTTER_MIN_LIMIT_1_350        24
-#define PAYLOAD_CAMERA_EO_SHUTTER_MIN_LIMIT_1_500        25
-#define PAYLOAD_CAMERA_EO_SHUTTER_MIN_LIMIT_1_725        26
-#define PAYLOAD_CAMERA_EO_SHUTTER_MIN_LIMIT_1_1000        27
-#define PAYLOAD_CAMERA_EO_SHUTTER_MIN_LIMIT_1_1500        28
-#define PAYLOAD_CAMERA_EO_SHUTTER_MIN_LIMIT_1_2000        29
 
 // Aperture values
 #define PAYLOAD_CAMERA_VIDEO_APERTURE_VALUE              "C_V_IrP"
-#define PAYLOAD_CAMERA_EO_APERTURE_F2_0                 25
-#define PAYLOAD_CAMERA_EO_APERTURE_F2_2                 24
-#define PAYLOAD_CAMERA_EO_APERTURE_F2_4                 23
-#define PAYLOAD_CAMERA_EO_APERTURE_F2_6                 22
-#define PAYLOAD_CAMERA_EO_APERTURE_F2_8                 21
-#define PAYLOAD_CAMERA_EO_APERTURE_F3_1                 20
-#define PAYLOAD_CAMERA_EO_APERTURE_F3_4                 19
-#define PAYLOAD_CAMERA_EO_APERTURE_F4_0                 17
-#define PAYLOAD_CAMERA_EO_APERTURE_F5_2                 14
-#define PAYLOAD_CAMERA_EO_APERTURE_F6_8                 11
-#define PAYLOAD_CAMERA_EO_APERTURE_F7_3                 10
-#define PAYLOAD_CAMERA_EO_APERTURE_F8_7                 8
+#define PAYLOAD_CAMERA_EO_APERTURE_F1_6                 16
+#define PAYLOAD_CAMERA_EO_APERTURE_F2_0                 15
+#define PAYLOAD_CAMERA_EO_APERTURE_F2_4                 14
+#define PAYLOAD_CAMERA_EO_APERTURE_F2_8                 13
+#define PAYLOAD_CAMERA_EO_APERTURE_F3_4                 12
+#define PAYLOAD_CAMERA_EO_APERTURE_F4_0                 11
+#define PAYLOAD_CAMERA_EO_APERTURE_F5_6                 10
+#define PAYLOAD_CAMERA_EO_APERTURE_F6_8                 9
+#define PAYLOAD_CAMERA_EO_APERTURE_F8_0                 8
 #define PAYLOAD_CAMERA_EO_APERTURE_F9_6                 7
-#define PAYLOAD_CAMERA_EO_APERTURE_F10_0                 6
-#define PAYLOAD_CAMERA_EO_APERTURE_F11_0                 5  
+#define PAYLOAD_CAMERA_EO_APERTURE_F11                  6
+#define PAYLOAD_CAMERA_EO_APERTURE_F14                  5  
 
 // EO Gain in High Sensitivity mode, PAYLOAD_CAMERA_EO_HS = PAYLOAD_CAMERA_EO_HS_ON
 #define PAYLOAD_CAMERA_EO_GAIN_HS           ""
@@ -270,12 +257,11 @@ enum _zoom_super_resolution_factor{
 
 // EO focus modes
 #define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE              "C_V_FM"
-#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_MANUAL              0
-#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_ZOOM_TRIGGER        1
-#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_AUTO_NEAR           2
-#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_AUTO_FAR            3
+#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_MANUAL                       0
+#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_AUTO_FOCUS                   1
+#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_AUTO_FOCUS_ONEPUSH           2
 
-// EO Manual focus value can be set from 0 to 61440, step 10
+// EO Manual focus value can be set from 0 to 61440, step 1
 #define PAYLOAD_CAMERA_VIDEO_FOCUS_VALUE              "C_V_FV"
 
 // EO Focus Speed
@@ -284,7 +270,7 @@ enum _zoom_super_resolution_factor{
 
 // EO ICR modes
 #define PAYLOAD_CAMERA_EO_ICR_MODE      "C_V_ICR"
-#define PAYLOAD_CAMERA_EO_ICR_MODE_AUTO     2
+#define PAYLOAD_CAMERA_EO_ICR_MODE_AUTO       2
 #define PAYLOAD_CAMERA_EO_ICR_MODE_MANUAL     3
 
 // EO ICR AUTO threshold, values can be set from 0 to 255, step 1
@@ -351,8 +337,9 @@ enum _zoom_super_resolution_factor{
 
 // Payload defog fan
 #define PAYLOAD_FAN_DEFOG               "C_F_DEFOG"
-#define PAYLOAD_FAN_DEFOG_OFF           0
-#define PAYLOAD_FAN_DEFOG_ON            1
+#define PAYLOAD_FAN_DEFOG_AUTO           0
+#define PAYLOAD_FAN_DEFOG_OFF            1
+#define PAYLOAD_FAN_DEFOG_ON             2
 
 // Gimbal modes
 #define PAYLOAD_CAMERA_GIMBAL_MODE              "GB_MODE"
@@ -368,22 +355,6 @@ enum _zoom_super_resolution_factor{
 #define PAYLOAD_LRF_MODE_1HZ    0
 #define PAYLOAD_LRF_MODE_4HZ    1
 #define PAYLOAD_LRF_MODE_10HZ    2
-
-enum Camera_Zoom_Value
-{
-   ZOOM_OUT  = -1,
-   ZOOM_STOP = 0, 
-   ZOOM_IN   = 1,
-};
-
-enum Camera_Focus_Value
-{
-   FOCUS_OUT  = -1,
-   FOCUS_STOP = 0, 
-   FOCUS_IN   = 1,
-   FOCUS_AUTO,
-};
-
 
 
 #endif

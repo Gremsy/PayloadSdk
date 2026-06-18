@@ -22,6 +22,7 @@ set(EXAMPLES
     camera_do_setzoom_individual.cpp
     camera_eo_set_shutter_speed.cpp
     camera_eo_trigger_wb_onepush.cpp
+    camera_set_all_zoom_modes.cpp
 
     gimbal_move_angle.cpp
     gimbal_move_speed.cpp

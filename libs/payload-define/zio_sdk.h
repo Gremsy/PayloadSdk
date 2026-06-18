@@ -2,9 +2,12 @@
 #define ZIO_SDK_H
 
 // Tracking modes
-#define PAYLOAD_CAMERA_OBJECT_DETECTION 	"TRACK_MODE"
-#define PAYLOAD_CAMERA_OBJECT_DETECTION_DISABLE 	0
-#define PAYLOAD_CAMERA_OBJECT_DETECTION_ENABLE 		1
+#define PAYLOAD_CAMERA_TRACKING_MODE 	"TRACK_MODE"
+#define PAYLOAD_CAMERA_TRACKING_OBJ_TRACKING 	    0
+#define PAYLOAD_CAMERA_TRACKING_OBJ_DETECTION 		1
+
+#define PAYLOAD_CAMERA_VIEW_SRC             "C_SOURCE"
+#define PAYLOAD_CAMERA_VIEW_EO                1
 
 // OSD modes
 #define PAYLOAD_CAMERA_VIDEO_OSD_MODE    "OSD_MODE"
@@ -29,8 +32,8 @@
 
 // Defog modes
 #define PAYLOAD_CAMERA_VIDEO_DEFOG        "C_V_DEFOG"
-#define PAYLOAD_CAMERA_VIDEO_DEFOG_OFF       0
-#define PAYLOAD_CAMERA_VIDEO_DEFOG_ON        1
+#define PAYLOAD_CAMERA_VIDEO_DEFOG_OFF       3
+#define PAYLOAD_CAMERA_VIDEO_DEFOG_ON        2
 
 // Defog levels
 #define PAYLOAD_CAMERA_VIDEO_DEFOG_LEVEL  "C_V_DEFOG_LV"
@@ -41,8 +44,8 @@
 
 // EO High Sensitivity
 #define PAYLOAD_CAMERA_EO_HS        "C_V_HS"
-#define PAYLOAD_CAMERA_EO_HS_OFF       0
-#define PAYLOAD_CAMERA_EO_HS_ON        1
+#define PAYLOAD_CAMERA_EO_HS_OFF       2
+#define PAYLOAD_CAMERA_EO_HS_ON        3
 
 // Exposure modes
 #define PAYLOAD_CAMERA_VIDEO_AUTO_EXPOSURE              "C_V_AE"
@@ -51,6 +54,7 @@
 #define PAYLOAD_CAMERA_VIDEO_EXPOSURE_SHUTTER               10
 #define PAYLOAD_CAMERA_VIDEO_EXPOSURE_IRIS                  11
 #define PAYLOAD_CAMERA_VIDEO_EXPOSURE_BRIGHT                13
+#define PAYLOAD_CAMERA_VIDEO_EXPOSURE_GAIN                  14
 
 // Shutter speeds
 #define PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED              "C_V_SP"
@@ -222,10 +226,9 @@ enum _zoom_combine_factor{
 
 // EO focus modes
 #define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE              "C_V_FM"
-#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_MANUAL          0
-#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_ZOOM_TRIGGER    1
-#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_AUTO_NEAR       2
-#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_AUTO_FAR        3
+#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_MANUAL                   0
+#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_AUTO_FOCUS               1
+#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_AUTO_FOCUS_ONEPUSH       2
 
 // EO Manual focus value can be set from 0 to 61440, step 10
 #define PAYLOAD_CAMERA_VIDEO_FOCUS_VALUE              "C_V_FV"
@@ -251,19 +254,5 @@ enum _zoom_combine_factor{
 #define PAYLOAD_CAMERA_GIMBAL_MODE_MAPPING          3
 #define PAYLOAD_CAMERA_GIMBAL_MODE_RESET            4
 
-enum Camera_Zoom_Value
-{
-   ZOOM_OUT  = -1,
-   ZOOM_STOP = 0, 
-   ZOOM_IN   = 1,
-};
-
-enum Camera_Focus_Value
-{
-   FOCUS_OUT  = -1,
-   FOCUS_STOP = 0, 
-   FOCUS_IN   = 1,
-   FOCUS_AUTO,
-};
 
 #endif

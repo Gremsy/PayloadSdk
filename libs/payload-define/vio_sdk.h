@@ -8,7 +8,7 @@
 
 // RC modes
 #define PAYLOAD_CAMERA_RC_MODE 			"RC_MODE"
-#define PAYLOAD_CAMERA_RC_MODE_GREMSY 		0
+#define PAYLOAD_CAMERA_RC_MODE_GREMSY 		    0
 #define PAYLOAD_CAMERA_RC_MODE_STANDARD 		1
 
 // Camera sources
@@ -140,8 +140,8 @@ enum _zoom_super_resolution_factor{
 
 // EO High Sensitivity
 #define PAYLOAD_CAMERA_EO_HS        "C_V_HS"
-#define PAYLOAD_CAMERA_EO_HS_OFF       0
-#define PAYLOAD_CAMERA_EO_HS_ON        1
+#define PAYLOAD_CAMERA_EO_HS_OFF       2
+#define PAYLOAD_CAMERA_EO_HS_ON        3
 
 // Exposure modes
 #define PAYLOAD_CAMERA_VIDEO_AUTO_EXPOSURE              "C_V_AE"
@@ -220,6 +220,7 @@ enum _zoom_super_resolution_factor{
 #define PAYLOAD_CAMERA_EO_APERTURE_F9_6                 7
 #define PAYLOAD_CAMERA_EO_APERTURE_F10_0                 6
 #define PAYLOAD_CAMERA_EO_APERTURE_F11_0                 5  
+#define PAYLOAD_CAMERA_EO_APERTURE_CLOSE                 0  
 
 // EO Gain in High Sensitivity mode, PAYLOAD_CAMERA_EO_HS = PAYLOAD_CAMERA_EO_HS_ON
 #define PAYLOAD_CAMERA_EO_GAIN_HS           "C_V_GAIN_HS"
@@ -282,12 +283,11 @@ enum _zoom_super_resolution_factor{
 
 // EO focus modes
 #define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE              "C_V_FM"
-#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_MANUAL              0
-#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_ZOOM_TRIGGER        1
-#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_AUTO_NEAR           2
-#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_AUTO_FAR            3
+#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_MANUAL                       0
+#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_AUTO_FOCUS                   1
+#define PAYLOAD_CAMERA_VIDEO_FOCUS_MODE_AUTO_FOCUS_ONEPUSH           2
 
-// EO Manual focus value can be set from 0 to 61440, step 10
+// EO Manual focus value can be set from 0 to 61440, step 1
 #define PAYLOAD_CAMERA_VIDEO_FOCUS_VALUE              "C_V_FV"
 
 // EO Focus Speed
@@ -321,22 +321,6 @@ enum _zoom_super_resolution_factor{
 #define PAYLOAD_LRF_MODE_1HZ    0
 #define PAYLOAD_LRF_MODE_4HZ    1
 #define PAYLOAD_LRF_MODE_10HZ    2
-
-enum Camera_Zoom_Value
-{
-   ZOOM_OUT  = -1,
-   ZOOM_STOP = 0, 
-   ZOOM_IN   = 1,
-};
-
-enum Camera_Focus_Value
-{
-   FOCUS_OUT  = -1,
-   FOCUS_STOP = 0, 
-   FOCUS_IN   = 1,
-   FOCUS_AUTO,
-};
-
 
 
 #endif

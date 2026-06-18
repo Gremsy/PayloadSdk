@@ -104,16 +104,28 @@ void quit_handler(int sig){
 
 static const char* shutter_value_to_label(int value){
     switch(value){
-        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_10: return "1/10";
-        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_20: return "1/20";
-        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_50: return "1/50";
-        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_100: return "1/100";
-        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_125: return "1/125";
-        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_500: return "1/500";
-        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_725: return "1/725";
-        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_1000: return "1/1000";
-        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_1500: return "1/1500";
-        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_2000: return "1/2000";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_1:      return "1/1";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_2:      return "1/2";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_4:      return "1/4";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_8:      return "1/8";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_15:     return "1/15";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_30:     return "1/30";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_60:     return "1/60";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_90:     return "1/90";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_100:    return "1/100";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_125:    return "1/125";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_180:    return "1/180";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_250:    return "1/250";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_350:    return "1/350";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_500:    return "1/500";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_725:    return "1/725";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_1000:   return "1/1000";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_1500:   return "1/1500";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_2000:   return "1/2000";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_3000:   return "1/3000";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_4000:   return "1/4000";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_6000:   return "1/6000";
+        case PAYLOAD_CAMERA_VIDEO_SHUTTER_SPEED_1_10000:  return "1/10000";
         default: return "unknown";
     }
 }

@@ -4,6 +4,7 @@
 #include <jsoncpp/json/json.h>
 #include <regex>
 #include <string>
+#include <cstring>
 #include <vector>
 #include <limits>
 #include "payloadsdk.h"

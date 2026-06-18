@@ -143,8 +143,8 @@ enum _zoom_super_resolution_factor{
 
 // EO High Sensitivity
 #define PAYLOAD_CAMERA_EO_HS        "C_V_HS"
-#define PAYLOAD_CAMERA_EO_HS_OFF       2
-#define PAYLOAD_CAMERA_EO_HS_ON        3
+#define PAYLOAD_CAMERA_EO_HS_OFF       3
+#define PAYLOAD_CAMERA_EO_HS_ON        2
 
 // Exposure modes
 #define PAYLOAD_CAMERA_VIDEO_AUTO_EXPOSURE              "C_V_AE"
@@ -290,12 +290,12 @@ enum _zoom_super_resolution_factor{
 // EO EIS levels
 #define PAYLOAD_CAMERA_EO_EIS_LEVEL         "C_V_EIS_LV"
 #define PAYLOAD_CAMERA_EO_EIS_LEVEL_SUPER       2
-#define PAYLOAD_CAMERA_EO_EIS_LEVEL_SUPER_PLUS  
+#define PAYLOAD_CAMERA_EO_EIS_LEVEL_SUPER_PLUS  3
 
 // EO Spot Light Avoidance
 #define PAYLOAD_CAMERA_EO_SPOT_LIGHT_AVOIDANCE          "C_V_SPAVOID"
-#define PAYLOAD_CAMERA_EO_SPOT_LIGHT_AVOIDANCE_ON           2
-#define PAYLOAD_CAMERA_EO_SPOT_LIGHT_AVOIDANCE_OFF          3
+#define PAYLOAD_CAMERA_EO_SPOT_LIGHT_AVOIDANCE_ON           1
+#define PAYLOAD_CAMERA_EO_SPOT_LIGHT_AVOIDANCE_OFF          0
 
 // EO Flicker Reduction
 #define PAYLOAD_CAMERA_EO_FLICKER_REDUCTION         "C_V_FLREDUCT"

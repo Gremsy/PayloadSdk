@@ -140,8 +140,8 @@ enum _zoom_super_resolution_factor{
 
 // EO High Sensitivity
 #define PAYLOAD_CAMERA_EO_HS        "C_V_HS"
-#define PAYLOAD_CAMERA_EO_HS_OFF       2
-#define PAYLOAD_CAMERA_EO_HS_ON        3
+#define PAYLOAD_CAMERA_EO_HS_OFF       3
+#define PAYLOAD_CAMERA_EO_HS_ON        2
 
 // Exposure modes
 #define PAYLOAD_CAMERA_VIDEO_AUTO_EXPOSURE              "C_V_AE"

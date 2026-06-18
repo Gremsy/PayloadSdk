@@ -73,7 +73,8 @@
 #include <arpa/inet.h>
 #include <stdbool.h>
 
-#include <common/mavlink.h>
+// #include <common/mavlink.h>
+#include <ardupilotmega/mavlink.h>
 
 #include "generic_port.h"
 

@@ -63,7 +63,8 @@
 #include <signal.h>
 #include <queue>
 
-#include <common/mavlink.h>
+// #include <common/mavlink.h>
+#include <ardupilotmega/mavlink.h>
 
 #include "generic_port.h"
 

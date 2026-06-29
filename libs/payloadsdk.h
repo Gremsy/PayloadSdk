@@ -20,6 +20,8 @@
     #include "orusl_sdk.h"
 #endif
 
+#define SDK_VERSION "3.1.0_build.26062026"
+
 static uint8_t SYS_ID = 1;
 static uint8_t COMP_ID = MAV_COMP_ID_ONBOARD_COMPUTER3;
 

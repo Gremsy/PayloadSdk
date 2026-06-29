@@ -1,7 +1,5 @@
 #include "payloadSdkInterface.h"
 
-#define SDK_VERSION "3.0.0_build.04022025"
-
 void*
 start_thrd_received_msg(void *args)
 {
@@ -1037,6 +1035,141 @@ setPayloadStandbyMode(bool mode){
     // do the write
     payload_interface->push_message_to_queue(message);
 }
+
+void 
+PayloadSdkInterface::
+setPayloadRestartApps(uint8_t app_id){
+    mavlink_command_long_t msg = {0};
+
+    msg.target_system = PAYLOAD_SYSTEM_ID;
+    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.command = MAV_CMD_USER_4;
+    msg.param1 = 4;
+    msg.param2 = 4;
+    msg.param3 = app_id;
+    msg.param4 = 0;
+    msg.param5 = 0;
+    msg.param6 = 0;
+    msg.param7 = 0;
+    msg.confirmation = 1;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+setCameraExtSettings_SpotAE_Display(uint8_t mode){
+    // SpotAE_Display_ON:  1
+    // SpotAE_Display_OFF: 0
+
+    mavlink_command_long_t msg = {0};
+
+    msg.target_system = PAYLOAD_SYSTEM_ID;
+    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.command = MAV_CMD_USER_4;
+    msg.param1 = 4;
+    msg.param2 = 5;
+    msg.param3 = 0;
+    msg.param4 = mode;
+    msg.param5 = 0;
+    msg.param6 = 0;
+    msg.param7 = 0;
+    msg.confirmation = 1;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+setCameraExtSettings_SpotAE_Mode(uint8_t mode){
+    // SpotAE_ON:  2
+    // SpotAE_OFF: 3
+
+    mavlink_command_long_t msg = {0};
+
+    msg.target_system = PAYLOAD_SYSTEM_ID;
+    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.command = MAV_CMD_USER_4;
+    msg.param1 = 4;
+    msg.param2 = 5;
+    msg.param3 = 1;
+    msg.param4 = mode;
+    msg.param5 = 0;
+    msg.param6 = 0;
+    msg.param7 = 0;
+    msg.confirmation = 1;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
+setCameraExtSettings_SpotAE_Position(uint8_t x, uint8_t y, uint8_t w, uint8_t h){
+    mavlink_command_long_t msg = {0};
+
+    msg.target_system = PAYLOAD_SYSTEM_ID;
+    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.command = MAV_CMD_USER_4;
+    msg.param1 = 4;
+    msg.param2 = 5;
+    msg.param3 = 2;
+    msg.param4 = x;
+    msg.param5 = y;
+    msg.param6 = w;
+    msg.param7 = h;
+    msg.confirmation = 1;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
 
 uint32_t 
 PayloadSdkInterface::

@@ -336,6 +336,14 @@ public:
     // set standby mode
     void setPayloadStandbyMode(bool mode);
 
+    // send command to restart the apps
+    void setPayloadRestartApps(uint8_t app_id);
+
+    // send command to change external settings for EO (only on ORUSL)
+    void setCameraExtSettings_SpotAE_Display(uint8_t mode);
+    void setCameraExtSettings_SpotAE_Mode(uint8_t mode);
+    void setCameraExtSettings_SpotAE_Position(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
+
     // get the current stream bitrate
     uint32_t getPayloadStreamBitrate(); 
 

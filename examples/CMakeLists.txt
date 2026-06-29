@@ -49,6 +49,8 @@ set(EXAMPLES
 
     payload_get_video_record_status.cpp
     payload_set_standby_mode.cpp
+    payload_set_restart_apps.cpp
+    camera_set_ext_settings.cpp
 )
 endif()
 
@@ -110,6 +112,8 @@ set(EXAMPLES
     payload_extract_tiff_file.cpp
     payload_set_gps.cpp
     payload_get_fov_status.cpp
+
+    payload_set_restart_apps.cpp
 )
 endif(MB1)
 

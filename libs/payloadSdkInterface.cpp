@@ -62,6 +62,12 @@ regPayloadRecordInfoChanged(payload_recordInfo_callback_t func){
     __notifyPayloadRecordChanged = func;
 }
 
+void
+PayloadSdkInterface::
+regPayloadHeartbeatChanged(payload_heartbeat_callback_t func){
+    __notifyPayloadHeartbeatChanged = func;
+}
+
 
 bool 
 PayloadSdkInterface::
@@ -128,7 +134,7 @@ checkPayloadConnection(){
 
     while(!time_to_exit){
         mavlink_message_t msg;
-        uint8_t msg_cnt = getNewMewssage(msg);
+        uint8_t msg_cnt = getNewMessage(msg);
 
         result = false;
 
@@ -167,11 +173,17 @@ checkPayloadConnection(){
 
 uint8_t 
 PayloadSdkInterface::
-getNewMewssage(mavlink_message_t& new_msg){
+getNewMessage(mavlink_message_t& new_msg){
     if(payload_interface != nullptr){
         return payload_interface->get_nxt_message(new_msg);
     }
     return 0;
+}
+
+uint8_t
+PayloadSdkInterface::
+getNewMewssage(mavlink_message_t& new_msg){
+    return getNewMessage(new_msg);
 }
 
 void
@@ -387,12 +399,13 @@ getPayloadCameraInformation(){
 
 void
 PayloadSdkInterface::
-getPayloadCameraStreamingInformation(){
+getPayloadCameraStreamingInformation(uint32_t stream_id){
     mavlink_command_long_t msg = {0};
 
     msg.target_system = CAMERA_SYSTEM_ID;
     msg.target_component = CAMERA_COMPONENT_ID;
     msg.command = MAV_CMD_REQUEST_VIDEO_STREAM_INFORMATION;
+    msg.param1 = stream_id;
     msg.confirmation = 1;
 
     // --------------------------------------------------------------------------
@@ -947,7 +960,7 @@ setPayloadStreamBitrate(uint32_t cam_id, uint32_t bitrate){
     payload_interface->push_message_to_queue(message);
 }
 
-void 
+void
 PayloadSdkInterface::
 setPayloadStreamResolution(uint32_t cam_id, uint32_t resolution_lv){
     mavlink_command_long_t msg = {0};
@@ -977,7 +990,7 @@ setPayloadStreamResolution(uint32_t cam_id, uint32_t resolution_lv){
     payload_interface->push_message_to_queue(message);
 }
 
-void 
+void
 PayloadSdkInterface::
 setPayloadStreamProfile(uint32_t cam_id, uint32_t enc_profile){
     mavlink_command_long_t msg = {0};
@@ -1007,7 +1020,7 @@ setPayloadStreamProfile(uint32_t cam_id, uint32_t enc_profile){
     payload_interface->push_message_to_queue(message);
 }
 
-void 
+void
 PayloadSdkInterface::
 setPayloadStandbyMode(bool mode){
     mavlink_command_long_t msg = {0};
@@ -1170,11 +1183,11 @@ setCameraExtSettings_SpotAE_Position(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
     payload_interface->push_message_to_queue(message);
 }
 
-
 uint32_t 
 PayloadSdkInterface::
 getPayloadStreamBitrate(){
-
+    getPayloadCameraStreamingInformation();
+    return 0;
 }
 
 void 
@@ -1601,7 +1614,7 @@ payload_recv_handle()
     // check payload messages
     while(!time_to_exit){
         mavlink_message_t msg;
-        uint8_t msg_cnt = getNewMewssage(msg);
+        uint8_t msg_cnt = getNewMessage(msg);
         if(msg_cnt){
 
             static int __cnt__ =0;
@@ -1644,6 +1657,9 @@ payload_recv_handle()
             switch(msg.msgid){
             case MAVLINK_MSG_ID_HEARTBEAT:{
                 // SDK_LOG("Got hearbeat, from %d, seq %d", msg.compid, msg.seq);
+
+                if(__notifyPayloadHeartbeatChanged)
+                    __notifyPayloadHeartbeatChanged(msg);
 
                 break;
             }
@@ -1704,11 +1720,11 @@ payload_recv_handle()
             case MAVLINK_MSG_ID_COMPONENT_INFORMATION_BASIC:{
                 _handle_request_component_info(&msg);
                 break;
-            }    
+            }
             case MAVLINK_MSG_ID_STATUSTEXT:{
                 _handle_statustext(&msg);
                 break;
-            }  
+            }
             default: break;
             }
         }else{
@@ -1778,7 +1794,13 @@ _handle_msg_camera_stream_information(mavlink_message_t* msg){
     mavlink_msg_video_stream_information_decode(msg, &stream_info);
 
     if(__notifyPayloadStreamChanged != NULL){
-        double params[3] = {stream_info.type, stream_info.resolution_v, stream_info.resolution_h};
+        double params[5] = {
+            static_cast<double>(stream_info.type),
+            static_cast<double>(stream_info.resolution_v),
+            static_cast<double>(stream_info.resolution_h),
+            static_cast<double>(stream_info.bitrate),
+            static_cast<double>(stream_info.stream_id)
+        };
 
         __notifyPayloadStreamChanged(PAYLOAD_CAM_STREAMINFO, stream_info.uri, params);
     }
@@ -1963,7 +1985,7 @@ _handle_request_component_info(mavlink_message_t* msg){
     }
 }
 
-void 
+void
 PayloadSdkInterface::
 _handle_statustext(mavlink_message_t* msg){
     if (msg == nullptr) return;

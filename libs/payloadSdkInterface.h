@@ -142,6 +142,7 @@ public:
     typedef std::function<void(int event, char* param_char, double* param_double)> payload_param_callback_t;
     typedef std::function<void(int event, char* param_char, double* param_double)> payload_streamInfo_callback_t;
     typedef std::function<void(int event, char* param_char, double* param_double)> payload_recordInfo_callback_t;
+    typedef std::function<void(mavlink_message_t msg)> payload_heartbeat_callback_t;
 
     PayloadSdkInterface();
     PayloadSdkInterface(T_ConnInfo data);
@@ -162,6 +163,9 @@ public:
     void regPayloadRecordInfoChanged(payload_recordInfo_callback_t func);
     payload_recordInfo_callback_t __notifyPayloadRecordChanged = NULL;
 
+    void regPayloadHeartbeatChanged(payload_heartbeat_callback_t func);
+    payload_heartbeat_callback_t __notifyPayloadHeartbeatChanged = NULL;
+
 
     /**
      * Init connection to payload
@@ -179,6 +183,7 @@ public:
     /**
      * Check new message 
      **/
+    uint8_t getNewMessage(mavlink_message_t& new_msg);
     uint8_t getNewMewssage(mavlink_message_t& new_msg);
 
     /**
@@ -224,7 +229,7 @@ public:
     /**
      * get payload's camera streaming information
      **/
-    void getPayloadCameraStreamingInformation();
+    void getPayloadCameraStreamingInformation(uint32_t stream_id = 0);
 
     /**
      * get payload's component information
@@ -372,7 +377,7 @@ private:
 
     uint32_t current_gimbal_mode;
     uint16_t current_attitude_flags;
-    
+
     std::map<uint16_t, StatusTextBuffer> statustext_buffers;
 public:
     /*!<@brief: used to rotate gimbal for each axis depend on angular rate or angle mode
@@ -462,7 +467,7 @@ public:
     void _handle_msg_device_attitude(mavlink_message_t* msg);
     void _handle_request_camera_fov_status(mavlink_message_t* msg);
     void _handle_request_component_info(mavlink_message_t* msg);
-    
+
     void _handle_statustext(mavlink_message_t* msg);
 };
 #endif

@@ -44,19 +44,21 @@ add_subdirectory(examples)
 
 # Project subdirectory
 if (VIO)
-add_subdirectory(tests/demo_project)
-add_subdirectory(tests/parse_thermal_stream)
-add_subdirectory(tests/ui_demo)
-add_subdirectory(tests/parse_klv_stream)
+    add_subdirectory(tests/demo_project)
+    add_subdirectory(tests/parse_thermal_stream)
+    add_subdirectory(tests/parse_klv_stream)
 endif(VIO)
 
 if (ORUSL)
-add_subdirectory(tests/demo_project)
-add_subdirectory(tests/parse_thermal_stream)
+    add_subdirectory(tests/demo_project)
+    add_subdirectory(tests/parse_thermal_stream)
+    add_subdirectory(tests/parse_klv_stream)
 endif(ORUSL)
 
 if (MB1)
-add_subdirectory(tests/mb1_project)
+    add_subdirectory(tests/mb1_project)
+    add_subdirectory(tests/parse_thermal_stream)
+    add_subdirectory(tests/parse_klv_stream)
 endif(MB1)
 
 # Add ui_demo for VIO, ORUSL, or MB1 (only once)

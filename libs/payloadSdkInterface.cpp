@@ -1251,7 +1251,7 @@ requestParamValue(uint8_t pIndex){
 
 void
 PayloadSdkInterface::
-setParamRate(uint8_t pIndex, uint16_t time_ms){
+setParamRate(int pIndex, uint16_t time_ms){
     payloadParams[pIndex].msg_rate = time_ms;
     sendPayloadRequestStreamRate(pIndex, time_ms);
 }
@@ -1725,6 +1725,10 @@ payload_recv_handle()
                 _handle_statustext(&msg);
                 break;
             }
+            case MAVLINK_MSG_ID_DISTANCE_SENSOR:{
+                _handle_distance_sensor(&msg);
+                break;
+            }
             default: break;
             }
         }else{
@@ -2032,5 +2036,23 @@ _handle_statustext(mavlink_message_t* msg){
     if(__notifyPayloadRecordChanged){
         double params[1] = {0.0};
         __notifyPayloadRecordChanged(PAYLOAD_RECORD_STATUS, const_cast<char*>(full_text.c_str()), params);
+    }
+}
+
+void 
+PayloadSdkInterface::
+_handle_distance_sensor(mavlink_message_t* msg){
+    if (msg == nullptr) return;
+
+    mavlink_distance_sensor_t _distance_sensor;
+    mavlink_msg_distance_sensor_decode(msg, &_distance_sensor);
+
+    if(__notifyPayloadStatusChanged != NULL){
+        double params[3] = {
+            _distance_sensor.horizontal_fov,
+            _distance_sensor.vertical_fov,
+            _distance_sensor.current_distance
+        };
+        __notifyPayloadStatusChanged(PAYLOAD_PARAM_DISTANCE_SENSOR, params);
     }
 }

@@ -181,13 +181,13 @@ void onPayloadStatusChanged(int event, double* param){
 					is_calibration_runing = true;
 				}
 
-				if(param[2] == MAV_RESULT_ACCEPTED){
+				if(param[1] == MAV_RESULT_ACCEPTED){
 					if(is_calibration_runing){
 						SDK_LOG("The gyro calibration done!");
 						is_exit= true;
 					}
 				}
-				else if(param[2] == MAV_RESULT_IN_PROGRESS){
+				else if(param[1] == MAV_RESULT_IN_PROGRESS){
 					is_calibration_runing = true;
 					SDK_LOG("The gyro calibration is processing...");
 				}
@@ -200,13 +200,13 @@ void onPayloadStatusChanged(int event, double* param){
 					is_calibration_runing = true;
 				}
 
-				if(param[2] == MAV_RESULT_ACCEPTED){
+				if(param[1] == MAV_RESULT_ACCEPTED){
 					if(is_calibration_runing){
 						SDK_LOG("The accel calibration done!");
 						is_exit= true;
 					}
 				}
-				else if(param[2] == MAV_RESULT_IN_PROGRESS){
+				else if(param[1] == MAV_RESULT_IN_PROGRESS){
 					is_calibration_runing = true;
 					SDK_LOG("The accel calibration is processing...");
 				}
@@ -220,14 +220,14 @@ void onPayloadStatusChanged(int event, double* param){
 					usleep(1000000); // waiting for the calib init
 				}
 
-				if(param[2] == MAV_RESULT_ACCEPTED){
+				if(param[1] == MAV_RESULT_ACCEPTED){
 					if(is_calibration_runing){
 						SDK_LOG("The motor calibration done!");
 
 						is_exit= true;
 					}
 				}
-				else if(param[2] == MAV_RESULT_IN_PROGRESS){
+				else if(param[1] == MAV_RESULT_IN_PROGRESS){
 					is_calibration_runing = true;
 					SDK_LOG("The motor calibration is processing...");
 				}
@@ -241,7 +241,7 @@ void onPayloadStatusChanged(int event, double* param){
 					usleep(1000000); // waiting for the calib init
 				}
 
-				if(param[2] == MAV_RESULT_ACCEPTED){
+				if(param[1] == MAV_RESULT_ACCEPTED){
 					if(is_calibration_runing){
 						SDK_LOG("The Auto tune done!");
 						usleep(1000000);
@@ -249,7 +249,7 @@ void onPayloadStatusChanged(int event, double* param){
 						is_exit= true;
 					}
 				}
-				else if(param[2] == MAV_RESULT_IN_PROGRESS){
+				else if(param[1] == MAV_RESULT_IN_PROGRESS){
 					is_calibration_runing = true;
 					SDK_LOG("The Auto tune is processing...");
 				}
@@ -263,14 +263,14 @@ void onPayloadStatusChanged(int event, double* param){
 					usleep(1000000); // waiting for the calib init
 				}
 
-				if(param[2] == MAV_RESULT_ACCEPTED){
+				if(param[1] == MAV_RESULT_ACCEPTED){
 					if(is_calibration_runing){
 						SDK_LOG("The SearchHome done!");
 
 						is_exit= true;
 					}
 				}
-				else if(param[2] == MAV_RESULT_IN_PROGRESS){
+				else if(param[1] == MAV_RESULT_IN_PROGRESS){
 					is_calibration_runing = true;
 					SDK_LOG("The SearchHome is processing...");
 				}

@@ -51,6 +51,7 @@ set(EXAMPLES
     payload_set_standby_mode.cpp
     payload_set_restart_apps.cpp
     camera_set_ext_settings.cpp
+    gimbal_calib_auto_tune.cpp
 )
 endif()
 

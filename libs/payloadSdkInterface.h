@@ -25,6 +25,7 @@ enum payload_status_event_t{
     PAYLOAD_PARAM_EXT_ACK,
 
     PAYLOAD_PARAM_CAM_FOV_STATUS,
+    PAYLOAD_PARAM_DISTANCE_SENSOR,
 
     PAYLOAD_RECORD_STATUS
 };
@@ -356,7 +357,7 @@ public:
     void getPayloadCameraFOVStatus(camera_type_t cam_type);
 
     void requestParamValue(uint8_t pIndex);
-    void setParamRate(uint8_t pIndex, uint16_t time_ms);
+    void setParamRate(int pIndex, uint16_t time_ms);
     void requestMessageStreamInterval();    
 
 private:
@@ -469,5 +470,6 @@ public:
     void _handle_request_component_info(mavlink_message_t* msg);
 
     void _handle_statustext(mavlink_message_t* msg);
+    void _handle_distance_sensor(mavlink_message_t* msg);
 };
 #endif

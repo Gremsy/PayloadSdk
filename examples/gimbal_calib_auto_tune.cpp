@@ -1,6 +1,7 @@
 /**
  * This sample will show how to perfrom the gimbal auto tune process
  * Only support gimbal's firmware 790.6 or higher
+ * 
  * The sequence is:
  * 1. Seding to auto tune command to the gimbal, uses command_long (MAV_CMD_USER_3)
  * 2. Checking the ACK feedback from the gimbal for the process's status
@@ -102,11 +103,6 @@ void onPayloadStatusChanged(int event, double* param){
 			// param[1]: result
 			// param[2]: progress
 			SDK_LOG("Got PAYLOAD_ACK for command %.2f with status %.2f, progress: %.2f", param[0], param[1], param[2]);
-
-			// if(param[1] == MAV_RESULT_ACCEPTED){
-			// 	is_calibration_runing = true;
-			// 	usleep(1000000); // waiting for the calib init
-			// }
 
 			if(param[1] == MAV_RESULT_ACCEPTED){
 				if(is_calibration_runing){

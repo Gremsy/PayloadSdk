@@ -719,25 +719,29 @@ create_video_interface() {
     url_frame->add(*url_box);
     box->pack_start(*url_frame, Gtk::PACK_SHRINK);
 
-    // Video display area
-    auto video_frame = Gtk::make_managed<Gtk::Frame>();
-    video_area = Gtk::make_managed<Gtk::DrawingArea>();
-    video_area->set_size_request(640, 360); // 16:9 ratio (640x360)
-    video_area->set_double_buffered(false);
-    
-    // Set aspect ratio constraint
-    video_area->set_vexpand(true);
-    video_area->set_hexpand(true);
-    
-    video_area->signal_draw().connect(sigc::mem_fun(*this, &PayloadSettingsTab::on_video_area_draw));
-    video_area->signal_realize().connect(sigc::mem_fun(*this, &PayloadSettingsTab::on_video_area_realize));
-    video_area->signal_configure_event().connect(sigc::mem_fun(*this, &PayloadSettingsTab::on_video_area_configure_event));
-    video_area->add_events(Gdk::BUTTON_PRESS_MASK);
-    
-    video_frame->add(*video_area);
-    box->pack_start(*video_frame, Gtk::PACK_EXPAND_WIDGET);
-    video_area->signal_button_press_event().connect(sigc::mem_fun(*this, &PayloadSettingsTab::on_video_area_clicked), false);
+    // Video display container
+    video_frame_container = Gtk::make_managed<Gtk::ScrolledWindow>();
+    video_frame_container->set_policy(Gtk::POLICY_NEVER, Gtk::POLICY_NEVER);
+    video_frame_container->set_size_request(640, 360);
+    video_frame_container->set_hexpand(false);
+    video_frame_container->set_vexpand(false);
+    video_frame_container->set_halign(Gtk::ALIGN_START);
+    video_frame_container->set_valign(Gtk::ALIGN_START);
+    video_frame_container->set_shadow_type(Gtk::SHADOW_NONE);
 
+    auto placeholder = Gtk::make_managed<Gtk::Label>("No video stream");
+    placeholder->set_name("video-placeholder");
+    placeholder->set_hexpand(true);
+    placeholder->set_vexpand(true);
+
+    auto css_placeholder = Gtk::CssProvider::create();
+    css_placeholder->load_from_data(
+        "#video-placeholder { background-color: #000000; color: #aaaaaa; }"
+    );
+    placeholder->get_style_context()->add_provider(css_placeholder, GTK_STYLE_PROVIDER_PRIORITY_USER);
+
+    video_frame_container->add(*placeholder);
+    box->pack_start(*video_frame_container, Gtk::PACK_SHRINK);
 
     touch_button = Gtk::make_managed<Gtk::ToggleButton>("Touch");
     track_button = Gtk::make_managed<Gtk::ToggleButton>("Track");
@@ -811,7 +815,7 @@ PayloadSettingsTab::
 setup_gstreamer_pipeline() {
     std::string url = url_entry->get_text();
     std::string pipeline_str =
-        "rtspsrc location=" + url + " latency=200 ! decodebin ! videoconvert ! xvimagesink name=vsink sync=false force-aspect-ratio=true";
+        "rtspsrc location=" + url + " latency=200 ! decodebin ! videoconvert ! gtksink name=vsink sync=false";
 
     GError* error = nullptr;
     pipeline = gst_parse_launch(pipeline_str.c_str(), &error);
@@ -827,8 +831,34 @@ setup_gstreamer_pipeline() {
 
     videosink = gst_bin_get_by_name(GST_BIN(pipeline), "vsink");
     if (!videosink) {
+        gst_object_unref(pipeline);
+        pipeline = nullptr;
         return;
     }
+
+    // Get the GtkWidget created by gtksink
+    GtkWidget* raw_widget = nullptr;
+    g_object_get(videosink, "widget", &raw_widget, nullptr);
+    if (!raw_widget) {
+        gst_object_unref(videosink);
+        videosink = nullptr;
+        gst_object_unref(pipeline);
+        pipeline = nullptr;
+        return;
+    }
+
+    video_widget = Glib::wrap(raw_widget);
+    video_widget->set_vexpand(true);
+    video_widget->set_hexpand(true);
+    video_widget->add_events(Gdk::BUTTON_PRESS_MASK);
+    video_widget->signal_button_press_event().connect(
+        sigc::mem_fun(*this, &PayloadSettingsTab::on_video_area_clicked), false);
+
+    if (video_frame_container->get_child()) {
+        video_frame_container->remove();
+    }
+    video_frame_container->add(*video_widget);
+    video_widget->show();
 
     // Setup bus for message handling
     bus = gst_element_get_bus(pipeline);
@@ -847,11 +877,6 @@ play_stream(const std::string& rtsp_url) {
 
     if (!pipeline) {
         return;
-    }
-
-    // Set video overlay
-    if (video_window_handle != 0) {
-        gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(videosink), video_window_handle);
     }
 
     // Start playing
@@ -891,8 +916,25 @@ stop_stream() {
         fullscreen_button->set_sensitive(false);
     }
 
-    // Clear video area
-    video_area->queue_draw();
+    if (video_frame_container) {
+        if (video_frame_container->get_child()) {
+            video_frame_container->remove();
+        }
+        auto placeholder = Gtk::make_managed<Gtk::Label>("No video stream");
+        placeholder->set_name("video-placeholder");
+        placeholder->set_hexpand(true);
+        placeholder->set_vexpand(true);
+
+        auto css_placeholder = Gtk::CssProvider::create();
+        css_placeholder->load_from_data(
+            "#video-placeholder { background-color: #000000; color: #aaaaaa; }"
+        );
+        placeholder->get_style_context()->add_provider(css_placeholder, GTK_STYLE_PROVIDER_PRIORITY_USER);
+
+        video_frame_container->add(*placeholder);
+        placeholder->show();
+    }
+    video_widget = nullptr;
 }
 
 void 
@@ -961,64 +1003,40 @@ toggle_fullscreen() {
 void
 PayloadSettingsTab::
 enter_fullscreen() {
-    if (!is_playing || is_fullscreen) {
+    if (!is_playing || is_fullscreen || !video_widget) {
         return;
     }
 
-    // Create fullscreen window
-    fullscreen_window = Gtk::make_managed<Gtk::Window>();
+    video_frame_container->remove();
+
+    fullscreen_window = new Gtk::Window();
     fullscreen_window->set_title("Video Fullscreen");
-    fullscreen_window->fullscreen();
     fullscreen_window->set_decorated(false);
 
-    // Create video area for fullscreen
-    fullscreen_video_area = Gtk::make_managed<Gtk::DrawingArea>();
-    fullscreen_video_area->set_size_request(1920, 1080);
-    fullscreen_video_area->set_double_buffered(false);
-    fullscreen_video_area->set_vexpand(true);
-    fullscreen_video_area->set_hexpand(true);
+    fullscreen_window->add(*video_widget);
+    video_widget->set_vexpand(true);
+    video_widget->set_hexpand(true);
+
+    fullscreen_window->signal_key_press_event().connect(
+        sigc::mem_fun(*this, &PayloadSettingsTab::on_fullscreen_key_press));
 
     // Add events for mouse click (for touch/tracking)
-    fullscreen_video_area->add_events(Gdk::BUTTON_PRESS_MASK);
-    fullscreen_video_area->signal_button_press_event().connect([this](GdkEventButton* event) {
-        if (is_touch && is_playing) {
-            double x_screen = event->x;
-            double y_screen = event->y;
-            int width = fullscreen_video_area->get_allocated_width();
-            int height = fullscreen_video_area->get_allocated_height();
-
-            double x_send = x_screen / width * 1920;
-            double y_send = y_screen / height * 1080;
-
-            double params[2] = {x_send, y_send};
-            on_button_clicked(PAYLOAD_TOUCH, params);
+    fullscreen_window->signal_button_press_event().connect([this](GdkEventButton* event) {
+        if (is_touch && is_playing && video_widget) {
+            int width  = video_widget->get_allocated_width();
+            int height = video_widget->get_allocated_height();
+            if (width > 0 && height > 0) {
+                double x_send = event->x / width  * 1920.0;
+                double y_send = event->y / height * 1080.0;
+                double params[2] = {x_send, y_send};
+                on_button_clicked(PAYLOAD_TOUCH, params);
+            }
         }
         return true;
     }, false);
 
-    // Handle key press for ESC to exit fullscreen
-    fullscreen_window->signal_key_press_event().connect(
-        sigc::mem_fun(*this, &PayloadSettingsTab::on_fullscreen_key_press)
-    );
-
-    fullscreen_window->add(*fullscreen_video_area);
     fullscreen_window->show_all();
-
-    // Wait for window to be realized
-    while (!fullscreen_video_area->get_window()) {
-        Gtk::Main::iteration(false);
-    }
-
-    // Get window handle
-    GdkWindow* window = fullscreen_video_area->get_window()->gobj();
-    if (GDK_IS_X11_WINDOW(window)) {
-        fullscreen_window_handle = GDK_WINDOW_XID(window);
-    }
-
-    // Switch video output to fullscreen window
-    if (videosink && fullscreen_window_handle != 0) {
-        gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(videosink), fullscreen_window_handle);
-    }
+    fullscreen_window->fullscreen();
 
     is_fullscreen = true;
     if (fullscreen_button) {
@@ -1029,31 +1047,26 @@ enter_fullscreen() {
 void
 PayloadSettingsTab::
 exit_fullscreen() {
-    if (!is_fullscreen) {
+    if (!is_fullscreen || !video_widget) {
         return;
     }
 
-    // Switch video back to normal window
-    if (videosink && video_window_handle != 0) {
-        gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(videosink), video_window_handle);
-    }
-
-    // Destroy fullscreen window
+    // Remove video_widget from the fullscreen window, returning the main container.
     if (fullscreen_window) {
+        fullscreen_window->remove();
         delete fullscreen_window;
         fullscreen_window = nullptr;
-        fullscreen_video_area = nullptr;
-        fullscreen_window_handle = 0;
     }
+
+    if (video_frame_container->get_child()) {
+        video_frame_container->remove();
+    }
+    video_frame_container->add(*video_widget);
+    video_widget->show();
 
     is_fullscreen = false;
     if (fullscreen_button) {
         fullscreen_button->set_label("Fullscreen");
-    }
-
-    // Redraw normal video area
-    if (video_area) {
-        video_area->queue_draw();
     }
 }
 
@@ -1066,46 +1079,6 @@ on_fullscreen_key_press(GdkEventKey* event) {
         return true;
     }
     return false;
-}
-
-bool
-PayloadSettingsTab::
-on_video_area_draw(const Cairo::RefPtr<Cairo::Context>& cr) {
-    if (!is_playing) {
-        // Draw placeholder when not playing
-        Gtk::Allocation allocation = video_area->get_allocation();
-        const int width = allocation.get_width();
-        const int height = allocation.get_height();
-
-        // Fill with black background
-        cr->set_source_rgb(0.0, 0.0, 0.0);
-        cr->rectangle(0, 0, width, height);
-        cr->fill();
-
-        // Draw text
-        cr->set_source_rgb(0.7, 0.7, 0.7);
-        cr->select_font_face("Sans", Cairo::FONT_SLANT_NORMAL, Cairo::FONT_WEIGHT_NORMAL);
-        cr->set_font_size(16);
-        
-        std::string text = "No video stream";
-        Cairo::TextExtents text_extents;
-        cr->get_text_extents(text, text_extents);
-        
-        cr->move_to((width - text_extents.width) / 2, (height + text_extents.height) / 2);
-        cr->show_text(text);
-    }
-    
-    return true;
-}
-
-void 
-PayloadSettingsTab::
-on_video_area_realize() {
-    // Get window handle for video overlay
-    GdkWindow* window = video_area->get_window()->gobj();
-    if (GDK_IS_X11_WINDOW(window)) {
-        video_window_handle = GDK_WINDOW_XID(window);
-    }
 }
 
 gboolean 
@@ -1177,54 +1150,21 @@ on_pad_added(GstElement* element, GstPad* pad, gpointer user_data) {
     gst_object_unref(sink_pad);
 }
 
-void 
-PayloadSettingsTab::
-maintain_aspect_ratio(int& width, int& height) {
-    const double aspect_ratio = 16.0 / 9.0;
-    double current_ratio = static_cast<double>(width) / height;
-    
-    if (current_ratio > aspect_ratio) {
-        // Too wide, adjust width
-        width = static_cast<int>(height * aspect_ratio);
-    } else {
-        // Too tall, adjust height
-        height = static_cast<int>(width / aspect_ratio);
-    }
-}
-
-bool 
-PayloadSettingsTab::
-on_video_area_configure_event(GdkEventConfigure* event) {
-    if (!video_area) return false;
-    
-    int width = event->width;
-    int height = event->height;
-    
-    // Maintain 16:9 aspect ratio
-    maintain_aspect_ratio(width, height);
-    
-    // Resize the drawing area if needed
-    if (width != event->width || height != event->height) {
-        video_area->set_size_request(width, height);
-    }
-    
-    return true;
-} 
-
-bool 
+bool
 PayloadSettingsTab::
 on_video_area_clicked(GdkEventButton* event){
-    if (is_touch && is_playing) {
+    if (is_touch && is_playing && video_widget) {
         double x_screen = event->x;
         double y_screen = event->y;
-        int width = video_area->get_allocated_width();
-        int height = video_area->get_allocated_height();
-
-        double x_send = x_screen / width * 1920;
-        double y_send = y_screen / height * 1080;
-
-        double params[2] = {x_send, y_send};
-        on_button_clicked(PAYLOAD_TOUCH, params);
+        int width  = video_widget->get_allocated_width();
+        int height = video_widget->get_allocated_height();
+        if (width > 0 && height > 0) {
+            double x_send = x_screen / width  * 1920;
+            double y_send = y_screen / height * 1080;
+            
+            double params[2] = {x_send, y_send};
+            on_button_clicked(PAYLOAD_TOUCH, params);
+        }
     }
     return true;
 }

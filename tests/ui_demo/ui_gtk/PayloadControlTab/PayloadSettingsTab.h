@@ -178,14 +178,10 @@ private:
     Gtk::Widget* create_video_interface();
     void setup_gstreamer_pipeline();
     void cleanup_gstreamer();
-    void maintain_aspect_ratio(int& width, int& height);
     
     void on_play_button_clicked();
     void on_stop_button_clicked();
     void on_url_entry_activate();
-    bool on_video_area_draw(const Cairo::RefPtr<Cairo::Context>& cr);
-    void on_video_area_realize();
-    bool on_video_area_configure_event(GdkEventConfigure* event);
     bool on_video_area_clicked(GdkEventButton* event);
     
     // GStreamer callbacks
@@ -550,12 +546,13 @@ private:
     Gtk::Button* fullscreen_button = nullptr;
     Gtk::ToggleButton* touch_button = nullptr;
     Gtk::ToggleButton* track_button = nullptr;
-    Gtk::DrawingArea* video_area = nullptr;
+
+    Gtk::Widget* video_widget = nullptr;
+    Gtk::Widget* fullscreen_video_widget = nullptr;
+    Gtk::ScrolledWindow* video_frame_container = nullptr;
 
     // Fullscreen components
     Gtk::Window* fullscreen_window = nullptr;
-    Gtk::DrawingArea* fullscreen_video_area = nullptr;
-    guintptr fullscreen_window_handle = 0;
     bool is_fullscreen = false;
 
     // GStreamer components
@@ -568,7 +565,6 @@ private:
     GstBus* bus = nullptr;
 
     // Video window
-    guintptr video_window_handle = 0;
     bool is_playing = false;
 
     bool is_touch = false;

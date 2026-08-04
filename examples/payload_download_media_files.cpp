@@ -345,8 +345,15 @@ bool dowload_file(std::string url, std::string fileName, bool allowRetry = true)
         return false;
     }
 
-    // Without this the login page would be saved under the media file's name and
-    // look like a corrupt photo. Sign in again and retry once.
+    if (httpCode != 200) {
+        std::cerr << "Download failed: HTTP " << httpCode << std::endl;
+        remove(outPath.c_str());
+        return false;
+    }
+
+    // A web page answered with 200 can only be the login form. Without this check
+    // it would be saved under the media file's name and look like a corrupt photo.
+    // Sign in again and retry once.
     if (gotHtml) {
         remove(outPath.c_str());
         std::cerr << "The session has expired." << std::endl;
@@ -354,12 +361,6 @@ bool dowload_file(std::string url, std::string fileName, bool allowRetry = true)
             return false;
         }
         return dowload_file(url, fileName, false);
-    }
-
-    if (httpCode != 200) {
-        std::cerr << "Download failed: HTTP " << httpCode << std::endl;
-        remove(outPath.c_str());
-        return false;
     }
 
     return true;

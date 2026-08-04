@@ -275,6 +275,89 @@ enum _isotherm_color {
 // EO Sharpness (0-6, step 1)
 #define PAYLOAD_CAMERA_EO_SHARPNESS                 "C_G_SHARPNESS"
 
+// EO Camera Profile - selects a preset; Custom keeps the manual settings below
+#define PAYLOAD_CAMERA_EO_PROFILE                   "C_G_PROFILE"
+#define PAYLOAD_CAMERA_EO_PROFILE_CUSTOM                0
+#define PAYLOAD_CAMERA_EO_PROFILE_DAYLIGHT              1
+#define PAYLOAD_CAMERA_EO_PROFILE_NIGHT_MODE            2
+
+// EO Control Mode
+#define PAYLOAD_CAMERA_EO_CONTROL_MODE              "C_G_CTRL_M"
+#define PAYLOAD_CAMERA_EO_CONTROL_MODE_OFF              0
+#define PAYLOAD_CAMERA_EO_CONTROL_MODE_AUTO             1
+#define PAYLOAD_CAMERA_EO_CONTROL_MODE_USE_SCENE        2
+#define PAYLOAD_CAMERA_EO_CONTROL_MODE_OFF_KEEP_STATE   3
+
+// EO Exposure Mode - manual exposure uses C_G_EXPO_TIME and C_G_ISO_M
+#define PAYLOAD_CAMERA_EO_EXPOSURE_MODE             "C_G_EXPO_M"
+#define PAYLOAD_CAMERA_EO_EXPOSURE_MODE_MANUAL          0
+#define PAYLOAD_CAMERA_EO_EXPOSURE_MODE_AUTO            1
+
+// EO Exposure Lock
+#define PAYLOAD_CAMERA_EO_EXPOSURE_LOCK             "C_G_EXPO_L"
+#define PAYLOAD_CAMERA_EO_EXPOSURE_LOCK_OFF             0
+#define PAYLOAD_CAMERA_EO_EXPOSURE_LOCK_ON              1
+
+// EO Exposure Metering
+#define PAYLOAD_CAMERA_EO_EXPOSURE_METERING         "C_G_EXPO_ME"
+#define PAYLOAD_CAMERA_EO_EXPOSURE_METERING_AVERAGE     0
+#define PAYLOAD_CAMERA_EO_EXPOSURE_METERING_CENTER      1
+#define PAYLOAD_CAMERA_EO_EXPOSURE_METERING_SPOT        2
+
+// EO Exposure Time in microseconds (200-100000, step 100)
+#define PAYLOAD_CAMERA_EO_EXPOSURE_TIME             "C_G_EXPO_TIME"
+
+// EO Manual ISO (100-3200, step 10)
+#define PAYLOAD_CAMERA_EO_ISO_MANUAL                "C_G_ISO_M"
+
+// EO Super HDR
+#define PAYLOAD_CAMERA_EO_SUPER_HDR                 "C_G_SHDR"
+#define PAYLOAD_CAMERA_EO_SUPER_HDR_OFF                 0
+#define PAYLOAD_CAMERA_EO_SUPER_HDR_ON                  1
+
+// EO ADRC (Active Disturbance Rejection Control)
+#define PAYLOAD_CAMERA_EO_ADRC                      "C_G_ADRC"
+#define PAYLOAD_CAMERA_EO_ADRC_OFF                      0
+#define PAYLOAD_CAMERA_EO_ADRC_ON                       1
+
+// EO Noise Reduction
+#define PAYLOAD_CAMERA_EO_NOISE_REDUCTION           "C_G_NR"
+#define PAYLOAD_CAMERA_EO_NOISE_REDUCTION_OFF           0
+#define PAYLOAD_CAMERA_EO_NOISE_REDUCTION_FAST          1
+#define PAYLOAD_CAMERA_EO_NOISE_REDUCTION_HQ            2
+
+// EO Contrast (1-10, step 1)
+#define PAYLOAD_CAMERA_EO_CONTRAST                  "C_G_CONTRA"
+
+// EO Saturation (0-10, step 1)
+#define PAYLOAD_CAMERA_EO_SATURATION                "C_G_SATU"
+
+// EO Night Mode
+#define PAYLOAD_CAMERA_EO_NIGHT_MODE                "C_G_N_MODE_OPT"
+#define PAYLOAD_CAMERA_EO_NIGHT_MODE_AUTO               0
+#define PAYLOAD_CAMERA_EO_NIGHT_MODE_OFF                1
+#define PAYLOAD_CAMERA_EO_NIGHT_MODE_ON                 2
+
+// EO Night Mode frame rate
+#define PAYLOAD_CAMERA_EO_NIGHT_MODE_FPS            "C_G_N_MODE_FPS"
+#define PAYLOAD_CAMERA_EO_NIGHT_MODE_FPS_30             0
+#define PAYLOAD_CAMERA_EO_NIGHT_MODE_FPS_20             1
+#define PAYLOAD_CAMERA_EO_NIGHT_MODE_FPS_10             2
+
+// ============================================================================
+// ADVANCED IMAGE PROCESSING
+// ============================================================================
+
+// Electronic Image Stabilizer
+#define PAYLOAD_CAMERA_ADV_EIS                      "ADV_EIS"
+#define PAYLOAD_CAMERA_ADV_EIS_OFF                      0
+#define PAYLOAD_CAMERA_ADV_EIS_ON                       1
+
+// IR Image Enhancement
+#define PAYLOAD_CAMERA_ADV_IR_IMAGE_ENHANCE         "ADV_IMG_ENHANCE"
+#define PAYLOAD_CAMERA_ADV_IR_IMAGE_ENHANCE_OFF         0
+#define PAYLOAD_CAMERA_ADV_IR_IMAGE_ENHANCE_ON          1
+
 // ============================================================================
 // GIMBAL SETTINGS
 // ============================================================================

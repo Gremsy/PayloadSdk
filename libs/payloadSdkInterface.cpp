@@ -68,6 +68,11 @@ regPayloadHeartbeatChanged(payload_heartbeat_callback_t func){
     __notifyPayloadHeartbeatChanged = func;
 }
 
+void
+PayloadSdkInterface::
+regPayloadDetectionChanged(payload_detection_callback_t func){
+    __notifyPayloadDetectionChanged = func;
+}
 
 bool 
 PayloadSdkInterface::
@@ -1729,6 +1734,10 @@ payload_recv_handle()
                 _handle_distance_sensor(&msg);
                 break;
             }
+            case MAVLINK_MSG_ID_V2_EXTENSION:{
+                _handle_msg_v2_extension(&msg);
+                break;
+            }
             default: break;
             }
         }else{
@@ -2055,4 +2064,29 @@ _handle_distance_sensor(mavlink_message_t* msg){
         };
         __notifyPayloadStatusChanged(PAYLOAD_PARAM_DISTANCE_SENSOR, params);
     }
+}
+
+void
+PayloadSdkInterface::
+_handle_msg_v2_extension(mavlink_message_t* msg){
+    mavlink_v2_extension_t ext = {0};
+    mavlink_msg_v2_extension_decode(msg, &ext);
+
+    if (ext.message_type != DET_MSG_TYPE) return;
+
+    det_packet_t pkt;
+    memcpy(&pkt, ext.payload, sizeof(det_packet_t));
+
+    if (pkt.magic != DET_PACKET_MAGIC) {
+        SDK_LOG("Detection packet: bad magic 0x%04x", pkt.magic);
+        return;
+    }
+    if (pkt.version != DET_PACKET_VERSION) {
+        SDK_LOG("Detection packet: version mismatch %d != %d", pkt.version, DET_PACKET_VERSION);
+        return;
+    }
+    if (pkt.num_boxes > DET_MAX_BOXES) pkt.num_boxes = DET_MAX_BOXES;
+
+    if (__notifyPayloadDetectionChanged)
+        __notifyPayloadDetectionChanged(pkt);
 }

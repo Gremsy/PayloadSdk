@@ -50,8 +50,30 @@ enum tracking_status_t {
     TRACK_LOST = 2
 };
 
+// PARAM_TRACK_STATUS packs two fields: (mode << 8) | status
+static const char* track_status_name(int status){
+	switch(status){
+	case TRACK_IDLE:    return "IDLE";
+	case TRACK_TRACKED: return "TRACKED";
+	case TRACK_LOST:    return "LOST";
+	default:            return "UNKNOWN";
+	}
+}
+
+static const char* track_mode_name(int mode){
+	switch(mode){
+	case TRACK_STOP:   return "STOP";
+	case TRACK_ACTIVE: return "ACTIVE";
+	default:           return "UNKNOWN";
+	}
+}
+
 pthread_t thrd_tracking;
 float track_pos_x = 0, track_pos_y = 0, track_status = 0, track_pos_w = 0, track_pos_h = 0;
+
+// Raw PARAM_TRACK_STATUS value and the mode field decoded from it, for logging only.
+int track_status_raw = 0;
+int track_mode = TRACK_STOP;
 
 int main(int argc, char *argv[]){
 	printf("Starting Do Object Tracking example...\n");
@@ -165,6 +187,9 @@ void handle_tracking(){
 		#endif
 
 		// check tracking status
+		printf("--> tracker state: %s (raw=%d, mode=%s) \n",
+			track_status_name((int)track_status), track_status_raw, track_mode_name(track_mode));
+
 		if(track_status == TRACK_TRACKED){
 			printf("Object was tracked. Keep this object for 5 seconds... \n");
 			usleep(5000000); // sleep for 5 secs
@@ -205,13 +230,20 @@ void onPayloadStatusChanged(int event, double* param){
 			track_pos_h = param[1];
 		}
 		else if(param[0] == PARAM_TRACK_STATUS){
-			track_status = (float)((int)param[1] & 0xff);
+			track_status_raw = (int)param[1];
+			track_mode       = (track_status_raw >> 8) & 0xff;
+			track_status     = (float)(track_status_raw & 0xff);
 		}
 		else{
 			break;
 		}
 
-		printf("%s, status: %.2f, x: %.2f, y: %.2f, w: %.2f, h: %.2f \n", __func__, track_status, track_pos_x, track_pos_y, track_pos_w, track_pos_h);
+		printf("%s, status: %s (raw=%d, mode=%s), x: %.2f, y: %.2f, w: %.2f, h: %.2f \n",
+			__func__,
+			track_status_name((int)track_status),
+			track_status_raw,
+			track_mode_name(track_mode),
+			track_pos_x, track_pos_y, track_pos_w, track_pos_h);
 		break;
 	}
 	default: break;

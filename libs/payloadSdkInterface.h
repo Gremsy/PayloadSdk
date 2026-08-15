@@ -5,6 +5,7 @@
 #include <chrono> // for get time
 #include <map>
 #include "payloadsdk.h"
+#include "detection_packet.h"
 #include <functional>
 
 enum payload_status_event_t{
@@ -143,6 +144,7 @@ public:
     typedef std::function<void(int event, char* param_char, double* param_double)> payload_param_callback_t;
     typedef std::function<void(int event, char* param_char, double* param_double)> payload_streamInfo_callback_t;
     typedef std::function<void(int event, char* param_char, double* param_double)> payload_recordInfo_callback_t;
+    typedef std::function<void(const det_packet_t& pkt)> payload_detection_callback_t;
     typedef std::function<void(mavlink_message_t msg)> payload_heartbeat_callback_t;
 
     PayloadSdkInterface();
@@ -166,6 +168,9 @@ public:
 
     void regPayloadHeartbeatChanged(payload_heartbeat_callback_t func);
     payload_heartbeat_callback_t __notifyPayloadHeartbeatChanged = NULL;
+
+    void regPayloadDetectionChanged(payload_detection_callback_t func);
+    payload_detection_callback_t __notifyPayloadDetectionChanged = NULL;
 
 
     /**
@@ -471,5 +476,6 @@ public:
 
     void _handle_statustext(mavlink_message_t* msg);
     void _handle_distance_sensor(mavlink_message_t* msg);
+    void _handle_msg_v2_extension(mavlink_message_t* msg);
 };
 #endif

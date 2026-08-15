@@ -46,6 +46,7 @@ set(EXAMPLES
     payload_set_camera_zoom_targetpos.cpp
     payload_set_stream_resolution.cpp
     payload_set_stream_profile.cpp
+    payload_get_bounding_box_detection.cpp
 
     payload_get_video_record_status.cpp
     payload_set_standby_mode.cpp
@@ -113,6 +114,7 @@ set(EXAMPLES
     payload_extract_tiff_file.cpp
     payload_set_gps.cpp
     payload_get_fov_status.cpp
+    payload_get_bounding_box_detection.cpp
 
     payload_set_restart_apps.cpp
 )

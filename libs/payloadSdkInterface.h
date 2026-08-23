@@ -382,7 +382,7 @@ private:
     bool is_send_stream_request = false;
 
     uint32_t current_gimbal_mode;
-    uint16_t current_attitude_flags;
+    uint16_t current_gb_device_flags;
 
     std::map<uint16_t, StatusTextBuffer> statustext_buffers;
 public:
@@ -391,6 +391,12 @@ public:
      * @para4 : Angular rate or angle mode
      * */
     void setGimbalSpeed(float spd_pitch, float spd_roll, float spd_yaw, input_mode_t mode);
+
+    /**
+     * We will use the flag inside the message MAVLINK_MSG_ID_GIMBAL_DEVICE_SET_ATTITUDE (284) for the gimbal's mode
+     **/
+    uint16_t getGimbalDeviceStatusFlags();
+    void setGimbalMode(uint16_t mode);
 
     /**
      * Set gimbal angle
@@ -470,7 +476,7 @@ public:
     void _handle_msg_camera_stream_information(mavlink_message_t* msg);
     void _handle_msg_camera_information(mavlink_message_t* msg);
 
-    void _handle_msg_device_attitude(mavlink_message_t* msg);
+    void _handle_msg_device_attitude_status(mavlink_message_t* msg);
     void _handle_request_camera_fov_status(mavlink_message_t* msg);
     void _handle_request_component_info(mavlink_message_t* msg);
 

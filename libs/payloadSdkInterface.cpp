@@ -196,8 +196,6 @@ PayloadSdkInterface::
 setPayloadCameraParam(char param_id[], uint32_t param_value, uint8_t param_type){
     mavlink_param_ext_set_t msg={0};
 
-    current_gimbal_mode = param_value;
-
     strcpy((char *)msg.param_id, param_id);
 
     cam_param_union_t u;
@@ -1282,26 +1280,7 @@ setGimbalSpeed(float spd_pitch, float spd_roll, float spd_yaw, input_mode_t mode
     attitude.target_system    = GIMBAL_SYSTEM_ID;
     attitude.target_component = GIMBAL_COMPONENT_ID;
 
-
-    switch (current_gimbal_mode){
-        case(PAYLOAD_CAMERA_GIMBAL_MODE_OFF):
-            attitude.flags = current_attitude_flags | GIMBAL_DEVICE_FLAGS_RETRACT;
-            break;
-        case(PAYLOAD_CAMERA_GIMBAL_MODE_RESET):
-            attitude.flags = current_attitude_flags | GIMBAL_DEVICE_FLAGS_NEUTRAL;
-            break;
-        case(PAYLOAD_CAMERA_GIMBAL_MODE_LOCK):
-            attitude.flags = current_attitude_flags | GIMBAL_DEVICE_FLAGS_YAW_LOCK;
-            break;
-        case(PAYLOAD_CAMERA_GIMBAL_MODE_FOLLOW):
-            attitude.flags = current_attitude_flags & (~GIMBAL_DEVICE_FLAGS_YAW_LOCK);
-            break;
-        case(PAYLOAD_CAMERA_GIMBAL_MODE_MAPPING):
-            #define MESSAGE_FLAG_MAPPING 0x4000
-            attitude.flags = current_attitude_flags | MESSAGE_FLAG_MAPPING;
-            break;
-        default: break;
-    }    
+    attitude.flags = current_gb_device_flags;
 
     if (mode == INPUT_ANGLE) {
         /* Convert target to quaternion */
@@ -1333,6 +1312,44 @@ setGimbalSpeed(float spd_pitch, float spd_roll, float spd_yaw, input_mode_t mode
         attitude.q[2] = NAN;
         attitude.q[3] = NAN;
     }
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message = { 0 };
+    mavlink_msg_gimbal_device_set_attitude_encode(SYS_ID, COMP_ID, &message, &attitude);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+uint16_t 
+PayloadSdkInterface::
+getGimbalDeviceStatusFlags(){
+    return current_gb_device_flags;
+}
+
+void 
+PayloadSdkInterface::
+setGimbalMode(uint16_t flags){
+        /* Pack message */
+    mavlink_gimbal_device_set_attitude_t attitude = { 0 };
+    attitude.target_system    = GIMBAL_SYSTEM_ID;
+    attitude.target_component = GIMBAL_COMPONENT_ID;
+
+    attitude.flags = flags;  
+
+    attitude.angular_velocity_x = 0;
+    attitude.angular_velocity_y = 0;
+    attitude.angular_velocity_z = 0;
+    attitude.q[0] = NAN;
+    attitude.q[1] = NAN;
+    attitude.q[2] = NAN;
+    attitude.q[3] = NAN;
 
     // --------------------------------------------------------------------------
     //   ENCODE
@@ -1715,7 +1732,7 @@ payload_recv_handle()
                 break;
             }
             case MAVLINK_MSG_ID_GIMBAL_DEVICE_ATTITUDE_STATUS:{
-                _handle_msg_device_attitude(&msg);
+                _handle_msg_device_attitude_status(&msg);
                 break;  
             }    
             case MAVLINK_MSG_ID_CAMERA_FOV_STATUS:{
@@ -1864,7 +1881,9 @@ _handle_msg_mount_orientation(mavlink_message_t* msg){
     if(__notifyPayloadStatusChanged != NULL){
         double pitch_ = packet.pitch;
         double roll_ = packet.roll;
-        double yaw_ = (current_gimbal_mode == PAYLOAD_CAMERA_GIMBAL_MODE_LOCK) ? packet.yaw_absolute : packet.yaw;
+
+        bool _is_lock_mode = (current_gb_device_flags & GIMBAL_DEVICE_FLAGS_YAW_LOCK) ? true : false;
+        double yaw_ = (_is_lock_mode) ? packet.yaw_absolute : packet.yaw;
 
         double params[3] = {pitch_, roll_, yaw_};
         __notifyPayloadStatusChanged(PAYLOAD_GB_ATTITUDE, params);
@@ -1916,7 +1935,7 @@ _handle_msg_debug(mavlink_message_t* msg){
 
 void
 PayloadSdkInterface::
-_handle_msg_device_attitude(mavlink_message_t* msg)
+_handle_msg_device_attitude_status(mavlink_message_t* msg)
 {
     mavlink_gimbal_device_attitude_status_t attitude = {0};
     mavlink_msg_gimbal_device_attitude_status_decode(msg, &attitude);
@@ -1936,21 +1955,21 @@ _handle_msg_device_attitude(mavlink_message_t* msg)
         param[5] = attitude.angular_velocity_z;
 
         // Save the current attitude flag 
-        current_attitude_flags = attitude.flags;
+        current_gb_device_flags = attitude.flags;
 
-        if(current_attitude_flags & GIMBAL_DEVICE_FLAGS_YAW_LOCK)
+        if(current_gb_device_flags & GIMBAL_DEVICE_FLAGS_YAW_LOCK)
         {
             strcpy(param_mode, "LOCK_MODE");
         }
-        else if(current_attitude_flags & GIMBAL_DEVICE_FLAGS_RETRACT)
+        else if(current_gb_device_flags & GIMBAL_DEVICE_FLAGS_RETRACT)
         {
             strcpy(param_mode, "OFF_MODE");
         }
-        else if(current_attitude_flags & GIMBAL_DEVICE_FLAGS_NEUTRAL)
+        else if(current_gb_device_flags & GIMBAL_DEVICE_FLAGS_NEUTRAL)
         {
             strcpy(param_mode, "RESET_MODE");
         }
-        else if(current_attitude_flags & 0x4000)
+        else if(current_gb_device_flags & 0x4000)
         {
             strcpy(param_mode, "MAPPING_MODE");
         }

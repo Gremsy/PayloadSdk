@@ -14,6 +14,7 @@
 
 #include "common_include.hpp"
 #include "unpack.hpp"
+#include "klv_gps_sender.hpp"
 
 class Klv_Decode_Interface
 {
@@ -65,6 +66,7 @@ private:
     bool decodeKlvData(GstBuffer *buffer);
     void printKlvData();
     void print_tag_values(const std::vector<Unpack::TagValuePair> &tag_values);
+    KlvGpsSender gps_sender{"127.0.0.1", 5005};
 
 
 };

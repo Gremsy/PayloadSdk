@@ -213,6 +213,8 @@ decodeKlvData(GstBuffer *buffer)
     size_t size = map_info.size;
 
     unpack->unpack_misb(data, size, tag_values);
+
+    gps_sender.update(tag_values);
     printKlvData();
 
     gst_buffer_unmap(buffer, &map_info);

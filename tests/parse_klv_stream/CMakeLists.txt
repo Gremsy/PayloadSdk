@@ -45,6 +45,11 @@ message(STATUS "Using libmisb0601 for ${MISB_ARCH}: ${MISB_LIB}")
 
 add_library(misb0601 STATIC IMPORTED)
 
+get_filename_component(PAYLOAD_SDK_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
+if(NOT TARGET PayloadSDK)
+    add_subdirectory(${PAYLOAD_SDK_ROOT} ${CMAKE_CURRENT_BINARY_DIR}/PayloadSDK EXCLUDE_FROM_ALL)
+endif()
+
 set_target_properties(misb0601 PROPERTIES
     IMPORTED_LOCATION
         ${MISB_LIB}
@@ -66,6 +71,7 @@ add_executable(Test_Decode_KLV
 target_link_libraries(Test_Decode_KLV
     PRIVATE
         misb0601
+        PayloadSDK
         ${GST_LIBRARIES}
         ${OpenCV_LIBS}
         Threads::Threads

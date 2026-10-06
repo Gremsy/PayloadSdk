@@ -1,13 +1,27 @@
 #include "klv_decode_interface.hpp"
 #include "app_logging.h"
+#include "gps_simulator.hpp"
+
+#include <atomic>
+#include <csignal>
+#include <string>
+#include <thread>
+#include <vector>
+
+static std::atomic<bool> g_quit{false};
+
+static void onSigint(int)
+{
+    g_quit = true;
+}
 
 static void busMessageLoop(GstElement *pipeline)
 {
     GstBus *bus = gst_element_get_bus(pipeline);
     gboolean terminate = FALSE;
-    while (!terminate)
+    while (!terminate && !g_quit)
     {
-        GstMessage *msg = gst_bus_timed_pop_filtered(bus, GST_CLOCK_TIME_NONE,
+        GstMessage *msg = gst_bus_timed_pop_filtered(bus, 200 * GST_MSECOND,
                                                      (GstMessageType)(GST_MESSAGE_STATE_CHANGED | GST_MESSAGE_ERROR | GST_MESSAGE_EOS));
 
         if (msg != nullptr)
@@ -59,6 +73,26 @@ int main(int argc, char *argv[])
     std::unique_ptr<Klv_Decode_Interface> decoder_klv(new Klv_Decode_Interface());
 
     gst_init(&argc, &argv);
+
+    // Options: [--no-gps] and the default GPS as "lat lon [alt]"
+    // or "--lat X --lon Y --alt Z".
+    GpsFix gps = {10.836414, 106.713832, 30.0};
+    bool use_gps = true;
+    std::vector<std::string> gps_args;
+    for (int i = 1; i < argc; ++i)
+    {
+        const std::string a = argv[i];
+        if (a == "--no-gps")
+            use_gps = false;
+        else
+            gps_args.push_back(a);
+    }
+    std::string arg_err;
+    if (!parseGpsArgs(gps_args, gps, arg_err))
+    {
+        LOG_ERROR("Invalid GPS option: %s", arg_err.c_str());
+        return -1;
+    }
 
     std::string _port = "8554";
 
@@ -115,7 +149,20 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    signal(SIGINT, onSigint);
+
+    GpsSimulator *sim = nullptr;
+    if (use_gps)
+    {
+        sim = new GpsSimulator(gps);
+        sim->start();
+        std::thread(runConsole, sim, &g_quit).detach();
+    }
+
     busMessageLoop(data.pipeline);
+
+    if (sim)
+        sim->stop();
 
     gst_element_set_state(data.pipeline, GST_STATE_NULL);
     gst_object_unref(data.pipeline);

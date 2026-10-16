@@ -47,6 +47,7 @@ if (VIO)
     add_subdirectory(tests/demo_project)
     add_subdirectory(tests/parse_thermal_stream)
     add_subdirectory(tests/parse_klv_stream)
+    add_subdirectory(tests/gamepad_control)
 endif(VIO)
 
 if (ORUSL)

@@ -23,7 +23,15 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_L
   target_link_libraries(gamepad_reader PUBLIC stdc++fs)
 endif()
 
+# Thu vien gamepad_controller (dung gamepad_reader)
+add_library(gamepad_controller STATIC
+  src/gamepad_controller.cpp
+)
+target_include_directories(gamepad_controller PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+target_link_libraries(gamepad_controller PUBLIC gamepad_reader)
+target_compile_options(gamepad_controller PRIVATE -Wall -Wextra)
+
 # Chuong trinh chinh su dung thu vien
-add_executable(gamepad_ctrl gamepad_ctrl.cpp)
-target_link_libraries(gamepad_ctrl PRIVATE gamepad_reader PayloadSDK)
+add_executable(gamepad_ctrl main.cpp)
+target_link_libraries(gamepad_ctrl PRIVATE gamepad_controller PayloadSDK)
 target_compile_options(gamepad_ctrl PRIVATE -Wall -Wextra)

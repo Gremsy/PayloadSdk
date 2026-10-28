@@ -1,0 +1,389 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1960 2238" width="297mm" height="339.1mm">
+<defs>
+<linearGradient id="hero" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b1b45"/><stop offset="0.6" stop-color="#1e3a8a"/><stop offset="1" stop-color="#2563eb"/></linearGradient>
+<linearGradient id="ok" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#047857"/><stop offset="1" stop-color="#10b981"/></linearGradient>
+<filter id="sh" x="-4%" y="-8%" width="108%" height="124%"><feGaussianBlur in="SourceAlpha" stdDeviation="7"/><feOffset dy="5" result="o"/><feComponentTransfer><feFuncA type="linear" slope="0.10"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<marker id="arr-w" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0 0, 10 4, 0 8" fill="#ffffff"/></marker>
+<marker id="arr-g" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><polygon points="0 0, 10 4, 0 8" fill="#6ee7b7"/></marker>
+</defs>
+<style>text{font-family:Inter, 'Helvetica Neue', Helvetica, Arial, 'DejaVu Sans', sans-serif;} .mono{font-family:'JetBrains Mono', 'DejaVu Sans Mono', 'Courier New', monospace;}</style>
+<rect width="1960" height="2238" fill="#f1f5f9"/>
+<line x1="70" y1="327" x2="70" y2="2138" stroke="#cbd5e1" stroke-width="3" stroke-dasharray="2,7" stroke-linecap="round"/>
+<rect x="0" y="0" width="1960" height="230" fill="url(#hero)"/>
+<circle cx="1880" cy="-40" r="220" fill="#ffffff" opacity="0.05"/>
+<circle cx="1700" cy="260" r="160" fill="#ffffff" opacity="0.04"/>
+<text x="60" y="62" font-size="13" font-weight="700" letter-spacing="2" fill="#93c5fd">PAYLOADSDK  ·  ORUSL</text>
+<text x="60" y="106" font-size="36" font-weight="800" fill="#ffffff">Payload Software Update</text>
+<text x="60" y="140" font-size="16" fill="#dbeafe">From a .zip package to a running payload in 7 steps.</text>
+<text x="60" y="162" font-size="16" fill="#dbeafe">Follow the same steps to build the update into your own application.</text>
+<rect x="60" y="182" width="146.8" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#ffffff" stroke-opacity="0.25"/>
+<text x="133.4" y="201" text-anchor="middle" font-size="12.5" font-weight="600" fill="#ffffff">SSH upload + md5</text>
+<rect x="216.8" y="182" width="132.2" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#ffffff" stroke-opacity="0.25"/>
+<text x="282.9" y="201" text-anchor="middle" font-size="12.5" font-weight="600" fill="#ffffff">MAVLink reboot</text>
+<rect x="359.0" y="182" width="219.79999999999998" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#ffffff" stroke-opacity="0.25"/>
+<text x="468.9" y="201" text-anchor="middle" font-size="12.5" font-weight="600" fill="#ffffff">Live % from the update log</text>
+<rect x="588.8" y="182" width="205.2" height="28" rx="14" fill="#ffffff" fill-opacity="0.12" stroke="#ffffff" stroke-opacity="0.25"/>
+<text x="691.4" y="201" text-anchor="middle" font-size="12.5" font-weight="600" fill="#ffffff">Auto check of the result</text>
+<rect x="1580" y="52" width="320" height="130" rx="18" fill="#ffffff" fill-opacity="0.08" stroke="#ffffff" stroke-opacity="0.18"/>
+<rect x="1612" y="82" width="60" height="40.800000000000004" rx="4.8" fill="none" stroke="#ffffff" stroke-width="2.5"/>
+<line x1="1642.0" y1="122.80000000000001" x2="1642.0" y2="133.6" stroke="#ffffff" stroke-width="2.5"/>
+<line x1="1628.8" y1="134.8" x2="1655.2" y2="134.8" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+<text x="1642" y="160" text-anchor="middle" font-size="12" font-weight="600" fill="#dbeafe">Your PC</text>
+<rect x="1826.0" y="84" width="24.0" height="9.6" rx="2.4" fill="none" stroke="#6ee7b7" stroke-width="2.5"/>
+<rect x="1808" y="93.6" width="60" height="39.6" rx="8.4" fill="none" stroke="#6ee7b7" stroke-width="2.5"/>
+<circle cx="1838.0" cy="113.4" r="12.0" fill="none" stroke="#6ee7b7" stroke-width="2.5"/>
+<circle cx="1838.0" cy="113.4" r="4.2" fill="#6ee7b7"/>
+<text x="1838" y="160" text-anchor="middle" font-size="12" font-weight="600" fill="#d1fae5">ORUSL payload</text>
+<line x1="1688" y1="108" x2="1794" y2="108" stroke="#ffffff" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arr-w)"/>
+<rect x="1715" y="88" width="50" height="16" rx="8" fill="#ffffff"/>
+<text x="1740" y="100" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e40af">.zip</text>
+<line x1="1794" y1="126" x2="1688" y2="126" stroke="#6ee7b7" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arr-g)"/>
+<text x="1740" y="143" text-anchor="middle" font-size="10.5" font-weight="600" fill="#6ee7b7">progress</text>
+<text x="112" y="276" font-size="12" font-weight="800" letter-spacing="1.6" fill="#64748b">PHASE 1</text>
+<text x="190.39999999999998" y="276" font-size="13" fill="#94a3b8">Prepare and upload  ·  the payload is not changed yet</text>
+<rect x="112" y="292" width="860" height="268" rx="16" fill="#ffffff" stroke="#e2e8f0" filter="url(#sh)"/>
+<rect x="112" y="310" width="4" height="34" rx="2" fill="#2563eb"/>
+<circle cx="70" cy="327" r="21" fill="#2563eb" stroke="#f1f5f9" stroke-width="5"/>
+<text x="70" y="334" text-anchor="middle" font-size="18" font-weight="800" fill="#ffffff">1</text>
+<text x="140" y="335" font-size="21" font-weight="800" fill="#0f172a">Upload the package</text>
+<rect x="887.2" y="312" width="60.8" height="30" rx="15" fill="#eff6ff"/>
+<rect x="899.2" y="319" width="17" height="11.56" rx="1.36" fill="none" stroke="#2563eb" stroke-width="1.6"/>
+<line x1="907.7" y1="330.56" x2="907.7" y2="333.62" stroke="#2563eb" stroke-width="1.6"/>
+<line x1="903.96" y1="333.96" x2="911.44" y2="333.96" stroke="#2563eb" stroke-width="1.6" stroke-linecap="round"/>
+<text x="923.2" y="332" font-size="12.5" font-weight="700" fill="#1e40af">PC</text>
+<rect x="140" y="358" width="546" height="94" rx="10" fill="#0f172a"/>
+<text x="156" y="384" class="mono" xml:space="preserve" font-size="12.5" fill="#e2e8f0">$ export SSHPASS=&lt;password&gt;</text>
+<text x="156" y="402" class="mono" xml:space="preserve" font-size="12.5" fill="#e2e8f0">$ sshpass -e ssh guest@192.168.55.1 \</text>
+<text x="156" y="420" class="mono" xml:space="preserve" font-size="12.5" fill="#e2e8f0">    &quot;cat &gt; /home/guest/payload_update/OrusL_sw_package.zip&quot; \</text>
+<text x="156" y="438" class="mono" xml:space="preserve" font-size="12.5" fill="#e2e8f0">    &lt; OrusL_sw_package.zip</text>
+<circle cx="150" cy="470" r="9" fill="#059669"/>
+<polyline points="145.95,470 149.1,473.15 154.5,466.85" fill="none" stroke="#ffffff" stroke-width="1.98" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="166" y="475" font-size="11.5" font-weight="800" letter-spacing="1.2" fill="#047857">DONE WHEN</text>
+<text x="140" y="498" font-size="15" font-weight="600" fill="#0f172a">md5sum on the PC  =  md5sum on the payload</text>
+<text x="140" y="530" font-size="13" fill="#64748b">Tip: upload as .zip.part, rename to .zip after the md5 check.</text>
+<rect x="706" y="358" width="242" height="90" rx="12" fill="#fff1f2" stroke="#fecdd3"/>
+<circle cx="730" cy="382" r="9" fill="#e11d48"/>
+<path d="M726.58,378.58 L733.42,385.42 M733.42,378.58 L726.58,385.42" stroke="#ffffff" stroke-width="1.98" stroke-linecap="round"/>
+<text x="746" y="387" font-size="11.5" font-weight="800" letter-spacing="1.2" fill="#e11d48">STOP IF</text>
+<text x="724" y="414" font-size="13" fill="#881337">ssh error or md5 differs:</text>
+<text x="724" y="434" font-size="13" fill="#881337">upload again, max 3 times</text>
+<rect x="112" y="582" width="860" height="204" rx="16" fill="#ffffff" stroke="#e2e8f0" filter="url(#sh)"/>
+<rect x="112" y="600" width="4" height="34" rx="2" fill="#2563eb"/>
+<circle cx="70" cy="617" r="21" fill="#2563eb" stroke="#f1f5f9" stroke-width="5"/>
+<text x="70" y="624" text-anchor="middle" font-size="18" font-weight="800" fill="#ffffff">2</text>
+<text x="140" y="625" font-size="21" font-weight="800" fill="#0f172a">Save the boot id</text>
+<rect x="887.2" y="602" width="60.8" height="30" rx="15" fill="#eff6ff"/>
+<rect x="899.2" y="609" width="17" height="11.56" rx="1.36" fill="none" stroke="#2563eb" stroke-width="1.6"/>
+<line x1="907.7" y1="620.56" x2="907.7" y2="623.62" stroke="#2563eb" stroke-width="1.6"/>
+<line x1="903.96" y1="623.96" x2="911.44" y2="623.96" stroke="#2563eb" stroke-width="1.6" stroke-linecap="round"/>
+<text x="923.2" y="622" font-size="12.5" font-weight="700" fill="#1e40af">PC</text>
+<rect x="140" y="648" width="546" height="58" rx="10" fill="#0f172a"/>
+<text x="156" y="674" class="mono" xml:space="preserve" font-size="12.5" fill="#e2e8f0">$ sshpass -e ssh guest@192.168.55.1 \</text>
+<text x="156" y="692" class="mono" xml:space="preserve" font-size="12.5" fill="#e2e8f0">    &quot;cat /proc/sys/kernel/random/boot_id&quot;</text>
+<circle cx="150" cy="724" r="9" fill="#059669"/>
+<polyline points="145.95,724 149.1,727.15 154.5,720.85" fill="none" stroke="#ffffff" stroke-width="1.98" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="166" y="729" font-size="11.5" font-weight="800" letter-spacing="1.2" fill="#047857">DONE WHEN</text>
+<text x="140" y="752" font-size="15" font-weight="600" fill="#0f172a">Saved as BOOT_A  (a new value after every reboot)</text>
+<text x="112" y="830" font-size="12" font-weight="800" letter-spacing="1.6" fill="#64748b">PHASE 2</text>
+<text x="190.39999999999998" y="830" font-size="13" fill="#94a3b8">Reboot and install  ·  do not power off the payload</text>
+<rect x="112" y="846" width="860" height="186" rx="16" fill="#ffffff" stroke="#e2e8f0" filter="url(#sh)"/>
+<rect x="112" y="864" width="4" height="34" rx="2" fill="#2563eb"/>
+<circle cx="70" cy="881" r="21" fill="#2563eb" stroke="#f1f5f9" stroke-width="5"/>
+<text x="70" y="888" text-anchor="middle" font-size="18" font-weight="800" fill="#ffffff">3</text>
+<text x="140" y="889" font-size="21" font-weight="800" fill="#0f172a">Send the reboot command</text>
+<rect x="887.2" y="866" width="60.8" height="30" rx="15" fill="#eff6ff"/>
+<rect x="899.2" y="873" width="17" height="11.56" rx="1.36" fill="none" stroke="#2563eb" stroke-width="1.6"/>
+<line x1="907.7" y1="884.56" x2="907.7" y2="887.62" stroke="#2563eb" stroke-width="1.6"/>
+<line x1="903.96" y1="887.96" x2="911.44" y2="887.96" stroke="#2563eb" stroke-width="1.6" stroke-linecap="round"/>
+<text x="923.2" y="886" font-size="12.5" font-weight="700" fill="#1e40af">PC</text>
+<rect x="140" y="912" width="546" height="40" rx="10" fill="#0f172a"/>
+<text x="156" y="938" class="mono" xml:space="preserve" font-size="12.5" fill="#e2e8f0">my_payload-&gt;setPayloadRestartApps(5);   // PayloadSdk, MAVLink</text>
+<circle cx="150" cy="970" r="9" fill="#059669"/>
+<polyline points="145.95,970 149.1,973.15 154.5,966.85" fill="none" stroke="#ffffff" stroke-width="1.98" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="166" y="975" font-size="11.5" font-weight="800" letter-spacing="1.2" fill="#047857">DONE WHEN</text>
+<text x="140" y="998" font-size="15" font-weight="600" fill="#0f172a">COMMAND_ACK received</text>
+<rect x="706" y="912" width="242" height="90" rx="12" fill="#fff1f2" stroke="#fecdd3"/>
+<circle cx="730" cy="936" r="9" fill="#e11d48"/>
+<path d="M726.58,932.58 L733.42,939.42 M733.42,932.58 L726.58,939.42" stroke="#ffffff" stroke-width="1.98" stroke-linecap="round"/>
+<text x="746" y="941" font-size="11.5" font-weight="800" letter-spacing="1.2" fill="#e11d48">STOP IF</text>
+<text x="724" y="968" font-size="13" fill="#881337">no ACK within 5 s</text>
+<text x="724" y="988" font-size="13" fill="#881337">(the payload is not changed)</text>
+<rect x="112" y="1054" width="860" height="250" rx="16" fill="#ffffff" stroke="#e2e8f0" filter="url(#sh)"/>
+<rect x="112" y="1072" width="4" height="34" rx="2" fill="#059669"/>
+<circle cx="70" cy="1089" r="21" fill="#059669" stroke="#f1f5f9" stroke-width="5"/>
+<text x="70" y="1096" text-anchor="middle" font-size="18" font-weight="800" fill="#ffffff">4</text>
+<text x="140" y="1097" font-size="21" font-weight="800" fill="#0f172a">Reboot #1</text>
+<rect x="761.4" y="1074" width="186.6" height="30" rx="15" fill="#ecfdf5"/>
+<rect x="778.5" y="1081" width="6.800000000000001" height="2.72" rx="0.68" fill="none" stroke="#059669" stroke-width="1.6"/>
+<rect x="773.4" y="1083.72" width="17" height="11.22" rx="2.3800000000000003" fill="none" stroke="#059669" stroke-width="1.6"/>
+<circle cx="781.9" cy="1089.33" r="3.4000000000000004" fill="none" stroke="#059669" stroke-width="1.6"/>
+<circle cx="781.9" cy="1089.33" r="1.1900000000000002" fill="#059669"/>
+<text x="797.4" y="1094" font-size="12.5" font-weight="700" fill="#047857">PAYLOAD · automatic</text>
+<rect x="140" y="1120" width="546" height="76" rx="10" fill="#0f172a"/>
+<text x="156" y="1146" class="mono" xml:space="preserve" font-size="12.5" fill="#64748b"># every 1 s, same command as step 2</text>
+<text x="156" y="1164" class="mono" xml:space="preserve" font-size="12.5" fill="#e2e8f0">$ sshpass -e ssh guest@192.168.55.1 \</text>
+<text x="156" y="1182" class="mono" xml:space="preserve" font-size="12.5" fill="#e2e8f0">    &quot;cat /proc/sys/kernel/random/boot_id&quot;</text>
+<circle cx="150" cy="1214" r="9" fill="#059669"/>
+<polyline points="145.95,1214 149.1,1217.15 154.5,1210.85" fill="none" stroke="#ffffff" stroke-width="1.98" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="166" y="1219" font-size="11.5" font-weight="800" letter-spacing="1.2" fill="#047857">DONE WHEN</text>
+<text x="140" y="1242" font-size="15" font-weight="600" fill="#0f172a">boot_id  ≠  BOOT_A   →  save it as BOOT_B</text>
+<text x="140" y="1274" font-size="13" fill="#64748b">ssh errors while the payload reboots are normal: keep trying.</text>
+<rect x="706" y="1120" width="242" height="90" rx="12" fill="#fff1f2" stroke="#fecdd3"/>
+<circle cx="730" cy="1144" r="9" fill="#e11d48"/>
+<path d="M726.58,1140.58 L733.42,1147.42 M733.42,1140.58 L726.58,1147.42" stroke="#ffffff" stroke-width="1.98" stroke-linecap="round"/>
+<text x="746" y="1149" font-size="11.5" font-weight="800" letter-spacing="1.2" fill="#e11d48">STOP IF</text>
+<text x="724" y="1176" font-size="13" fill="#881337">boot_id not changed</text>
+<text x="724" y="1196" font-size="13" fill="#881337">after 3 minutes</text>
+<rect x="112" y="1326" width="860" height="252" rx="16" fill="#ffffff" stroke="#e2e8f0" filter="url(#sh)"/>
+<rect x="112" y="1344" width="4" height="34" rx="2" fill="#059669"/>
+<circle cx="70" cy="1361" r="21" fill="#059669" stroke="#f1f5f9" stroke-width="5"/>
+<text x="70" y="1368" text-anchor="middle" font-size="18" font-weight="800" fill="#ffffff">5</text>
+<text x="140" y="1369" font-size="21" font-weight="800" fill="#0f172a">Install the package</text>
+<rect x="761.4" y="1346" width="186.6" height="30" rx="15" fill="#ecfdf5"/>
+<rect x="778.5" y="1353" width="6.800000000000001" height="2.72" rx="0.68" fill="none" stroke="#059669" stroke-width="1.6"/>
+<rect x="773.4" y="1355.72" width="17" height="11.22" rx="2.3800000000000003" fill="none" stroke="#059669" stroke-width="1.6"/>
+<circle cx="781.9" cy="1361.33" r="3.4000000000000004" fill="none" stroke="#059669" stroke-width="1.6"/>
+<circle cx="781.9" cy="1361.33" r="1.1900000000000002" fill="#059669"/>
+<text x="797.4" y="1366" font-size="12.5" font-weight="700" fill="#047857">PAYLOAD · automatic</text>
+<rect x="140" y="1392" width="546" height="58" rx="10" fill="#0f172a"/>
+<text x="156" y="1418" class="mono" xml:space="preserve" font-size="12.5" fill="#64748b"># every 1 s, use only the lines after the last &quot;Start Apply OTA&quot;</text>
+<text x="156" y="1436" class="mono" xml:space="preserve" font-size="12.5" fill="#e2e8f0">$ sshpass -e ssh guest@192.168.55.1 &quot;cat /var/log/apply_ota.log&quot;</text>
+<circle cx="150" cy="1468" r="9" fill="#059669"/>
+<polyline points="145.95,1468 149.1,1471.15 154.5,1464.85" fill="none" stroke="#ffffff" stroke-width="1.98" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="166" y="1473" font-size="11.5" font-weight="800" letter-spacing="1.2" fill="#047857">DONE WHEN</text>
+<text x="140" y="1496" font-size="15" font-weight="600" fill="#0f172a">log has: do_apply_ota.lock has been successfully deleted</text>
+<text x="140" y="1528" font-size="13" fill="#64748b">Percent and result: see the log table below.</text>
+<text x="140" y="1548" font-size="13" fill="#64748b">&quot;Skipping firmware update as expected&quot; is OK, not an error.</text>
+<rect x="706" y="1392" width="242" height="130" rx="12" fill="#fff1f2" stroke="#fecdd3"/>
+<circle cx="730" cy="1416" r="9" fill="#e11d48"/>
+<path d="M726.58,1412.58 L733.42,1419.42 M733.42,1412.58 L726.58,1419.42" stroke="#ffffff" stroke-width="1.98" stroke-linecap="round"/>
+<text x="746" y="1421" font-size="11.5" font-weight="800" letter-spacing="1.2" fill="#e11d48">STOP IF</text>
+<text x="724" y="1448" font-size="13" fill="#881337">&quot;Failed to execute do_install.sh&quot;</text>
+<text x="724" y="1468" font-size="13" fill="#881337">&quot;Payload file not found</text>
+<text x="724" y="1488" font-size="13" fill="#881337">  in /sdcard&quot;</text>
+<text x="724" y="1508" font-size="13" fill="#881337">log not changed for 3 minutes</text>
+<rect x="112" y="1600" width="860" height="222" rx="16" fill="#ffffff" stroke="#e2e8f0" filter="url(#sh)"/>
+<rect x="112" y="1618" width="4" height="34" rx="2" fill="#059669"/>
+<circle cx="70" cy="1635" r="21" fill="#059669" stroke="#f1f5f9" stroke-width="5"/>
+<text x="70" y="1642" text-anchor="middle" font-size="18" font-weight="800" fill="#ffffff">6</text>
+<text x="140" y="1643" font-size="21" font-weight="800" fill="#0f172a">Reboot #2  (automatic)</text>
+<rect x="761.4" y="1620" width="186.6" height="30" rx="15" fill="#ecfdf5"/>
+<rect x="778.5" y="1627" width="6.800000000000001" height="2.72" rx="0.68" fill="none" stroke="#059669" stroke-width="1.6"/>
+<rect x="773.4" y="1629.72" width="17" height="11.22" rx="2.3800000000000003" fill="none" stroke="#059669" stroke-width="1.6"/>
+<circle cx="781.9" cy="1635.33" r="3.4000000000000004" fill="none" stroke="#059669" stroke-width="1.6"/>
+<circle cx="781.9" cy="1635.33" r="1.1900000000000002" fill="#059669"/>
+<text x="797.4" y="1640" font-size="12.5" font-weight="700" fill="#047857">PAYLOAD · automatic</text>
+<rect x="140" y="1666" width="546" height="76" rx="10" fill="#0f172a"/>
+<text x="156" y="1692" class="mono" xml:space="preserve" font-size="12.5" fill="#64748b"># every 1 s, same command as step 2</text>
+<text x="156" y="1710" class="mono" xml:space="preserve" font-size="12.5" fill="#e2e8f0">$ sshpass -e ssh guest@192.168.55.1 \</text>
+<text x="156" y="1728" class="mono" xml:space="preserve" font-size="12.5" fill="#e2e8f0">    &quot;cat /proc/sys/kernel/random/boot_id&quot;</text>
+<circle cx="150" cy="1760" r="9" fill="#059669"/>
+<polyline points="145.95,1760 149.1,1763.15 154.5,1756.85" fill="none" stroke="#ffffff" stroke-width="1.98" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="166" y="1765" font-size="11.5" font-weight="800" letter-spacing="1.2" fill="#047857">DONE WHEN</text>
+<text x="140" y="1788" font-size="15" font-weight="600" fill="#0f172a">boot_id  ≠  BOOT_B</text>
+<rect x="706" y="1666" width="242" height="90" rx="12" fill="#fff1f2" stroke="#fecdd3"/>
+<circle cx="730" cy="1690" r="9" fill="#e11d48"/>
+<path d="M726.58,1686.58 L733.42,1693.42 M733.42,1686.58 L726.58,1693.42" stroke="#ffffff" stroke-width="1.98" stroke-linecap="round"/>
+<text x="746" y="1695" font-size="11.5" font-weight="800" letter-spacing="1.2" fill="#e11d48">STOP IF</text>
+<text x="724" y="1722" font-size="13" fill="#881337">boot_id not changed</text>
+<text x="724" y="1742" font-size="13" fill="#881337">after 3 minutes</text>
+<text x="112" y="1866" font-size="12" font-weight="800" letter-spacing="1.6" fill="#64748b">PHASE 3</text>
+<text x="190.39999999999998" y="1866" font-size="13" fill="#94a3b8">Confirm</text>
+<rect x="112" y="1882" width="860" height="186" rx="16" fill="#ffffff" stroke="#e2e8f0" filter="url(#sh)"/>
+<rect x="112" y="1900" width="4" height="34" rx="2" fill="#2563eb"/>
+<circle cx="70" cy="1917" r="21" fill="#2563eb" stroke="#f1f5f9" stroke-width="5"/>
+<text x="70" y="1924" text-anchor="middle" font-size="18" font-weight="800" fill="#ffffff">7</text>
+<text x="140" y="1925" font-size="21" font-weight="800" fill="#0f172a">Wait for the payload app</text>
+<rect x="887.2" y="1902" width="60.8" height="30" rx="15" fill="#eff6ff"/>
+<rect x="899.2" y="1909" width="17" height="11.56" rx="1.36" fill="none" stroke="#2563eb" stroke-width="1.6"/>
+<line x1="907.7" y1="1920.56" x2="907.7" y2="1923.62" stroke="#2563eb" stroke-width="1.6"/>
+<line x1="903.96" y1="1923.96" x2="911.44" y2="1923.96" stroke="#2563eb" stroke-width="1.6" stroke-linecap="round"/>
+<text x="923.2" y="1922" font-size="12.5" font-weight="700" fill="#1e40af">PC</text>
+<rect x="140" y="1948" width="546" height="40" rx="10" fill="#0f172a"/>
+<text x="156" y="1974" class="mono" xml:space="preserve" font-size="12.5" fill="#e2e8f0">my_payload-&gt;regPayloadHeartbeatChanged(callback);  // PayloadSdk</text>
+<circle cx="150" cy="2006" r="9" fill="#059669"/>
+<polyline points="145.95,2006 149.1,2009.15 154.5,2002.85" fill="none" stroke="#ffffff" stroke-width="1.98" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="166" y="2011" font-size="11.5" font-weight="800" letter-spacing="1.2" fill="#047857">DONE WHEN</text>
+<text x="140" y="2034" font-size="15" font-weight="600" fill="#0f172a">a heartbeat comes from MAV_COMP_ID_CAMERA ... CAMERA6</text>
+<rect x="706" y="1948" width="242" height="70" rx="12" fill="#fff1f2" stroke="#fecdd3"/>
+<circle cx="730" cy="1972" r="9" fill="#e11d48"/>
+<path d="M726.58,1968.58 L733.42,1975.42 M733.42,1968.58 L726.58,1975.42" stroke="#ffffff" stroke-width="1.98" stroke-linecap="round"/>
+<text x="746" y="1977" font-size="11.5" font-weight="800" letter-spacing="1.2" fill="#e11d48">STOP IF</text>
+<text x="724" y="2004" font-size="13" fill="#881337">no heartbeat after 3 minutes</text>
+<rect x="112" y="2094" width="860" height="88" rx="16" fill="url(#ok)" filter="url(#sh)"/>
+<circle cx="164" cy="2138" r="22" fill="#ffffff"/>
+<polyline points="154.1,2138 161.8,2145.7 175.0,2130.3" fill="none" stroke="#ffffff" stroke-width="4.84" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="154,2138 162,2146 175,2131" fill="none" stroke="#059669" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="204" y="2134" font-size="22" font-weight="800" fill="#ffffff">UPDATE SUCCESSFUL</text>
+<text x="204" y="2158" font-size="14" fill="#d1fae5">New software is running. Exit code 0.  Any STOP IF → exit code 1.</text>
+<circle cx="70" cy="2138" r="21" fill="#059669" stroke="#f1f5f9" stroke-width="5"/>
+<circle cx="70" cy="2138" r="12" fill="#059669"/>
+<polyline points="64.6,2138 68.8,2142.2 76.0,2133.8" fill="none" stroke="#ffffff" stroke-width="2.64" stroke-linecap="round" stroke-linejoin="round"/>
+<polyline points="64,2138 69,2143 77,2133" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1012" y="276" font-size="12" font-weight="800" letter-spacing="1.6" fill="#64748b">STEP 5 IN DETAIL</text>
+<text x="1012" y="312" font-size="28" font-weight="800" fill="#0f172a">Reading the update log</text>
+<text x="1012" y="340" font-size="15" fill="#475569">Check each line of the last run with "contains". Keep the highest percent seen.</text>
+<text x="1012" y="362" font-size="15" fill="#475569">Split the text by \n and by \r (the gimbal flashing line ends with \r).</text>
+<rect x="1012" y="384" width="900" height="1798" rx="16" fill="#ffffff" stroke="#e2e8f0" filter="url(#sh)"/>
+<path d="M1012,428 L1012,400 Q1012,384 1028,384 L1896,384 Q1912,384 1912,400 L1912,428 Z" fill="#0f172a"/>
+<text x="1036" y="412" font-size="12.5" font-weight="700" letter-spacing="1" fill="#ffffff">LOG LINE CONTAINS</text>
+<text x="1438" y="412" font-size="12.5" font-weight="700" letter-spacing="1" fill="#ffffff">MEANING</text>
+<text x="1890" y="412" text-anchor="end" font-size="12.5" font-weight="700" letter-spacing="1" fill="#ffffff">PROGRESS</text>
+<rect x="1013" y="428" width="898" height="34" fill="#2563eb" fill-opacity="0.08"/>
+<circle cx="1041" cy="445" r="5" fill="#2563eb"/>
+<text x="1054" y="450" font-size="13.5" font-weight="800" fill="#2563eb">Progress</text>
+<text x="1036" y="492.19354838709677" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">Start Apply OTA</text>
+<text x="1438" y="492.19354838709677" font-size="14" fill="#334155">a new run starts (read the last run)</text>
+<rect x="1712" y="484.19354838709677" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="484.19354838709677" width="7" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="492.19354838709677" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">2%</text>
+<rect x="1013" y="512.3870967741935" width="898" height="50.38709677419355" fill="#f8fafc"/>
+<text x="1036" y="542.5806451612904" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">Checking /sdcard directory</text>
+<text x="1438" y="542.5806451612904" font-size="14" fill="#334155">searching for the package</text>
+<rect x="1712" y="534.5806451612904" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="534.5806451612904" width="7" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="542.5806451612904" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">3%</text>
+<text x="1036" y="592.9677419354839" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">Payload found in OTA directory (&lt;name&gt;)</text>
+<text x="1438" y="592.9677419354839" font-size="14" fill="#334155">package found: &lt;name&gt;</text>
+<rect x="1712" y="584.9677419354839" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="584.9677419354839" width="7" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="592.9677419354839" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">5%</text>
+<rect x="1013" y="613.1612903225806" width="898" height="50.38709677419355" fill="#f8fafc"/>
+<text x="1036" y="643.3548387096774" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">ZIP metadata is valid</text>
+<text x="1438" y="643.3548387096774" font-size="14" fill="#334155">package metadata is valid</text>
+<rect x="1712" y="635.3548387096774" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="635.3548387096774" width="8.8" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="643.3548387096774" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">8%</text>
+<text x="1036" y="693.741935483871" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">Decryption complete</text>
+<text x="1438" y="693.741935483871" font-size="14" fill="#334155">decryption complete</text>
+<rect x="1712" y="685.741935483871" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="685.741935483871" width="17.6" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="693.741935483871" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">16%</text>
+<rect x="1013" y="713.9354838709677" width="898" height="50.38709677419355" fill="#f8fafc"/>
+<text x="1036" y="744.1290322580645" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">[INFO] Extracting</text>
+<text x="1438" y="744.1290322580645" font-size="14" fill="#334155">extracting the package</text>
+<rect x="1712" y="736.1290322580645" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="736.1290322580645" width="19.8" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="744.1290322580645" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">18%</text>
+<text x="1036" y="794.516129032258" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">Processing gremsy-app-setting directory</text>
+<text x="1438" y="794.516129032258" font-size="14" fill="#334155">installing gremsy-app-setting</text>
+<rect x="1712" y="786.516129032258" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="786.516129032258" width="24.2" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="794.516129032258" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">22%</text>
+<rect x="1013" y="814.7096774193548" width="898" height="50.38709677419355" fill="#f8fafc"/>
+<text x="1036" y="844.9032258064516" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">/gimbal-official-firmwares/</text>
+<text x="1438" y="844.9032258064516" font-size="14" fill="#334155">updating gimbal firmware</text>
+<rect x="1712" y="836.9032258064516" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="836.9032258064516" width="27.5" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="844.9032258064516" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">25%</text>
+<text x="1036" y="895.2903225806451" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">[FLASH] Write percent ==&gt; N [%]</text>
+<text x="1438" y="895.2903225806451" font-size="14" fill="#334155">gimbal flashing N %</text>
+<rect x="1712" y="887.2903225806451" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="887.2903225806451" width="27.5" height="7" rx="3.5" fill="#2563eb"/>
+<rect x="1739.5" y="887.2903225806451" width="33.0" height="7" fill="#2563eb" fill-opacity="0.35"/>
+<text x="1890" y="895.2903225806451" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">25→55</text>
+<rect x="1013" y="915.4838709677418" width="898" height="50.38709677419355" fill="#f8fafc"/>
+<text x="1036" y="945.6774193548387" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">Firmware update successful</text>
+<text x="1438" y="945.6774193548387" font-size="14" fill="#334155">gimbal firmware updated</text>
+<rect x="1712" y="937.6774193548387" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="937.6774193548387" width="60.5" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="945.6774193548387" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">55%</text>
+<text x="1036" y="996.0645161290322" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">/gremsy-app-lt6911-update/</text>
+<text x="1438" y="996.0645161290322" font-size="14" fill="#334155">installing gremsy-app-lt6911-update</text>
+<rect x="1712" y="988.0645161290322" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="988.0645161290322" width="63.8" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="996.0645161290322" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">58%</text>
+<rect x="1013" y="1016.2580645161289" width="898" height="50.38709677419355" fill="#f8fafc"/>
+<text x="1036" y="1046.4516129032256" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">/gremsy-app-mavlink-debugger/</text>
+<text x="1438" y="1046.4516129032256" font-size="14" fill="#334155">installing mavlink-debugger</text>
+<rect x="1712" y="1038.4516129032256" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="1038.4516129032256" width="67.1" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="1046.4516129032256" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">61%</text>
+<text x="1036" y="1096.8387096774193" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">/gremsy-app-password-manager/</text>
+<text x="1438" y="1096.8387096774193" font-size="14" fill="#334155">installing password-manager</text>
+<rect x="1712" y="1088.8387096774193" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="1088.8387096774193" width="70.4" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="1096.8387096774193" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">64%</text>
+<rect x="1013" y="1117.032258064516" width="898" height="50.38709677419355" fill="#f8fafc"/>
+<text x="1036" y="1147.225806451613" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">/gremsy-app-payload/</text>
+<text x="1438" y="1147.225806451613" font-size="14" fill="#334155">installing gremsy-app-payload</text>
+<rect x="1712" y="1139.225806451613" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="1139.225806451613" width="74.8" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="1147.225806451613" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">68%</text>
+<text x="1036" y="1197.6129032258066" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">/gremsy-app-tracking/</text>
+<text x="1438" y="1197.6129032258066" font-size="14" fill="#334155">installing gremsy-app-tracking</text>
+<rect x="1712" y="1189.6129032258066" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="1189.6129032258066" width="81.4" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="1197.6129032258066" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">74%</text>
+<rect x="1013" y="1217.8064516129034" width="898" height="50.38709677419355" fill="#f8fafc"/>
+<text x="1036" y="1248.0000000000002" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">/gremsy-app-videostream-ethernet/</text>
+<text x="1438" y="1248.0000000000002" font-size="14" fill="#334155">installing videostream-ethernet</text>
+<rect x="1712" y="1240.0000000000002" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="1240.0000000000002" width="85.8" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="1248.0000000000002" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">78%</text>
+<text x="1036" y="1298.3870967741939" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">/gremsy-app-videostream-hdmi/</text>
+<text x="1438" y="1298.3870967741939" font-size="14" fill="#334155">installing gremsy-app-videostream-hdmi</text>
+<rect x="1712" y="1290.3870967741939" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="1290.3870967741939" width="90.2" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="1298.3870967741939" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">82%</text>
+<rect x="1013" y="1318.5806451612907" width="898" height="50.38709677419355" fill="#f8fafc"/>
+<text x="1036" y="1348.7741935483875" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">/gremsy-stm32-fw-update/</text>
+<text x="1438" y="1348.7741935483875" font-size="14" fill="#334155">installing gremsy-stm32-fw-update</text>
+<rect x="1712" y="1340.7741935483875" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="1340.7741935483875" width="93.5" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="1348.7741935483875" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">85%</text>
+<text x="1036" y="1399.1612903225812" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">Running create_db.py</text>
+<text x="1438" y="1399.1612903225812" font-size="14" fill="#334155">updating the database</text>
+<rect x="1712" y="1391.1612903225812" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="1391.1612903225812" width="96.8" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="1399.1612903225812" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">88%</text>
+<rect x="1013" y="1419.354838709678" width="898" height="50.38709677419355" fill="#f8fafc"/>
+<text x="1036" y="1449.5483870967748" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">create_db.py completed successfully</text>
+<text x="1438" y="1449.5483870967748" font-size="14" fill="#334155">database updated</text>
+<rect x="1712" y="1441.5483870967748" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="1441.5483870967748" width="102.3" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="1449.5483870967748" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">93%</text>
+<text x="1036" y="1499.9354838709685" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">Deleting files in</text>
+<text x="1438" y="1499.9354838709685" font-size="14" fill="#334155">cleaning up</text>
+<rect x="1712" y="1491.9354838709685" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="1491.9354838709685" width="104.5" height="7" rx="3.5" fill="#2563eb"/>
+<text x="1890" y="1499.9354838709685" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">95%</text>
+<rect x="1013" y="1520.1290322580653" width="898" height="34" fill="#7c3aed" fill-opacity="0.08"/>
+<circle cx="1041" cy="1537.1290322580653" r="5" fill="#7c3aed"/>
+<text x="1054" y="1542.1290322580653" font-size="13.5" font-weight="800" fill="#7c3aed">Component result</text>
+<text x="1036" y="1584.3225806451621" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">Processing directory: &lt;dir&gt;</text>
+<text x="1438" y="1584.3225806451621" font-size="14" fill="#334155">component &lt;dir&gt; starts</text>
+<rect x="1013" y="1604.516129032259" width="898" height="50.38709677419355" fill="#f8fafc"/>
+<text x="1036" y="1634.7096774193558" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">Found do_install.sh in &lt;dir&gt;. Running</text>
+<text x="1438" y="1634.7096774193558" font-size="14" fill="#334155">component &lt;dir&gt; is installing</text>
+<text x="1036" y="1685.0967741935494" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">Successfully executed do_install.sh in &lt;dir&gt;</text>
+<text x="1438" y="1685.0967741935494" font-size="14" fill="#334155">component &lt;dir&gt; installed  (OK)</text>
+<rect x="1013" y="1705.2903225806463" width="898" height="50.38709677419355" fill="#f8fafc"/>
+<text x="1036" y="1735.483870967743" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">Failed to execute do_install.sh in &lt;dir&gt;</text>
+<text x="1438" y="1735.483870967743" font-size="14" fill="#334155">component &lt;dir&gt; failed  (unless skipped)</text>
+<text x="1036" y="1785.8709677419367" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">Skipping firmware update as expected</text>
+<text x="1438" y="1785.8709677419367" font-size="14" fill="#334155">skipped on purpose  (OK)</text>
+<rect x="1013" y="1806.0645161290336" width="898" height="50.38709677419355" fill="#f8fafc"/>
+<text x="1036" y="1836.2580645161304" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">Gimbal FW update not selected. Skip</text>
+<text x="1438" y="1836.2580645161304" font-size="14" fill="#334155">skipped on purpose  (OK)</text>
+<rect x="1013" y="1856.4516129032272" width="898" height="34" fill="#0d9488" fill-opacity="0.08"/>
+<circle cx="1041" cy="1873.4516129032272" r="5" fill="#0d9488"/>
+<text x="1054" y="1878.4516129032272" font-size="13.5" font-weight="800" fill="#0d9488">Package information</text>
+<text x="1036" y="1920.645161290324" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">Package_Info written to ... version='..'</text>
+<text x="1438" y="1920.645161290324" font-size="14" fill="#334155">version, build date, payload type</text>
+<rect x="1013" y="1940.8387096774209" width="898" height="34" fill="#e11d48" fill-opacity="0.08"/>
+<circle cx="1041" cy="1957.8387096774209" r="5" fill="#e11d48"/>
+<text x="1054" y="1962.8387096774209" font-size="13.5" font-weight="800" fill="#e11d48">End of the update</text>
+<text x="1036" y="2005.0322580645177" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">do_apply_ota.lock has been successfully deleted</text>
+<text x="1438" y="2005.0322580645177" font-size="14" fill="#334155">finished: wait for reboot #2</text>
+<rect x="1712" y="1997.0322580645177" width="110" height="7" rx="3.5" fill="#e2e8f0"/>
+<rect x="1712" y="1997.0322580645177" width="106.7" height="7" rx="3.5" fill="#e11d48"/>
+<text x="1890" y="2005.0322580645177" text-anchor="end" font-size="14" font-weight="800" fill="#0f172a">97%</text>
+<rect x="1013" y="2025.2258064516145" width="898" height="50.38709677419355" fill="#f8fafc"/>
+<text x="1036" y="2055.419354838711" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">Payload file not found in /sdcard after</text>
+<text x="1438" y="2055.419354838711" font-size="14" fill="#334155">no package found: STOP</text>
+<text x="1036" y="2105.8064516129048" class="mono" xml:space="preserve" font-size="13" fill="#0f172a">[ERROR]   or   Error:</text>
+<text x="1438" y="2105.8064516129048" font-size="14" fill="#334155">error line: show it to the user</text>
+<text x="1036" y="2150.000000000002" font-size="13" fill="#64748b">Failed component = started (Found do_install.sh) without "Successfully executed",</text>
+<text x="1036" y="2168.000000000002" font-size="13" fill="#64748b">or with "Failed to execute", and not skipped.</text>
+</svg>

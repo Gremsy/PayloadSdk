@@ -350,6 +350,9 @@ public:
     // send command to restart the apps
     void setPayloadRestartApps(uint8_t app_id);
 
+    // send command to trigger advance feature
+    void setPayloadTriggerAdvanceFeatures(uint8_t feat_id, bool opt);
+
     // send command to change external settings for EO (only on ORUSL)
     void setCameraExtSettings_SpotAE_Display(uint8_t mode);
     void setCameraExtSettings_SpotAE_Mode(uint8_t mode);

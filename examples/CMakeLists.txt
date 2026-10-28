@@ -53,6 +53,7 @@ set(EXAMPLES
     payload_set_restart_apps.cpp
     camera_set_ext_settings.cpp
     gimbal_calib_auto_tune.cpp
+    payload_set_advance_features_trigger.cpp
 )
 endif()
 

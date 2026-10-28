@@ -51,10 +51,11 @@ int main(int argc, char *argv[]){
 	// 2: tracking app
 	// 3: web ui app
 	// 4: gimbal app
+	// 5: reboot payload
 
 	while(1){
 		// send command to restart the payload app
-		rq_app_id = 4;
+		rq_app_id = 0;
 		my_payload->setPayloadRestartApps(rq_app_id);
 		usleep(5000000); // do nothing
 

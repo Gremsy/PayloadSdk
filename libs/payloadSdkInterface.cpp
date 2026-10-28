@@ -1086,6 +1086,38 @@ setPayloadRestartApps(uint8_t app_id){
 
 void 
 PayloadSdkInterface::
+setPayloadTriggerAdvanceFeatures(uint8_t feat_id, bool opt){
+        mavlink_command_long_t msg = {0};
+
+    msg.target_system = PAYLOAD_SYSTEM_ID;
+    msg.target_component = PAYLOAD_COMPONENT_ID;
+    msg.command = MAV_CMD_USER_4;
+    msg.param1 = 4;
+    msg.param2 = 6;
+    msg.param3 = feat_id;
+    msg.param4 = opt;
+    msg.param5 = 0;
+    msg.param6 = 0;
+    msg.param7 = 0;
+    msg.confirmation = 1;
+
+    // --------------------------------------------------------------------------
+    //   ENCODE
+    // --------------------------------------------------------------------------
+    mavlink_message_t message;
+
+    mavlink_msg_command_long_encode_chan(SYS_ID, COMP_ID, port->get_mav_channel(), &message, &msg);
+
+    // --------------------------------------------------------------------------
+    //   WRITE
+    // --------------------------------------------------------------------------
+
+    // do the write
+    payload_interface->push_message_to_queue(message);
+}
+
+void 
+PayloadSdkInterface::
 setCameraExtSettings_SpotAE_Display(uint8_t mode){
     // SpotAE_Display_ON:  1
     // SpotAE_Display_OFF: 0

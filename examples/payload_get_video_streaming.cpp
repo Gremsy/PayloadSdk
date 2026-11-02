@@ -213,7 +213,7 @@ void *start_loop_thread(void *threadid)
     gst_init(NULL, NULL);
 
     string descr;
-	descr = "rtspsrc location=" + _stream_uri + " latency=0 ! decodebin ! videoconvert ! autovideosink sync=false async=false";
+	descr = "rtspsrc location=" + _stream_uri + " latency=0 ! decodebin ! videoconvert ! autovideosink sync=false";
 
     printf("%s %s \n", __func__, descr.c_str());
     main_pipeline = gst_parse_launch(descr.c_str(), &error);

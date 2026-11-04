@@ -78,11 +78,14 @@ int main(int argc, char *argv[]){
 	_flags = my_payload->getGimbalDeviceStatusFlags();
 
 	while(!is_exit){
-		printf("Change gimbal forward flag to OVERWRITE \n");
-		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_FW_FLAG,PAYLOAD_CAMERA_GIMBAL_FW_FLAG_OVERWRITE, PARAM_TYPE_UINT32);
+		printf("Change gimbal forward flag to AUTOPILOT \n");
+		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_FW_FLAG,PAYLOAD_CAMERA_GIMBAL_FW_FLAG_AUTOPILOT, PARAM_TYPE_UINT32);
 		usleep(2000000);
-		printf("Change gimbal forward flag to FORWARD \n");
-		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_FW_FLAG,PAYLOAD_CAMERA_GIMBAL_FW_FLAG_FORWARD, PARAM_TYPE_UINT32);
+		printf("Change gimbal forward flag to ONBOARD_COMPUTER \n");
+		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_FW_FLAG,PAYLOAD_CAMERA_GIMBAL_FW_FLAG_ONBOARD_COMPUTER, PARAM_TYPE_UINT32);
+		usleep(2000000);
+		printf("Change gimbal forward flag to SBUS_CONVERT \n");
+		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_FW_FLAG,PAYLOAD_CAMERA_GIMBAL_FW_FLAG_SBUS_CONVERT, PARAM_TYPE_UINT32);
 		usleep(2000000);
 		printf("Change gimbal mode to LOCK \n");
 		_flags |= GIMBAL_DEVICE_FLAGS_YAW_LOCK;

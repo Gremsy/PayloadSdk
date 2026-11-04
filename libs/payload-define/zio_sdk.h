@@ -254,5 +254,9 @@ enum _zoom_combine_factor{
 #define PAYLOAD_CAMERA_GIMBAL_MODE_MAPPING          3
 #define PAYLOAD_CAMERA_GIMBAL_MODE_RESET            4
 
+// Gimbal Forward Flag
+#define PAYLOAD_CAMERA_GIMBAL_FW_FLAG               "GB_FW_FLAG"
+#define PAYLOAD_CAMERA_GIMBAL_FW_FLAG_OVERWRITE         0
+#define PAYLOAD_CAMERA_GIMBAL_FW_FLAG_FORWARD           1
 
 #endif

@@ -25,6 +25,10 @@ bool listed = false;
 std::string downloadDirectory;
 // Base URL "http://<ip>:8000", needed to sign in again when a session expires.
 std::string baseUrl;
+// Storage region the server addresses with "?opt=" (e.g. "iflash", "sdcard").
+// Empty = unknown, which is the case on old firmware and on payloads with a
+// single storage; requests are then sent without any storage parameter.
+std::string currentStorage;
 
 // Callback function to receive the response
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* response) {
@@ -60,6 +64,29 @@ void reset_request_options() {
 bool is_login_page(const std::string& html) {
     return html.find("/smb-login") != std::string::npos ||
            html.find("smb-username") != std::string::npos;
+}
+
+// "/list-file", with "?opt=<storage>" appended once the storage is known.
+std::string list_file_url(const std::string& url) {
+    std::string target = url + "/list-file";
+    if (!currentStorage.empty()) {
+        target += "?opt=" + currentStorage;
+    }
+    return target;
+}
+
+// Append "?src=<storage>" to a download/delete path, so the server does not
+// depend on its per-session storage choice. Unchanged while the storage is unknown.
+std::string with_storage_src(const std::string& target) {
+    if (currentStorage.empty()) {
+        return target;
+    }
+    return target + "?src=" + currentStorage;
+}
+
+bool is_redirect_code(long httpCode) {
+    return httpCode == 301 || httpCode == 302 || httpCode == 303 ||
+           httpCode == 307 || httpCode == 308;
 }
 
 // Read a line without echoing it back to the terminal.
@@ -171,25 +198,69 @@ bool do_interactive_login(const std::string& baseUrl) {
     return false;
 }
 
+bool parse_storage_options(const std::string& html,
+                           std::vector<std::pair<std::string, std::string> >& options,
+                           std::string& current);
+
+// Fetch the media page. Payloads with several storages answer a /list-file
+// request that has no "?opt=" with a redirect to "/list-file?opt=<storage>":
+// remember that storage and ask again once. Redirects are never followed
+// blindly, and any other redirect target is reported as an error.
+// Returns false on a transport error or an unusable redirect; otherwise
+// httpCode holds the final status and html the body.
+bool fetch_list_page(const std::string& url, std::string& html, long& httpCode) {
+    static const std::regex optRedirect("^https?://[^/]+/list-file\\?(?:[^#]*&)?opt=([A-Za-z0-9_-]+)(?:&[^#]*)?(?:#.*)?$");
+
+    for (int pass = 0; pass < 2; pass++) {
+        html.clear();
+        reset_request_options();
+        curl_easy_setopt(curl, CURLOPT_URL, list_file_url(url).c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &html);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15L);
+
+        res = curl_easy_perform(curl);
+        if (res != CURLE_OK) {
+            std::cerr << "Cannot reach the media server: " << curl_easy_strerror(res) << std::endl;
+            return false;
+        }
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
+
+        if (!is_redirect_code(httpCode)) {
+            if (httpCode == 200 && currentStorage.empty() && !is_login_page(html)) {
+                // No redirect, but the page may still list the storages (selected one).
+                std::vector<std::pair<std::string, std::string> > options;
+                std::string selected;
+                parse_storage_options(html, options, selected);
+                currentStorage = selected;
+            }
+            return true;
+        }
+
+        char* location = NULL;
+        curl_easy_getinfo(curl, CURLINFO_REDIRECT_URL, &location);
+        const std::string target = location ? location : "";
+        std::smatch match;
+        if (pass == 0 && std::regex_match(target, match, optRedirect)) {
+            currentStorage = match[1];
+            continue;                       // ask again with the storage the server chose
+        }
+        std::cerr << "Media server redirected to an unexpected location (HTTP " << httpCode
+                  << "): " << (target.empty() ? "(none)" : target) << std::endl;
+        return false;
+    }
+    return false;
+}
+
 // Sign in only when the server asks for it. An unauthenticated page answers 200
 // with the login form; a payload still detecting its cameras answers 404.
 bool ensure_authenticated(const std::string& url) {
     std::string response;
+    long httpCode = 0;
 
-    reset_request_options();
-    curl_easy_setopt(curl, CURLOPT_URL, (url + "/list-file").c_str());
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15L);
-
-    res = curl_easy_perform(curl);
-    if (res != CURLE_OK) {
-        std::cerr << "Cannot reach the media server: " << curl_easy_strerror(res) << std::endl;
+    if (!fetch_list_page(url, response, httpCode)) {
         return false;
     }
-
-    long httpCode = 0;
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
 
     if (httpCode == 404) {
         std::cerr << "Media files are not available on this payload: the payload type "
@@ -204,33 +275,30 @@ bool ensure_authenticated(const std::string& url) {
     if (!is_login_page(response)) {
         return true;    // this payload serves the media files without a login
     }
-    return do_interactive_login(url);
+    if (!do_interactive_login(url)) {
+        return false;
+    }
+    // Once signed in, the page redirects to the storage to use: learn it now.
+    if (!fetch_list_page(url, response, httpCode)) {
+        return false;
+    }
+    if (httpCode != 200 || is_login_page(response)) {
+        std::cerr << "Media server replied HTTP " << httpCode << " after login" << std::endl;
+        return false;
+    }
+    return true;
 }
 
-bool directory_listing(std::string url, bool allowRetry = true)
+bool directory_listing(const std::string& url, bool allowRetry = true)
 {
     hrefElements.clear();
     listed = false;
     std::string response;
+    long httpCode = 0;
 
-    reset_request_options();
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    // Set the callback function to write the downloaded data to the file
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15L);
-
-    // Perform the request
-    res = curl_easy_perform(curl);
-
-    // Check for errors
-    if (res != CURLE_OK) {
-        std::cerr << "Request failed: " << curl_easy_strerror(res) << std::endl;
+    if (!fetch_list_page(url, response, httpCode)) {
         return false;
     }
-
-    long httpCode = 0;
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
     if (httpCode != 200) {
         std::cerr << "Listing failed: HTTP " << httpCode << std::endl;
         return false;
@@ -248,7 +316,8 @@ bool directory_listing(std::string url, bool allowRetry = true)
 
     // Regular expression pattern
     // std::regex pattern("<a href=\"(/delete/.*?)\" class=\"delete-link\" onclick=\"return confirm('Are you sure you want to delete this image?')\">[Delete]</a>");
-    std::regex pattern("<a href=\"(/delete/.*?)\" class=\"delete-link\"");
+    // The link may carry a "?src=<storage>" query; only the file name is kept.
+    std::regex pattern("<a href=\"(/delete/[^\"?]*)[^\"]*\" class=\"delete-link\"");
     std::smatch match;
     std::string::const_iterator searchStart(response.cbegin());
     while (std::regex_search(searchStart, response.cend(), match, pattern)) {
@@ -276,7 +345,7 @@ bool directory_listing(std::string url, bool allowRetry = true)
 
 bool dowload_file(std::string url, std::string fileName, bool allowRetry = true)
 {
-    const std::string requestUrl = url + "/download/" + fileName;
+    const std::string requestUrl = with_storage_src(url + "/download/" + fileName);
 
     // Replace "%20" with a space to build the local file name
     std::string localName;
@@ -338,7 +407,7 @@ bool dowload_file(std::string url, std::string fileName, bool allowRetry = true)
 
     // A redirect here means the session expired mid-session; without this check
     // the login page would be saved under the media file's name.
-    if (httpCode == 301 || httpCode == 302 || httpCode == 303 || httpCode == 307) {
+    if (is_redirect_code(httpCode)) {
         std::cerr << "Download rejected: session expired, please restart and log in again."
                   << std::endl;
         remove(outPath.c_str());
@@ -449,6 +518,7 @@ bool set_storage_source(const std::string& url, const std::string& option,
                                       &root, &parseErrors);
     if (parsed && root.get("ok", false).asBool()) {
         listed = false;                     // the cached listing belongs to the old storage
+        currentStorage = option;            // later requests address this storage explicitly
         std::cout << "Storage source: " << root.get("media_source", option).asString()
                   << " (" << root.get("directory", "").asString() << ")" << std::endl;
         return true;
@@ -463,13 +533,8 @@ bool set_storage_source(const std::string& url, const std::string& option,
 // Ask which storage to work on. Does nothing when the payload has only one.
 void choose_storage_source(const std::string& url) {
     std::string html;
-
-    reset_request_options();
-    curl_easy_setopt(curl, CURLOPT_URL, (url + "/list-file").c_str());
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &html);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15L);
-    if (curl_easy_perform(curl) != CURLE_OK) {
+    long httpCode = 0;
+    if (!fetch_list_page(url, html, httpCode) || httpCode != 200) {
         return;
     }
 
@@ -477,6 +542,9 @@ void choose_storage_source(const std::string& url) {
     std::string current;
     if (!parse_storage_options(html, options, current)) {
         return;
+    }
+    if (currentStorage.empty()) {
+        currentStorage = current;
     }
 
     std::cout << "" << std::endl;
@@ -618,7 +686,7 @@ bool isIPAddress(const std::string& str) {
 // Download every listed file matching the given extension filter, refreshing
 // the listing first when it has not been fetched yet.
 void download_all(const std::string& url, bool (*matches)(const std::string&)) {
-    if (!listed && !directory_listing(url + "/list-file")) {
+    if (!listed && !directory_listing(url)) {
         return;
     }
     for (const auto& element : hrefElements) {
@@ -681,7 +749,7 @@ int main(int argc, char* argv[]) {
             std::cout << "" << std::endl;
             if (choice == "1") {
                 std::cout << "Listing items..." << std::endl;
-                if (directory_listing(url+"/list-file")) {
+                if (directory_listing(url)) {
                     std::cout << "" << std::endl;
                     for (const auto& element : hrefElements) {
                         std::cout << element << std::endl;
@@ -691,7 +759,7 @@ int main(int argc, char* argv[]) {
                     }
                 }
             } else if (choice == "2") {
-                if (directory_listing(url+"/list-file")) {
+                if (directory_listing(url)) {
                     std::cout << "" << std::endl;
                     for (const auto& element : hrefElements) {
                         std::cout << element << std::endl;
@@ -710,7 +778,7 @@ int main(int argc, char* argv[]) {
                 std::cout << "Downloading all Videos..." << std::endl;
                 download_all(url, isVideoExtension);
             } else if (choice == "5") {
-                if (directory_listing(url + "/list-file")) {
+                if (directory_listing(url)) {
                     std::cout << "" << std::endl;
                     for (const auto& element : hrefElements) {
                         std::cout << element << std::endl;
@@ -723,18 +791,18 @@ int main(int argc, char* argv[]) {
                     std::cout << "Deleting a image or video. Enter the name: ";
                     std::cin >> name;
                     if (confirm_destructive("Delete '" + name + "' from the payload?") &&
-                        send_delete(url + "/delete/" + name, false)) {
+                        send_delete(with_storage_src(url + "/delete/" + name), false)) {
                         std::cout << "Deleted." << std::endl;
                     }
                 }
             } else if (choice == "6") {
                 if (confirm_destructive("Delete ALL images on the payload?") &&
-                    send_delete(url + "/delete-all-images", true)) {
+                    send_delete(with_storage_src(url + "/delete-all-images"), true)) {
                     std::cout << "All images deleted." << std::endl;
                 }
             } else if (choice == "7") {
                 if (confirm_destructive("Delete ALL videos on the payload?") &&
-                    send_delete(url + "/delete-all-videos", true)) {
+                    send_delete(with_storage_src(url + "/delete-all-videos"), true)) {
                     std::cout << "All videos deleted." << std::endl;
                 }
             } else if (choice == "8") {

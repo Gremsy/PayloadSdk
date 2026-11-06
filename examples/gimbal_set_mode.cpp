@@ -25,6 +25,7 @@ bool is_exit = false;
 
 void quit_handler(int sig);
 void onPayloadParamChanged(int event, char* param_char, double* param_double);
+void onPayloadStatusChanged(int event, double* param);
 
 int main(int argc, char *argv[]){
 	printf("Starting Set gimbal mode example...\n");
@@ -35,6 +36,7 @@ int main(int argc, char *argv[]){
 
 	// register callback function
 	my_payload->regPayloadParamChanged(onPayloadParamChanged);
+	my_payload->regPayloadStatusChanged(onPayloadStatusChanged);
 
 	// init payload
 	my_payload->sdkInitConnection();
@@ -76,6 +78,15 @@ int main(int argc, char *argv[]){
 	_flags = my_payload->getGimbalDeviceStatusFlags();
 
 	while(!is_exit){
+		printf("Change gimbal forward flag to AUTOPILOT \n");
+		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_FW_FLAG,PAYLOAD_CAMERA_GIMBAL_FW_FLAG_AUTOPILOT, PARAM_TYPE_UINT32);
+		usleep(2000000);
+		printf("Change gimbal forward flag to ONBOARD_COMPUTER \n");
+		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_FW_FLAG,PAYLOAD_CAMERA_GIMBAL_FW_FLAG_ONBOARD_COMPUTER, PARAM_TYPE_UINT32);
+		usleep(2000000);
+		printf("Change gimbal forward flag to SBUS_CONVERT \n");
+		my_payload->setPayloadCameraParam(PAYLOAD_CAMERA_GIMBAL_FW_FLAG,PAYLOAD_CAMERA_GIMBAL_FW_FLAG_SBUS_CONVERT, PARAM_TYPE_UINT32);
+		usleep(2000000);
 		printf("Change gimbal mode to LOCK \n");
 		_flags |= GIMBAL_DEVICE_FLAGS_YAW_LOCK;
 		_flags &= ~(1 << 14);					// xoa co
@@ -171,6 +182,17 @@ void quit_handler( int sig ){
 
     // end program here
     exit(0);
+}
+
+void onPayloadStatusChanged(int event, double* param){
+	
+	switch(event){
+	case PAYLOAD_PARAM_EXT_ACK:{
+		printf(" --> Got ack, result %.2f\n", param[0]);
+		break;
+	}
+	default: break;
+	}
 }
 
 void onPayloadParamChanged(int event, char* param_char, double* param){

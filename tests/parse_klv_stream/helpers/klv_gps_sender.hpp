@@ -12,6 +12,8 @@
 
 class KlvGpsSender
 {
+    using Clock = std::chrono::steady_clock;
+
 public:
     KlvGpsSender(const std::string &ip = "127.0.0.1", int port = 5005)
     {
@@ -20,63 +22,74 @@ public:
         addr_.sin_port = htons(port);
         inet_pton(AF_INET, ip.c_str(), &addr_.sin_addr);
     }
-
-    ~KlvGpsSender()
-    {
-        if (sock_ >= 0)
-            close(sock_);
-    }
-
+    ~KlvGpsSender() { if (sock_ >= 0) close(sock_); }
     KlvGpsSender(const KlvGpsSender &) = delete;
     KlvGpsSender &operator=(const KlvGpsSender &) = delete;
 
     bool update(const std::vector<Unpack::TagValuePair> &tags)
     {
-        double clat = NAN, clon = NAN;
-        double dlat[4] = {NAN, NAN, NAN, NAN};
-        double dlon[4] = {NAN, NAN, NAN, NAN};
-
+        const auto now = Clock::now();
         for (const auto &p : tags)
         {
             const std::string &n = p.tag_name;
-            if (n == "Frame Center Latitude")
-                clat = toDouble(p.value);
-            else if (n == "Frame Center Longitude")
-                clon = toDouble(p.value);
+            if (n == "Frame Center Latitude")         { clat_ = toDouble(p.value); fp_t_ = now; }
+            else if (n == "Frame Center Longitude")   { clon_ = toDouble(p.value); fp_t_ = now; }
+            else if (n == "Sensor Latitude")          { slat_ = toDouble(p.value); cam_t_ = now; }
+            else if (n == "Sensor Longitude")         { slon_ = toDouble(p.value); cam_t_ = now; }
+            else if (n == "Sensor True Altitude")     salt_ = toDouble(p.value);
+            else if (n == "Sensor Horizontal FOV")    hfov_ = toDouble(p.value);
+            else if (n == "Sensor Vertical FOV")      vfov_ = toDouble(p.value);
             else
-            {
                 for (int i = 0; i < 4; ++i)
                 {
                     const std::string idx = std::to_string(i + 1);
-                    if (n == "Offset Corner Latitude Point " + idx)
-                        dlat[i] = toDouble(p.value);
-                    else if (n == "Offset Corner Longitude Point " + idx)
-                        dlon[i] = toDouble(p.value);
+                    if (n == "Offset Corner Latitude Point " + idx)       { dlat_[i] = toDouble(p.value); fp_t_ = now; }
+                    else if (n == "Offset Corner Longitude Point " + idx) { dlon_[i] = toDouble(p.value); fp_t_ = now; }
                 }
-            }
         }
 
-        if (!std::isfinite(clat) || !std::isfinite(clon))
+        const bool fp  = fresh(fp_t_, now)  && std::isfinite(clat_) && std::isfinite(clon_);
+        const bool cam = fresh(cam_t_, now) && std::isfinite(slat_) && std::isfinite(slon_);
+        if (!fp && !cam)
             return false;
-
-        bool has_corners = true;
-        for (int i = 0; i < 4; ++i)
-            has_corners = has_corners && std::isfinite(dlat[i]) && std::isfinite(dlon[i]);
 
         std::ostringstream oss;
         oss << std::fixed << std::setprecision(9);
-        oss << "1," << clat << "," << clon;
-        if (has_corners)
+        bool first = true;
+        auto add = [&](int id, double a, double b) {
+            if (!first) oss << ";";
+            first = false;
+            oss << id << "," << a << "," << b;
+        };
+
+        if (fp)
+        {
+            add(1, clat_, clon_);
+            bool all = true;
             for (int i = 0; i < 4; ++i)
-                oss << ";" << (i + 2) << "," << (clat + dlat[i]) << "," << (clon + dlon[i]);
+                all = all && std::isfinite(dlat_[i]) && std::isfinite(dlon_[i]);
+            if (all)
+                for (int i = 0; i < 4; ++i)             // Point 1..4 -> id 2..5 (TL, TR, BR, BL)
+                    add(i + 2, clat_ + dlat_[i], clon_ + dlon_[i]);
+        }
+        if (cam)
+        {
+            add(10, slat_, slon_);
+            if (std::isfinite(salt_)) add(11, salt_, 0);
+            if (std::isfinite(hfov_)) add(12, hfov_, std::isfinite(vfov_) ? vfov_ : 0);
+        }
 
         const std::string s = oss.str();
-        sendto(sock_, s.c_str(), s.size(), 0,
-               reinterpret_cast<const sockaddr *>(&addr_), sizeof(addr_));
+        sendto(sock_, s.c_str(), s.size(), 0, reinterpret_cast<const sockaddr *>(&addr_), sizeof(addr_));
         return true;
     }
 
 private:
+    static bool fresh(Clock::time_point t, Clock::time_point now)
+    {
+        return std::chrono::duration<double>(now - t).count() < 1.0;
+    }
+
     static double toDouble(const decltype(Unpack::TagValuePair::value) &v)
     {
         switch (v.type)
@@ -97,4 +110,8 @@ private:
 
     int sock_ = -1;
     sockaddr_in addr_{};
+    double clat_ = NAN, clon_ = NAN, slat_ = NAN, slon_ = NAN;
+    double salt_ = NAN, hfov_ = NAN, vfov_ = NAN;
+    double dlat_[4] = {NAN, NAN, NAN, NAN}, dlon_[4] = {NAN, NAN, NAN, NAN};
+    Clock::time_point fp_t_{}, cam_t_{};
 };

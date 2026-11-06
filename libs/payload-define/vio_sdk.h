@@ -322,5 +322,10 @@ enum _zoom_super_resolution_factor{
 #define PAYLOAD_LRF_MODE_4HZ    1
 #define PAYLOAD_LRF_MODE_10HZ    2
 
+// Gimbal Forward Flag
+#define PAYLOAD_CAMERA_GIMBAL_FW_FLAG               "GB_FW_FLAG"
+#define PAYLOAD_CAMERA_GIMBAL_FW_FLAG_AUTOPILOT              0
+#define PAYLOAD_CAMERA_GIMBAL_FW_FLAG_ONBOARD_COMPUTER       1
+#define PAYLOAD_CAMERA_GIMBAL_FW_FLAG_SBUS_CONVERT           2
 
 #endif

@@ -1,6 +1,12 @@
 #ifndef ZIO_SDK_H
 #define ZIO_SDK_H
 
+// Setting Target - Select which device to configure
+#define PAYLOAD_CAMERA_SETTING_TARGET                "SETTING_TARGET"
+#define PAYLOAD_CAMERA_SETTING_TARGET_EO                 0
+#define PAYLOAD_CAMERA_SETTING_TARGET_IR                 1
+#define PAYLOAD_CAMERA_SETTING_TARGET_GIMBAL             2
+
 // Tracking modes
 #define PAYLOAD_CAMERA_TRACKING_MODE 	"TRACK_MODE"
 #define PAYLOAD_CAMERA_TRACKING_OBJ_TRACKING 	    0
@@ -14,6 +20,7 @@
 #define PAYLOAD_CAMERA_VIDEO_OSD_MODE_DISABLE       0
 #define PAYLOAD_CAMERA_VIDEO_OSD_MODE_DEBUG         1
 #define PAYLOAD_CAMERA_VIDEO_OSD_MODE_STATUS        2
+#define PAYLOAD_CAMERA_VIDEO_OSD_MODE_CUSTOM        3
 
 // RC modes
 #define PAYLOAD_CAMERA_RC_MODE 			"RC_MODE"

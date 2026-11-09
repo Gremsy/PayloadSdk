@@ -1,6 +1,12 @@
 #ifndef VIO_SDK_H
 #define VIO_SDK_H
 
+// Setting Target - Select which device to configure
+#define PAYLOAD_CAMERA_SETTING_TARGET                "SETTING_TARGET"
+#define PAYLOAD_CAMERA_SETTING_TARGET_EO                 0
+#define PAYLOAD_CAMERA_SETTING_TARGET_IR                 1
+#define PAYLOAD_CAMERA_SETTING_TARGET_GIMBAL             2
+
 // Tracking modes
 #define PAYLOAD_CAMERA_TRACKING_MODE 	"TRACK_MODE"
 #define PAYLOAD_CAMERA_TRACKING_OBJ_TRACKING 	    0
@@ -32,7 +38,7 @@
 #define PAYLOAD_CAMERA_VIDEO_OSD_MODE_DISABLE       0
 #define PAYLOAD_CAMERA_VIDEO_OSD_MODE_DEBUG         1
 #define PAYLOAD_CAMERA_VIDEO_OSD_MODE_STATUS        2
-
+#define PAYLOAD_CAMERA_VIDEO_OSD_MODE_CUSTOM        3
 // Image flip
 #define PAYLOAD_CAMERA_VIDEO_FLIP        "C_V_FLIP"
 #define PAYLOAD_CAMERA_VIDEO_FLIP_OFF       3
@@ -322,5 +328,10 @@ enum _zoom_super_resolution_factor{
 #define PAYLOAD_LRF_MODE_4HZ    1
 #define PAYLOAD_LRF_MODE_10HZ    2
 
+// Gimbal Forward Flag
+#define PAYLOAD_CAMERA_GIMBAL_FW_FLAG               "GB_FW_FLAG"
+#define PAYLOAD_CAMERA_GIMBAL_FW_FLAG_AUTOPILOT              0
+#define PAYLOAD_CAMERA_GIMBAL_FW_FLAG_ONBOARD_COMPUTER       1
+#define PAYLOAD_CAMERA_GIMBAL_FW_FLAG_SBUS_CONVERT           2
 
 #endif

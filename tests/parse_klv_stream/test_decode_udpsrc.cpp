@@ -12,7 +12,8 @@ static std::atomic<bool> g_quit{false};
 
 static void onSigint(int)
 {
-    g_quit = true;
+    if (g_quit.exchange(true))
+        _exit(130);
 }
 
 static void busMessageLoop(GstElement *pipeline)
@@ -98,16 +99,13 @@ int main(int argc, char *argv[])
 
     std::string pipeline_desc =
         "udpsrc name=source port=" + _port + " ! "
-        "tsdemux name=demux ! "
+        "tsdemux name=demux "
         "queue max-size-buffers=0 max-size-bytes=0 max-size-time=0 name=videoQueue ! "
         "h264parse name=h264parse ! "
         "avdec_h264 name=avdec_h264 ! "
         "appsink name=videoSink emit-signals=false async=false sync=false drop=true "
-        "demux. ! "
         "queue max-size-buffers=0 max-size-bytes=0 max-size-time=0 name=dataQueue ! "
-        "appsink name=dataSink emit-signals=false async=false sync=false drop=true "
-
-        ;
+        "appsink name=dataSink emit-signals=false async=false sync=false drop=true";
 
     data.pipeline = gst_parse_launch(pipeline_desc.c_str(), nullptr);
     if (!data.pipeline)

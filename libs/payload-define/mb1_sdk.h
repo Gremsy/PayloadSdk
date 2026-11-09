@@ -36,6 +36,7 @@ enum _zoom_eo_factor{
 #define PAYLOAD_CAMERA_VIDEO_OSD_MODE_DISABLE       0
 #define PAYLOAD_CAMERA_VIDEO_OSD_MODE_DEBUG         1
 #define PAYLOAD_CAMERA_VIDEO_OSD_MODE_STATUS        2
+#define PAYLOAD_CAMERA_VIDEO_OSD_MODE_CUSTOM        3
 
 #define PAYLOAD_CAMERA_RC_MODE 			"RC_MODE"
 #define PAYLOAD_CAMERA_RC_MODE_GREMSY 		    0
@@ -372,8 +373,9 @@ enum _isotherm_color {
 
 // Gimbal Forward Flag
 #define PAYLOAD_CAMERA_GIMBAL_FW_FLAG               "GB_FW_FLAG"
-#define PAYLOAD_CAMERA_GIMBAL_FW_FLAG_OVERWRITE         0
-#define PAYLOAD_CAMERA_GIMBAL_FW_FLAG_FORWARD           1
+#define PAYLOAD_CAMERA_GIMBAL_FW_FLAG_AUTOPILOT              0
+#define PAYLOAD_CAMERA_GIMBAL_FW_FLAG_ONBOARD_COMPUTER       1
+#define PAYLOAD_CAMERA_GIMBAL_FW_FLAG_SBUS_CONVERT           2
 
 // Zoom value can be set from 1x to 8x for camera thermal
 #define PAYLOAD_CAMERA_IR_ZOOM_FACTOR              "C_T_ZOOM"

@@ -122,3 +122,13 @@ jobs:
             -v "$SCRIPT_PATH:/ci/build-in-container.sh:ro" \
             "ubuntu:${DISTRO}" \
             bash /ci/build-in-container.sh
+
+  # Single required check for the branch ruleset: passes only if every matrix job passed.
+  build-result:
+    name: build-result
+    needs: build
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check matrix result
+        run: test "${{ needs.build.result }}" = "success"

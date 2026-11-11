@@ -1,0 +1,5 @@
+# Default reviewer for every file in this repository
+*            @imgodofmoney
+
+# CI workflows: reviewed by the same owner so CI cannot be weakened unnoticed
+/.github/    @imgodofmoney

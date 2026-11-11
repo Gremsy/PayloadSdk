@@ -1,0 +1,124 @@
+name: build-matrix
+
+on:
+  push:
+    branches: [payloadsdk_v3]
+  pull_request:
+    branches: [payloadsdk_v3]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-matrix-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: u${{ matrix.distro }}-${{ matrix.payload }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        distro: ["18.04", "20.04", "22.04", "24.04"]
+        payload: [VIO, ORUSL, MB1, ZIO]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Build runs in a plain ubuntu:<distro> container started from the host.
+      # The job-level container: key is not used because Node 20 (used by actions)
+      # needs glibc >= 2.28, which ubuntu 18.04 does not provide.
+      - name: Write in-container build script
+        env:
+          SCRIPT_PATH: ${{ runner.temp }}/build-in-container.sh
+        run: |
+          set -euo pipefail
+          cat > "$SCRIPT_PATH" <<'SCRIPT'
+          #!/bin/bash
+          # Runs inside ubuntu:<DISTRO>. /src = repo (read-only), /build = scratch build tree.
+          # PAYLOADS = space-separated payload list, one build directory per payload.
+          set -euo pipefail
+          export DEBIAN_FRONTEND=noninteractive
+
+          . /etc/os-release
+          echo "OS: ${PRETTY_NAME}"
+
+          apt-get update -qq
+          apt-get install -y -qq --no-install-recommends \
+            build-essential cmake pkg-config ca-certificates tar \
+            libcurl4-openssl-dev libjsoncpp-dev zlib1g-dev \
+            libgtkmm-3.0-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            libgstrtspserver-1.0-dev \
+            libopencv-dev python3-opencv
+
+          echo "gcc: $(gcc -dumpfullversion)"
+          echo "cmake: $(cmake --version | head -1)"
+
+          # Copy the repo out of the read-only mount; skip any host build directory.
+          mkdir -p /build/src
+          tar -C /src --exclude=./build -cf - . | tar -C /build/src -xf -
+
+          # Directories under tests/ (or examples/) that must produce an executable per payload.
+          expected_dirs() {
+            case "$1" in
+              VIO)   echo "tests/demo_project tests/parse_thermal_stream tests/parse_klv_stream tests/gamepad_control tests/ui_demo" ;;
+              ORUSL) echo "tests/demo_project tests/parse_thermal_stream tests/parse_klv_stream tests/update_payload_package tests/ui_demo" ;;
+              MB1)   echo "tests/mb1_project tests/parse_thermal_stream tests/parse_klv_stream tests/ui_demo" ;;
+              ZIO)   echo "examples" ;;
+              *)     echo "unknown payload $1" >&2; exit 1 ;;
+            esac
+          }
+
+          # Configure, build and verify one payload. Explicit "|| return 1" because
+          # set -e is not applied inside a function called from an if-condition.
+          build_payload() {
+            local P="$1" B="/build/build-$1" d
+            echo "===== payload ${P}: configure ====="
+            # Classic out-of-source form: "cmake -S/-B" needs CMake >= 3.13, Ubuntu 18.04 ships 3.10.
+            mkdir -p "$B"
+            (cd "$B" && cmake /build/src -D${P}=1) 2>&1 | tee "$B.cmake.log" || return 1
+            # CMakeLists.txt echoes "-- <PAYLOAD>: <value>" when the payload is selected.
+            grep -q -- "-- ${P}: 1" "$B.cmake.log" || return 1
+
+            echo "===== payload ${P}: build ====="
+            make -C "$B" -j8 || return 1
+
+            for d in $(expected_dirs "$P"); do
+              find "$B/$d" -maxdepth 1 -type f -executable | grep -q . \
+                || { echo "no executable built in $d for ${P}"; return 1; }
+              echo "ok: $d"
+            done
+          }
+
+          # Keep going over payloads so every combination is reported; fail at the end.
+          FAILED=""
+          for P in ${PAYLOADS}; do
+            if build_payload "$P"; then
+              echo "PAYLOAD_RESULT ${P} PASS"
+            else
+              echo "PAYLOAD_RESULT ${P} FAIL"
+              FAILED="${FAILED} ${P}"
+            fi
+          done
+          [ -z "$FAILED" ] || { echo "FAILED payloads:${FAILED} on ${PRETTY_NAME}"; exit 1; }
+
+          echo "BUILD OK on ${PRETTY_NAME}: ${PAYLOADS}"
+          SCRIPT
+          chmod +x "$SCRIPT_PATH"
+
+      - name: Build in ubuntu ${{ matrix.distro }} container
+        env:
+          DISTRO: ${{ matrix.distro }}
+          PAYLOADS: ${{ matrix.payload }}
+          SCRIPT_PATH: ${{ runner.temp }}/build-in-container.sh
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -e PAYLOADS \
+            -v "$PWD:/src:ro" \
+            -v "$SCRIPT_PATH:/ci/build-in-container.sh:ro" \
+            "ubuntu:${DISTRO}" \
+            bash /ci/build-in-container.sh

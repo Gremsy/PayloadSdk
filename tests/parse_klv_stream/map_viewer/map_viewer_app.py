@@ -36,10 +36,13 @@ def parse(text):
 
 def build(pts):
     # Optional extras: 10 = camera lat,lon | 11 = altitude (MSL) | 12 = HFOV,VFOV
+    #                  13 = target lat,lon | 14 = target elevation (MSL)
     pts = dict(pts)
     cam = pts.pop(10, None)
     alt = pts.pop(11, (None,))[0]
     fov = pts.pop(12, None)
+    tgt = pts.pop(13, None)
+    talt = pts.pop(14, (None,))[0]
     if cam is None and CAM_DEFAULT:
         cam = tuple(CAM_DEFAULT[:2])
         if alt is None and len(CAM_DEFAULT) > 2:
@@ -49,8 +52,11 @@ def build(pts):
         alt = None
     if alt is not None:
         alt -= GROUND_ALT[0]                 # MSL -> height above ground (AGL)
-    if not pts and cam:                      # camera only, no footprint yet
-        pts = {1: cam}
+    tgt = tgt if tgt and good(tgt) else None
+    if talt is not None:
+        talt = talt - GROUND_ALT[0] if math.isfinite(talt) else None
+    if not pts and (cam or tgt):             # no footprint yet: camera and/or target only
+        pts = {1: cam or tgt}
 
     if all(i in pts for i in range(1, 7)):
         drone, center, ids, base = pts[1], pts[2], (3, 4, 5, 6), 2
@@ -68,6 +74,7 @@ def build(pts):
         for p in corners)
     return {"valid": True, "drone": drone, "center": center,
             "camera": cam, "alt": alt, "hfov": fov[0] if fov else None,
+            "target": tgt, "talt": talt,
             "corners": corners if drawable else None,
             "labels": [f"P{i - base}" for i in ids] if drawable else None}
 
@@ -214,9 +221,9 @@ function mkMarker(color, label) {
 }
 const show = (mk, p) => { mk.setLngLat(ll(p)); if (!mk._on) { mk.addTo(map); mk._on = 1; } };
 const hide = mk => { if (mk._on) { mk.remove(); mk._on = 0; } };
-const cMk = mkMarker('#ff5a36', 'Center'), dMk = mkMarker('#448aff', 'Aircraft'), camMk = mkMarker('#90a4ae', '');
+const cMk = mkMarker('#ff5a36', 'Center'), dMk = mkMarker('#448aff', 'Aircraft'), tMk = mkMarker('#00e676', 'Target');
 const cornerMk = {};
-const allMk = () => Object.values(cornerMk).concat([cMk, dMk, camMk]);
+const allMk = () => Object.values(cornerMk).concat([cMk, dMk, tMk]);
 
 // ---- three.js custom layer: view pyramid, rays, line of sight, camera sphere (ENU meters) ----
 const T = {origin:null, group:null, mats:[]};
@@ -254,27 +261,42 @@ function build3d(m) {
   const g = T.group; if (!g) return;
   while (g.children.length) { const o = g.children.pop(); o.geometry.dispose(); o.material.dispose(); }
   T.mats = [];
-  if (!m || !m.corners || !m.camera || !(m.alt > 0)) { T.origin = null; $('camLbl').style.display = 'none'; map.triggerRepaint(); return; }
-  T.origin = ll(m.center);
-  const c = toENU(m.camera, m.center), C = [c[0], c[1], m.alt];
+  // origin of the local ENU frame: frame center when the footprint exists, else the target
+  const org = m && m.camera && m.alt > 0 ? (m.corners ? m.center : m.target) : null;
+  if (!org) { T.origin = null; $('camLbl').style.display = 'none'; map.triggerRepaint(); return; }
+  T.origin = ll(org);
+  const c = toENU(m.camera, org), C = [c[0], c[1], m.alt];
   T.cpos = C; $('camLbl').textContent = 'Payload · ' + m.alt.toFixed(0) + ' m';
-  const G = m.corners.map(p => { const e = toENU(p, m.center); return [e[0], e[1], 0]; });
   const add = (obj, mat, op) => { mat.userData = {op}; T.mats.push(mat); g.add(obj); };
   const geo = arr => { const b = new THREE.BufferGeometry(); b.setAttribute('position', new THREE.Float32BufferAttribute(arr.flat(), 3)); return b; };
-  // translucent pyramid
-  const tri = []; for (let i = 0; i < 4; i++) tri.push(C, G[i], G[(i+1) % 4]);
-  let mat = new THREE.MeshBasicMaterial({color:0xf0dc82, transparent:true, opacity:.18, side:THREE.DoubleSide, depthWrite:false});
-  add(new THREE.Mesh(geo(tri), mat), mat, .18);
-  // rays
-  mat = new THREE.LineBasicMaterial({color:0xf0dc82, transparent:true});
-  add(new THREE.LineSegments(geo(G.flatMap(p => [C, p])), mat), mat, 1);
-  // line of sight + drop line
-  mat = new THREE.LineBasicMaterial({color:0xff5a36, transparent:true});
-  add(new THREE.LineSegments(geo([C, [0,0,0]]), mat), mat, 1);
+  const r = Math.max(1, Math.hypot(...C) * 0.012);
+  let mat;
+  if (m.corners) {
+    const G = m.corners.map(p => { const e = toENU(p, org); return [e[0], e[1], 0]; });
+    // translucent pyramid
+    const tri = []; for (let i = 0; i < 4; i++) tri.push(C, G[i], G[(i+1) % 4]);
+    mat = new THREE.MeshBasicMaterial({color:0xf0dc82, transparent:true, opacity:.18, side:THREE.DoubleSide, depthWrite:false});
+    add(new THREE.Mesh(geo(tri), mat), mat, .18);
+    // rays
+    mat = new THREE.LineBasicMaterial({color:0xf0dc82, transparent:true});
+    add(new THREE.LineSegments(geo(G.flatMap(p => [C, p])), mat), mat, 1);
+    // line of sight to the frame center
+    mat = new THREE.LineBasicMaterial({color:0xff5a36, transparent:true});
+    add(new THREE.LineSegments(geo([C, [0,0,0]]), mat), mat, 1);
+  }
+  // drop line
   mat = new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:.6});
   add(new THREE.LineSegments(geo([C, [C[0], C[1], 0]]), mat), mat, .6);
+  // target: line from the payload + sphere at the target elevation
+  if (m.target) {
+    const e = toENU(m.target, org), Tp = [e[0], e[1], Math.max(0, m.talt || 0)];
+    mat = new THREE.LineBasicMaterial({color:0x00e676, transparent:true});
+    add(new THREE.LineSegments(geo([C, Tp]), mat), mat, 1);
+    mat = new THREE.MeshBasicMaterial({color:0x00e676, side:THREE.DoubleSide, transparent:true});
+    const ts = new THREE.Mesh(new THREE.SphereGeometry(r * 0.7, 16, 12), mat); ts.position.set(...Tp);
+    add(ts, mat, 1);
+  }
   // camera sphere
-  const r = Math.max(1, Math.hypot(...C) * 0.012);
   mat = new THREE.MeshBasicMaterial({color:0xff5a36, side:THREE.DoubleSide, transparent:true});
   const sp = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), mat); sp.position.set(...C);
   add(sp, mat, 1);
@@ -288,11 +310,12 @@ const setFollow = v => { follow = v; $('bFollow').textContent = 'Follow: ' + (v 
 
 function fit() {
   if (!last) return;
-  if (last.corners) {
+  if (last.corners || last.target) {
     const b = new maplibregl.LngLatBounds();
-    last.corners.forEach(p => b.extend(ll(p)));
+    (last.corners || []).forEach(p => b.extend(ll(p)));
     if (last.camera) b.extend(ll(last.camera));
-    map.fitBounds(b, {padding:100, maxZoom:20, animate:false});
+    if (last.target) b.extend(ll(last.target));
+    map.fitBounds(b, {padding:100, maxZoom:last.corners ? 20 : 21, animate:false});
   } else map.jumpTo({center:ll(last.drone || last.camera || last.center), zoom:Math.max(map.getZoom(), 19)});
 }
 $('bCenter').onclick = () => { setFollow(true); fit(); };
@@ -342,11 +365,10 @@ function clearFootprint() {
   Object.values(cornerMk).forEach(hide); hide(cMk);
 }
 function drawCam(m) {
-  if (!m.camera) { hide(camMk); build3d(null); return ''; }
-  show(camMk, m.camera);
-  if (!m.corners) { build3d(null); return '<br><small>Payload: ' + fmtLL(m.camera) + '</small>'; }
+  const t = m.target ? '<br><small>Target: ' + fmtLL(m.target) + '</small>' : '';
+  if (!m.camera) { build3d(null); return t; }
   build3d(m);
-  return '';   // HUD keeps only coordinates + footprint size
+  return (m.corners ? '' : '<br><small>Payload: ' + fmtLL(m.camera) + '</small>') + t;
 }
 
 let pend = 0;
@@ -369,6 +391,7 @@ function drawNow(m) {
     show(cMk, m.center);
   } else clearFootprint();
   if (m.drone) show(dMk, m.drone);
+  if (m.target) show(tMk, m.target); else hide(tMk);
 
   const html0 = drawCam(m);
   if (fitMode === 0) { fit(); fitMode = m.corners ? 2 : 1; }

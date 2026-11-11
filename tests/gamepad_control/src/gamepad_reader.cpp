@@ -10,11 +10,17 @@
 #include <cerrno>
 #include <chrono>
 #include <cstring>
-#include <filesystem>
 #include <iostream>
 #include <vector>
 
+// GCC 7 (Ubuntu 18.04) only provides <experimental/filesystem>; GCC >= 9 provides <filesystem>.
+#if __has_include(<filesystem>)
+#include <filesystem>
 namespace fs = std::filesystem;
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif
 
 namespace {
 const char* kButtonNames[] = {

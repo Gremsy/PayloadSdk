@@ -13,7 +13,7 @@ MainWindow::MainWindow(int width, int height) {
     main_box.pack_start(*create_connect_ip(), Gtk::PACK_SHRINK);
 
     // Create scrolled window for tab content
-    auto scrolled_window = Gtk::make_managed<Gtk::ScrolledWindow>();
+    auto scrolled_window = Gtk::manage(new Gtk::ScrolledWindow());
     scrolled_window->set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
     scrolled_window->set_vexpand(true);
     scrolled_window->set_hexpand(true);
@@ -24,7 +24,7 @@ MainWindow::MainWindow(int width, int height) {
     tab_content.set_hexpand(true);
     tab_content.set_vexpand(true);
 
-    payload_tab = Gtk::make_managed<PayloadSettingsTab>();
+    payload_tab = Gtk::manage(new PayloadSettingsTab());
     payload_tab->signal_button_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_payload_button_clicked));
     payload_tab->set_sensitive(false);
     payload_tab->set_hexpand(true);
@@ -40,7 +40,7 @@ MainWindow::MainWindow(int width, int height) {
 Gtk::Widget*
 MainWindow::
 create_connect_ip(){
-    auto frame = Gtk::make_managed<Gtk::Frame>("IP");
+    auto frame = Gtk::manage(new Gtk::Frame("IP"));
     frame->set_halign(Gtk::ALIGN_FILL);
     frame->set_valign(Gtk::ALIGN_CENTER);
     frame->set_margin_top(10);
@@ -48,13 +48,13 @@ create_connect_ip(){
     frame->set_margin_end(10);
     frame->set_margin_bottom(5);
 
-    auto ip_box = Gtk::make_managed<Gtk::Box>(Gtk::ORIENTATION_HORIZONTAL, 10);
+    auto ip_box = Gtk::manage(new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 10));
     ip_box->set_margin_top(10);
     ip_box->set_margin_bottom(10);
     ip_box->set_margin_start(10);
     ip_box->set_margin_end(10);
 
-    ip_entry = Gtk::make_managed<Gtk::Entry>();
+    ip_entry = Gtk::manage(new Gtk::Entry());
     ip_entry->set_size_request(300, -1);
     ip_entry->set_placeholder_text("Enter your payload IP address");
     ip_entry->set_text(udp_ip_target);
@@ -62,7 +62,7 @@ create_connect_ip(){
 
     ip_box->pack_start(*ip_entry, Gtk::PACK_EXPAND_WIDGET);
 
-    btn_connect = Gtk::make_managed<Gtk::Button>("Connect");
+    btn_connect = Gtk::manage(new Gtk::Button("Connect"));
     btn_connect->set_size_request(150, -1);
     btn_connect->signal_clicked().connect([this]() {
         if(!is_connected){
@@ -78,7 +78,7 @@ create_connect_ip(){
     });
     ip_box->pack_start(*btn_connect, Gtk::PACK_SHRINK);
 
-    connect_info = Gtk::make_managed<Gtk::Label>("  Disconnected ");
+    connect_info = Gtk::manage(new Gtk::Label("  Disconnected "));
     connect_info->set_markup("<span color='red'>  Disconnected </span>");
     ip_box->pack_start(*connect_info, Gtk::PACK_SHRINK);
 

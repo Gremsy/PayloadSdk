@@ -43,7 +43,16 @@ In another terminal:
 
 ```bash
 cd PayloadSdk/build
-./tests/parse_klv_stream/Test_Decode_KLV
+```
+
+**H.264 stream (default)**
+```bash
+./tests/parse_klv_stream/Test_Decode_KLV 
+```
+
+**H.265 stream**
+```bash
+./tests/parse_klv_stream/Test_Decode_KLV --h265
 ```
 
 It decodes the KLV stream and starts a GPS simulator. Default position: lat `10.836414`, lon `106.713832`, alt `30` m.

@@ -26,8 +26,8 @@ public:
         GstElement *tsDemux;
         GstElement *videoQueue;
         GstElement *dataQueue;
-        GstElement *h264parse;
-        GstElement *avdec;
+        GstElement *parser;   
+        GstElement *decoder;
         GstElement *videoSink;
         GstElement *dataSink;
         GstElement *autoVideoSink;

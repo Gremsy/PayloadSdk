@@ -221,11 +221,16 @@ decodeKlvData(GstBuffer *buffer)
     return true;
 }
 
-void 
-Klv_Decode_Interface::
-printKlvData()
+void Klv_Decode_Interface::printKlvData()
 {
-    print_tag_values(tag_values);
+    static const bool verbose = getenv("KLV_LOG") != nullptr;
+    static auto last = std::chrono::steady_clock::now();
+    const auto now = std::chrono::steady_clock::now();
+    if (verbose || now - last >= std::chrono::seconds(1))
+    {
+        last = now;
+        print_tag_values(tag_values);
+    }
     tag_values.clear();
 }
 

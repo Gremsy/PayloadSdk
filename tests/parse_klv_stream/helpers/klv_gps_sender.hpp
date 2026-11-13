@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <chrono>
 #include <cmath>
 #include <iomanip>
 #include <sstream>
@@ -32,13 +33,16 @@ public:
         for (const auto &p : tags)
         {
             const std::string &n = p.tag_name;
-            if (n == "Frame Center Latitude")         { clat_ = toDouble(p.value); fp_t_ = now; }
-            else if (n == "Frame Center Longitude")   { clon_ = toDouble(p.value); fp_t_ = now; }
-            else if (n == "Sensor Latitude")          { slat_ = toDouble(p.value); cam_t_ = now; }
-            else if (n == "Sensor Longitude")         { slon_ = toDouble(p.value); cam_t_ = now; }
-            else if (n == "Sensor True Altitude")     salt_ = toDouble(p.value);
-            else if (n == "Sensor Horizontal FOV")    hfov_ = toDouble(p.value);
-            else if (n == "Sensor Vertical FOV")      vfov_ = toDouble(p.value);
+            if (n == "Frame Center Latitude")           { clat_ = toDouble(p.value); fp_t_ = now; }
+            else if (n == "Frame Center Longitude")     { clon_ = toDouble(p.value); fp_t_ = now; }
+            else if (n == "Sensor Latitude")            { slat_ = toDouble(p.value); cam_t_ = now; }
+            else if (n == "Sensor Longitude")           { slon_ = toDouble(p.value); cam_t_ = now; }
+            else if (n == "Sensor True Altitude")       salt_ = toDouble(p.value);
+            else if (n == "Sensor Horizontal FOV")      hfov_ = toDouble(p.value);
+            else if (n == "Sensor Vertical FOV")        vfov_ = toDouble(p.value);
+            else if (n == "Target Location Latitude")   { tlat_ = toDouble(p.value); tgt_t_ = now; }
+            else if (n == "Target Location Longitude")  { tlon_ = toDouble(p.value); tgt_t_ = now; }
+            else if (n == "Target Location Elevation")  talt_ = toDouble(p.value);
             else
                 for (int i = 0; i < 4; ++i)
                 {
@@ -48,9 +52,11 @@ public:
                 }
         }
 
+        // Data not refreshed for more than 1 second is treated as lost
         const bool fp  = fresh(fp_t_, now)  && std::isfinite(clat_) && std::isfinite(clon_);
         const bool cam = fresh(cam_t_, now) && std::isfinite(slat_) && std::isfinite(slon_);
-        if (!fp && !cam)
+        const bool tgt = fresh(tgt_t_, now) && std::isfinite(tlat_) && std::isfinite(tlon_);
+        if (!fp && !cam && !tgt)
             return false;
 
         std::ostringstream oss;
@@ -64,19 +70,24 @@ public:
 
         if (fp)
         {
-            add(1, clat_, clon_);
+            add(1, clat_, clon_);                                   // frame center
             bool all = true;
             for (int i = 0; i < 4; ++i)
                 all = all && std::isfinite(dlat_[i]) && std::isfinite(dlon_[i]);
             if (all)
-                for (int i = 0; i < 4; ++i)             // Point 1..4 -> id 2..5 (TL, TR, BR, BL)
+                for (int i = 0; i < 4; ++i)                         // Point 1..4 -> id 2..5 (TL, TR, BR, BL)
                     add(i + 2, clat_ + dlat_[i], clon_ + dlon_[i]);
         }
         if (cam)
         {
-            add(10, slat_, slon_);
-            if (std::isfinite(salt_)) add(11, salt_, 0);
+            add(10, slat_, slon_);                                  // payload position
+            if (std::isfinite(salt_)) add(11, salt_, 0);            // altitude (MSL)
             if (std::isfinite(hfov_)) add(12, hfov_, std::isfinite(vfov_) ? vfov_ : 0);
+        }
+        if (tgt)
+        {
+            add(13, tlat_, tlon_);                                  // target location
+            if (std::isfinite(talt_)) add(14, talt_, 0);            // target elevation (MSL)
         }
 
         const std::string s = oss.str();
@@ -110,8 +121,8 @@ private:
 
     int sock_ = -1;
     sockaddr_in addr_{};
-    double clat_ = NAN, clon_ = NAN, slat_ = NAN, slon_ = NAN;
-    double salt_ = NAN, hfov_ = NAN, vfov_ = NAN;
+    double clat_ = NAN, clon_ = NAN, slat_ = NAN, slon_ = NAN, tlat_ = NAN, tlon_ = NAN;
+    double salt_ = NAN, hfov_ = NAN, vfov_ = NAN, talt_ = NAN;
     double dlat_[4] = {NAN, NAN, NAN, NAN}, dlon_[4] = {NAN, NAN, NAN, NAN};
-    Clock::time_point fp_t_{}, cam_t_{};
+    Clock::time_point fp_t_{}, cam_t_{}, tgt_t_{};
 };

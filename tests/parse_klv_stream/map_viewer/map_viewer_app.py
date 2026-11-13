@@ -1,5 +1,5 @@
-import argparse, json, logging, math, os, socket, sys, threading, urllib.request, webbrowser
-from flask import Flask, Response, abort
+import argparse, base64, io, json, logging, math, os, socket, sys, threading, time, urllib.error, urllib.request, webbrowser
+from flask import Flask, Response, abort, jsonify, request
 
 BASE = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(os.path.expanduser("~"), "GPSMapCache")
@@ -7,6 +7,10 @@ KLV_CORNER_ORDER = (2, 3, 4, 5)   # packet ids of KLV Point 1..4 = image corners
 MAX_CORNER_OFFSET = 0.0745        # KLV corner offsets saturate at 0.075 deg when a point is out of range
 CAM_DEFAULT = []                  # [lat, lon, alt] from --cam, used when the stream has no camera position
 GROUND_ALT = [0.0]                # ground elevation (MSL) under the camera, from --ground-alt
+START = []                        # [lat, lon, zoom] from --start, initial map view until GPS data arrives
+PREFETCH_HALF_M = 1500            # half side of the download area: 1500 m -> 3x3 km
+PREFETCH_ZOOMS = range(14, 20)    # zoom levels 14..19
+NET_DOWN = [0.0]                  # time until which the network is considered down (avoids waiting for a timeout per tile)
 TILES = {
     "sat": ("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", "image/jpeg"),
     "osm": ("https://tile.openstreetmap.org/{z}/{x}/{y}.png", "image/png"),
@@ -16,6 +20,10 @@ app = Flask(__name__, static_folder=os.path.join(BASE, "static"), static_url_pat
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 cond = threading.Condition()
 state = {"seq": 0, "msg": "{}"}
+# Video preview: the C++ app connects to --video-port (TCP) and sends [4-byte length][JPEG] frames; /video re-serves them as MJPEG
+vcond = threading.Condition()
+vstate = {"seq": 0, "jpg": None}
+PLACEHOLDER_JPG = base64.b64decode("/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wAARCAACAAIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDlqKKKYj//2Q==")   # 2x2 grey frame, keeps the HTTP connection alive when idle
 
 
 def good(p):
@@ -36,10 +44,13 @@ def parse(text):
 
 def build(pts):
     # Optional extras: 10 = camera lat,lon | 11 = altitude (MSL) | 12 = HFOV,VFOV
+    #                  13 = target lat,lon | 14 = target elevation (MSL)
     pts = dict(pts)
     cam = pts.pop(10, None)
     alt = pts.pop(11, (None,))[0]
     fov = pts.pop(12, None)
+    tgt = pts.pop(13, None)
+    talt = pts.pop(14, (None,))[0]
     if cam is None and CAM_DEFAULT:
         cam = tuple(CAM_DEFAULT[:2])
         if alt is None and len(CAM_DEFAULT) > 2:
@@ -49,8 +60,11 @@ def build(pts):
         alt = None
     if alt is not None:
         alt -= GROUND_ALT[0]                 # MSL -> height above ground (AGL)
-    if not pts and cam:                      # camera only, no footprint yet
-        pts = {1: cam}
+    tgt = tgt if tgt and good(tgt) else None
+    if talt is not None:
+        talt = talt - GROUND_ALT[0] if math.isfinite(talt) else None
+    if not pts and (cam or tgt):             # no footprint yet: camera and/or target only
+        pts = {1: cam or tgt}
 
     if all(i in pts for i in range(1, 7)):
         drone, center, ids, base = pts[1], pts[2], (3, 4, 5, 6), 2
@@ -68,6 +82,7 @@ def build(pts):
         for p in corners)
     return {"valid": True, "drone": drone, "center": center,
             "camera": cam, "alt": alt, "hfov": fov[0] if fov else None,
+            "target": tgt, "talt": talt,
             "corners": corners if drawable else None,
             "labels": [f"P{i - base}" for i in ids] if drawable else None}
 
@@ -81,6 +96,61 @@ def udp_loop(sock):
                 state["seq"] += 1
                 state["msg"] = json.dumps(msg)
                 cond.notify_all()
+
+
+def recv_exact(conn, n):
+    buf = bytearray()
+    while len(buf) < n:
+        chunk = conn.recv(min(1 << 16, n - len(buf)))
+        if not chunk:
+            return None
+        buf += chunk
+    return bytes(buf)
+
+
+def video_conn(conn):
+    with conn:
+        while True:
+            hdr = recv_exact(conn, 4)
+            if hdr is None:
+                return
+            n = int.from_bytes(hdr, "big")
+            if n < 4 or n > 8_000_000:                      # corrupt stream: drop the connection
+                return
+            jpg = recv_exact(conn, n)
+            if jpg is None:
+                return
+            if jpg[:2] == b"\xff\xd8" and jpg[-2:] == b"\xff\xd9":   # complete JPEG only
+                with vcond:
+                    vstate["seq"] += 1
+                    vstate["jpg"] = jpg
+                    vcond.notify_all()
+
+
+def video_server(srv):
+    while True:
+        conn, _ = srv.accept()
+        threading.Thread(target=video_conn, args=(conn,), daemon=True).start()
+
+
+@app.route("/video")
+def video():
+    def part(jpg):
+        return (b"--frame\r\nContent-Type: image/jpeg\r\nContent-Length: " + str(len(jpg)).encode() +
+                b"\r\n\r\n" + jpg + b"\r\n")
+
+    def gen():
+        last = -1
+        while True:
+            with vcond:
+                vcond.wait_for(lambda: vstate["seq"] != last, timeout=3)
+                seq, jpg = vstate["seq"], vstate["jpg"]
+            # No new frame for 3 s: resend the last one (or a placeholder). The write fails once the
+            # browser has closed the connection, so idle generator threads never pile up.
+            last = seq
+            yield part(jpg or PLACEHOLDER_JPG)
+    return Response(gen(), mimetype="multipart/x-mixed-replace; boundary=frame",
+                    headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
 
 @app.route("/stream")
@@ -100,38 +170,176 @@ def stream():
                     headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
+# ---------------------------------------------------------------- tiles: cache, download, overzoom
+def tile_path(layer, z, x, y):
+    return os.path.join(CACHE, layer, str(z), str(x), f"{y}.img")
+
+
+def is_cached(layer, z, x, y):
+    p = tile_path(layer, z, x, y)
+    return os.path.exists(p) and os.path.getsize(p) > 100
+
+
+def read_cached(layer, z, x, y):
+    if not is_cached(layer, z, x, y):
+        return None
+    with open(tile_path(layer, z, x, y), "rb") as f:
+        return f.read()
+
+
+def download_tile(layer, z, x, y, force=False):
+    """Download a tile from the network and store it in the cache. Returns bytes or None."""
+    if not force and time.time() < NET_DOWN[0]:
+        return None                                   # network recently lost: don't wait for timeouts again
+    url, _ = TILES[layer]
+    data, err, conn_fail = None, None, False
+    for _ in range(2):
+        try:
+            req = urllib.request.Request(url.format(z=z, x=x, y=y), headers={"User-Agent": "GPSMapApp/1.0"})
+            with urllib.request.urlopen(req, timeout=8) as r:
+                body = r.read()
+                if r.status == 200 and r.headers.get("Content-Type", "").startswith("image/") and len(body) > 100:
+                    data = body
+                    break
+                err = f"response is not an image ({r.status}, {len(body)} bytes)"
+        except urllib.error.HTTPError as e:           # server answered with an error: network is up, tile just missing
+            err, conn_fail = e, False
+            break
+        except Exception as e:                        # could not connect
+            err, conn_fail = e, True
+    if data is None:
+        if conn_fail:
+            NET_DOWN[0] = time.time() + 20
+        print(f"[tile] {layer}/{z}/{x}/{y} failed: {err}")
+        return None
+    path = tile_path(layer, z, x, y)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = f"{path}.{threading.get_ident()}.tmp"
+    with open(tmp, "wb") as f:
+        f.write(data)
+    os.replace(tmp, path)
+    return data
+
+
+def overzoom(layer, z, x, y):
+    """Tile missing: crop + upscale from a lower-zoom cached tile (up to 4 levels up)."""
+    try:
+        from PIL import Image
+    except ImportError:
+        return None
+    for dz in range(1, 5):
+        if z - dz < 0:
+            break
+        data = read_cached(layer, z - dz, x >> dz, y >> dz)
+        if data is None:
+            continue
+        try:
+            im = Image.open(io.BytesIO(data)).convert("RGB")
+            s = im.width >> dz
+            ox, oy = (x & ((1 << dz) - 1)) * s, (y & ((1 << dz) - 1)) * s
+            im = im.crop((ox, oy, ox + s, oy + s)).resize((256, 256), Image.BICUBIC)
+            out = io.BytesIO()
+            im.save(out, "JPEG", quality=85)
+            return out.getvalue()
+        except Exception as e:
+            print(f"[overzoom] {layer}/{z}/{x}/{y}: {e}")
+    return None
+
+
 @app.route("/tile/<layer>/<int:z>/<int:x>/<int:y>")
 def tile(layer, z, x, y):
     if layer not in TILES:
         abort(404)
-    url, mime = TILES[layer]
-    path = os.path.join(CACHE, layer, str(z), str(x), f"{y}.img")
-    data = None
-    if os.path.exists(path) and os.path.getsize(path) > 100:
-        with open(path, "rb") as f:
-            data = f.read()
-    if data is None:
-        err = None
-        for _ in range(2):
-            try:
-                req = urllib.request.Request(url.format(z=z, x=x, y=y), headers={"User-Agent": "GPSMapApp/1.0"})
-                with urllib.request.urlopen(req, timeout=8) as r:
-                    body = r.read()
-                    if r.status == 200 and r.headers.get("Content-Type", "").startswith("image/") and len(body) > 100:
-                        data = body
-                        break
-                    err = f"response is not an image ({r.status}, {len(body)} bytes)"
-            except Exception as e:
-                err = e
-        if data is None:
-            print(f"[tile] {layer}/{z}/{x}/{y} failed: {err}")
-            abort(Response("", 404, {"Cache-Control": "no-store"}))
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        tmp = f"{path}.{threading.get_ident()}.tmp"
-        with open(tmp, "wb") as f:
-            f.write(data)
-        os.replace(tmp, path)
-    return Response(data, mimetype=mime, headers={"Cache-Control": "max-age=86400"})
+    mime = TILES[layer][1]
+    hdr = {"Cache-Control": "max-age=86400"}
+    data = read_cached(layer, z, x, y) or download_tile(layer, z, x, y)
+    if data:
+        return Response(data, mimetype=mime, headers=hdr)
+    data = overzoom(layer, z, x, y)                   # not written to disk, so the real tile can still be fetched later
+    if data:
+        return Response(data, mimetype="image/jpeg", headers={"Cache-Control": "no-store"})
+    abort(Response("", 404, {"Cache-Control": "no-store"}))
+
+
+# ---------------------------------------------------------------- area prefetch (3x3 km)
+PF = {"running": False, "cancel": False, "done": 0, "total": 0, "fail": 0, "msg": ""}
+PF_LOCK = threading.Lock()
+
+
+def deg2tile(lat, lon, z):
+    lat = max(-85.0511, min(85.0511, lat))
+    n = 2 ** z
+    return (int((lon + 180) / 360 * n),
+            int((1 - math.asinh(math.tan(math.radians(lat))) / math.pi) / 2 * n))
+
+
+def tiles_in_box(lat, lon, half_m, zooms):
+    dlat = half_m / 110540
+    dlon = half_m / (111320 * math.cos(math.radians(lat)))
+    for z in zooms:
+        x1, y1 = deg2tile(lat + dlat, lon - dlon, z)
+        x2, y2 = deg2tile(lat - dlat, lon + dlon, z)
+        for x in range(x1, x2 + 1):
+            for y in range(y1, y2 + 1):
+                yield z, x, y
+
+
+def prefetch_run(layer, jobs):
+    from concurrent.futures import ThreadPoolExecutor
+    streak = [0]
+
+    def one(j):
+        if PF["cancel"]:
+            return
+        z, x, y = j
+        if not is_cached(layer, z, x, y):
+            ok = download_tile(layer, z, x, y, force=True) is not None
+            with PF_LOCK:
+                if ok:
+                    streak[0] = 0
+                else:
+                    PF["fail"] += 1
+                    streak[0] += 1
+                    if streak[0] >= 20:               # 20 consecutive failures: most likely no network
+                        PF["cancel"] = True
+                        PF["msg"] = "Network error, download stopped"
+        with PF_LOCK:
+            PF["done"] += 1
+    try:
+        with ThreadPoolExecutor(6) as ex:
+            list(ex.map(one, jobs))
+    finally:
+        PF["running"] = False
+
+
+@app.route("/prefetch", methods=["POST"])
+def prefetch():
+    d = request.get_json(silent=True) or {}
+    try:
+        lat, lon = float(d["lat"]), float(d["lon"])
+    except (KeyError, TypeError, ValueError):
+        abort(400)
+    layer = d.get("layer", "sat")
+    if layer not in TILES or not good((lat, lon)):
+        abort(400)
+    with PF_LOCK:
+        if PF["running"]:
+            return jsonify(PF)
+        jobs = list(tiles_in_box(lat, lon, PREFETCH_HALF_M, PREFETCH_ZOOMS))
+        PF.update(running=True, cancel=False, done=0, total=len(jobs), fail=0, msg="")
+    threading.Thread(target=prefetch_run, args=(layer, jobs), daemon=True).start()
+    return jsonify(PF)
+
+
+@app.route("/prefetch/status")
+def prefetch_status():
+    return jsonify(PF)
+
+
+@app.route("/prefetch/cancel", methods=["POST"])
+def prefetch_cancel():
+    PF["cancel"] = True
+    return jsonify(PF)
 
 
 # Needs in ./static : maplibre-gl.js, maplibre-gl.css, three.min.js (r128)
@@ -153,6 +361,9 @@ HTML = r"""<!DOCTYPE html>
  #hud small{color:#666} #warn{color:#d84315;font-weight:600}
  #camLbl{display:none;pointer-events:none;background:rgba(255,255,255,.92);border:1px solid #555;border-radius:4px;
   padding:0 6px;font-size:14px;white-space:nowrap;transform:translate(-50%,-160%)}
+ #vid{left:12px;top:64px;width:320px;max-width:45vw;display:none;background:#000;border-radius:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,.35);cursor:pointer}
+ #vid.big{width:min(70vw,960px);max-width:none}
  #btns{right:12px;bottom:28px;display:flex;flex-direction:column;gap:10px}
  #btns button{min-width:150px;height:54px;border:0;border-radius:14px;font-size:17px;font-weight:600;
   background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.35);cursor:pointer}
@@ -166,18 +377,22 @@ HTML = r"""<!DOCTYPE html>
 <div id="map"></div>
 <div id="status" class="ui"><span id="dot"></span><span id="stxt">Waiting for device...</span></div>
 <div id="camLbl" class="ui"></div>
+<img id="vid" class="ui" alt="video" title="Click to enlarge / shrink">
 <div id="hud" class="ui" title="Tap to copy coordinates" style="display:none"></div>
 <div id="btns" class="ui">
  <button id="bCenter">◎ Center</button>
  <button id="bFollow" class="on">Follow: On</button>
  <button id="bLayer">Basemap: Satellite</button>
  <button id="bView">View: 3D</button>
+ <button id="bVideo">Video: Off</button>
+ <button id="bDl">⬇ Download 3×3 km</button>
 </div>
 <script>
 const $ = id => document.getElementById(id);
 const rs = n => ({type:'raster', tiles:[location.origin + '/tile/' + n + '/{z}/{x}/{y}'], tileSize:256, maxzoom:19});
+const START = /*START*/null;                     // [lat, lon, zoom] from --start, else null
 const map = new maplibregl.Map({
-  container:'map', center:[106,16], zoom:5, maxZoom:22, maxPitch:85, pitch:55, attributionControl:false,
+  container:'map', center:START ? [START[1], START[0]] : [106,16], zoom:START ? START[2] : 5, maxZoom:22, maxPitch:85, pitch:55, attributionControl:false,
   style:{version:8, sources:{sat:rs('sat'), osm:rs('osm')}, layers:[
     {id:'bg', type:'background', paint:{'background-color':'#2b2f33'}},
     {id:'sat', type:'raster', source:'sat'},
@@ -214,9 +429,9 @@ function mkMarker(color, label) {
 }
 const show = (mk, p) => { mk.setLngLat(ll(p)); if (!mk._on) { mk.addTo(map); mk._on = 1; } };
 const hide = mk => { if (mk._on) { mk.remove(); mk._on = 0; } };
-const cMk = mkMarker('#ff5a36', 'Center'), dMk = mkMarker('#448aff', 'Aircraft'), camMk = mkMarker('#90a4ae', '');
+const cMk = mkMarker('#ff5a36', 'Center'), dMk = mkMarker('#448aff', 'Aircraft'), tMk = mkMarker('#00e676', 'Target');
 const cornerMk = {};
-const allMk = () => Object.values(cornerMk).concat([cMk, dMk, camMk]);
+const allMk = () => Object.values(cornerMk).concat([cMk, dMk, tMk]);
 
 // ---- three.js custom layer: view pyramid, rays, line of sight, camera sphere (ENU meters) ----
 const T = {origin:null, group:null, mats:[]};
@@ -254,27 +469,42 @@ function build3d(m) {
   const g = T.group; if (!g) return;
   while (g.children.length) { const o = g.children.pop(); o.geometry.dispose(); o.material.dispose(); }
   T.mats = [];
-  if (!m || !m.corners || !m.camera || !(m.alt > 0)) { T.origin = null; $('camLbl').style.display = 'none'; map.triggerRepaint(); return; }
-  T.origin = ll(m.center);
-  const c = toENU(m.camera, m.center), C = [c[0], c[1], m.alt];
+  // origin of the local ENU frame: frame center when the footprint exists, else the target
+  const org = m && m.camera && m.alt > 0 ? (m.corners ? m.center : m.target) : null;
+  if (!org) { T.origin = null; $('camLbl').style.display = 'none'; map.triggerRepaint(); return; }
+  T.origin = ll(org);
+  const c = toENU(m.camera, org), C = [c[0], c[1], m.alt];
   T.cpos = C; $('camLbl').textContent = 'Payload · ' + m.alt.toFixed(0) + ' m';
-  const G = m.corners.map(p => { const e = toENU(p, m.center); return [e[0], e[1], 0]; });
   const add = (obj, mat, op) => { mat.userData = {op}; T.mats.push(mat); g.add(obj); };
   const geo = arr => { const b = new THREE.BufferGeometry(); b.setAttribute('position', new THREE.Float32BufferAttribute(arr.flat(), 3)); return b; };
-  // translucent pyramid
-  const tri = []; for (let i = 0; i < 4; i++) tri.push(C, G[i], G[(i+1) % 4]);
-  let mat = new THREE.MeshBasicMaterial({color:0xf0dc82, transparent:true, opacity:.18, side:THREE.DoubleSide, depthWrite:false});
-  add(new THREE.Mesh(geo(tri), mat), mat, .18);
-  // rays
-  mat = new THREE.LineBasicMaterial({color:0xf0dc82, transparent:true});
-  add(new THREE.LineSegments(geo(G.flatMap(p => [C, p])), mat), mat, 1);
-  // line of sight + drop line
-  mat = new THREE.LineBasicMaterial({color:0xff5a36, transparent:true});
-  add(new THREE.LineSegments(geo([C, [0,0,0]]), mat), mat, 1);
+  const r = Math.max(1, Math.hypot(...C) * 0.012);
+  let mat;
+  if (m.corners) {
+    const G = m.corners.map(p => { const e = toENU(p, org); return [e[0], e[1], 0]; });
+    // translucent pyramid
+    const tri = []; for (let i = 0; i < 4; i++) tri.push(C, G[i], G[(i+1) % 4]);
+    mat = new THREE.MeshBasicMaterial({color:0xf0dc82, transparent:true, opacity:.18, side:THREE.DoubleSide, depthWrite:false});
+    add(new THREE.Mesh(geo(tri), mat), mat, .18);
+    // rays
+    mat = new THREE.LineBasicMaterial({color:0xf0dc82, transparent:true});
+    add(new THREE.LineSegments(geo(G.flatMap(p => [C, p])), mat), mat, 1);
+    // line of sight to the frame center
+    mat = new THREE.LineBasicMaterial({color:0xff5a36, transparent:true});
+    add(new THREE.LineSegments(geo([C, [0,0,0]]), mat), mat, 1);
+  }
+  // drop line
   mat = new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:.6});
   add(new THREE.LineSegments(geo([C, [C[0], C[1], 0]]), mat), mat, .6);
+  // target: line from the payload + sphere at the target elevation
+  if (m.target) {
+    const e = toENU(m.target, org), Tp = [e[0], e[1], Math.max(0, m.talt || 0)];
+    mat = new THREE.LineBasicMaterial({color:0x00e676, transparent:true});
+    add(new THREE.LineSegments(geo([C, Tp]), mat), mat, 1);
+    mat = new THREE.MeshBasicMaterial({color:0x00e676, side:THREE.DoubleSide, transparent:true});
+    const ts = new THREE.Mesh(new THREE.SphereGeometry(r * 0.7, 16, 12), mat); ts.position.set(...Tp);
+    add(ts, mat, 1);
+  }
   // camera sphere
-  const r = Math.max(1, Math.hypot(...C) * 0.012);
   mat = new THREE.MeshBasicMaterial({color:0xff5a36, side:THREE.DoubleSide, transparent:true});
   const sp = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), mat); sp.position.set(...C);
   add(sp, mat, 1);
@@ -288,11 +518,12 @@ const setFollow = v => { follow = v; $('bFollow').textContent = 'Follow: ' + (v 
 
 function fit() {
   if (!last) return;
-  if (last.corners) {
+  if (last.corners || last.target) {
     const b = new maplibregl.LngLatBounds();
-    last.corners.forEach(p => b.extend(ll(p)));
+    (last.corners || []).forEach(p => b.extend(ll(p)));
     if (last.camera) b.extend(ll(last.camera));
-    map.fitBounds(b, {padding:100, maxZoom:20, animate:false});
+    if (last.target) b.extend(ll(last.target));
+    map.fitBounds(b, {padding:100, maxZoom:last.corners ? 20 : 21, animate:false});
   } else map.jumpTo({center:ll(last.drone || last.camera || last.center), zoom:Math.max(map.getZoom(), 19)});
 }
 $('bCenter').onclick = () => { setFollow(true); fit(); };
@@ -310,6 +541,41 @@ $('bView').onclick = () => {
   if (viewMode === 'tilt') map.easeTo({pitch:55});
   else map.easeTo({pitch:0, bearing:0});
 };
+const BLANK = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+$('bVideo').onclick = () => {
+  const on = $('vid').style.display !== 'block', v = $('vid');
+  $('bVideo').textContent = 'Video: ' + (on ? 'On' : 'Off');
+  $('bVideo').classList.toggle('on', on);
+  if (on) { v.src = '/video?t=' + Date.now(); v.style.display = 'block'; }
+  else { v.src = BLANK; v.style.display = 'none'; }          // dropping the src closes the MJPEG connection
+};
+$('vid').onclick = () => $('vid').classList.toggle('big');
+
+// ---- offline area download (3x3 km around the map center) ----
+const DL_LABEL = '⬇ Download 3×3 km';
+async function pollDl() {
+  const b = $('bDl');
+  let s;
+  try { s = await (await fetch('/prefetch/status')).json(); } catch (e) { return; }
+  if (s.running) {
+    b.dataset.run = '1'; b.classList.add('on');
+    b.textContent = 'Cancel · ' + Math.round(100 * s.done / Math.max(1, s.total)) + '%';
+    setTimeout(pollDl, 1000);
+    return;
+  }
+  b.dataset.run = '0'; b.classList.remove('on');
+  b.textContent = s.msg ? '⚠ ' + s.msg : 'Saved ✓' + (s.fail ? ' (' + s.fail + ' failed)' : '');
+  setTimeout(() => { if (b.dataset.run !== '1') b.textContent = DL_LABEL; }, 5000);
+}
+$('bDl').onclick = async () => {
+  const b = $('bDl');
+  if (b.dataset.run === '1') { await fetch('/prefetch/cancel', {method:'POST'}); return; }
+  const c = map.getCenter();
+  const r = await fetch('/prefetch', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({lat:c.lat, lon:c.lng, layer:cur})});
+  if (r.ok) pollDl();
+};
+
 $('hud').onclick = () => { const p = copyTarget(); if (p) copyText(fmtLL(p)); };
 map.on('dragstart', () => setFollow(false));
 map.on('click', e => {
@@ -342,11 +608,10 @@ function clearFootprint() {
   Object.values(cornerMk).forEach(hide); hide(cMk);
 }
 function drawCam(m) {
-  if (!m.camera) { hide(camMk); build3d(null); return ''; }
-  show(camMk, m.camera);
-  if (!m.corners) { build3d(null); return '<br><small>Payload: ' + fmtLL(m.camera) + '</small>'; }
+  const t = m.target ? '<br><small>Target: ' + fmtLL(m.target) + '</small>' : '';
+  if (!m.camera) { build3d(null); return t; }
   build3d(m);
-  return '';   // HUD keeps only coordinates + footprint size
+  return (m.corners ? '' : '<br><small>Payload: ' + fmtLL(m.camera) + '</small>') + t;
 }
 
 let pend = 0;
@@ -369,6 +634,7 @@ function drawNow(m) {
     show(cMk, m.center);
   } else clearFootprint();
   if (m.drone) show(dMk, m.drone);
+  if (m.target) show(tMk, m.target); else hide(tMk);
 
   const html0 = drawCam(m);
   if (fitMode === 0) { fit(); fitMode = m.corners ? 2 : 1; }
@@ -415,7 +681,8 @@ setInterval(() => {
 
 @app.route("/")
 def index():
-    return Response(HTML, mimetype="text/html")
+    html = HTML.replace("/*START*/null", json.dumps(START)) if START else HTML
+    return Response(html, mimetype="text/html")
 
 
 def main():
@@ -423,11 +690,23 @@ def main():
     ap.add_argument("--udp-port", type=int, default=5005)
     ap.add_argument("--port", type=int, default=5000)
     ap.add_argument("--no-browser", action="store_true")
+    ap.add_argument("--video-port", type=int, default=5006, help="TCP port on which the C++ app delivers JPEG preview frames")
     ap.add_argument("--cam", help="fallback camera position when the stream has none: lat,lon[,alt]")
     ap.add_argument("--ground-alt", type=float, default=0.0,
                     help="ground elevation (m, MSL) under the camera; subtracted from altitude to get height above ground")
+    ap.add_argument("--start", help="initial map position until GPS data arrives: lat,lon[,zoom] (default zoom 17)")
     args = ap.parse_args()
     GROUND_ALT[0] = args.ground_alt
+
+    if args.start:
+        try:
+            vals = [float(x) for x in args.start.replace(";", ",").split(",")]
+            if len(vals) not in (2, 3) or not good(vals[:2]):
+                raise ValueError
+            zoom = vals[2] if len(vals) == 3 else 17.0
+            START[:] = [vals[0], vals[1], max(0.0, min(22.0, zoom))]
+        except ValueError:
+            ap.error("--start must be lat,lon or lat,lon,zoom")
 
     if args.cam:
         try:
@@ -447,6 +726,15 @@ def main():
             input("Press Enter to exit...")
         return
     threading.Thread(target=udp_loop, args=(sock,), daemon=True).start()
+
+    try:
+        vsrv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        vsrv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        vsrv.bind(("127.0.0.1", args.video_port))
+        vsrv.listen(2)
+        threading.Thread(target=video_server, args=(vsrv,), daemon=True).start()
+    except OSError:
+        print(f"Cannot open video port {args.video_port}; video preview disabled.")
 
     url = f"http://127.0.0.1:{args.port}"
     print(f"GPS Map running at {url} (UDP data on port {args.udp_port})")

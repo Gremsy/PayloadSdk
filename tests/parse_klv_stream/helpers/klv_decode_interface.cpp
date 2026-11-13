@@ -41,7 +41,7 @@ pad_added_handler(GstElement *src, GstPad *new_pad, CustomData *data)
     const gchar *new_pad_type = gst_structure_get_name(new_pad_struct);
     LOG_DEBUG("Received new pad '%s' from '%s' of type '%s':", GST_PAD_NAME(new_pad), GST_ELEMENT_NAME(src), new_pad_type);
 
-    if (g_str_has_prefix(new_pad_type, "video/x-h264"))
+    if (g_str_has_prefix(new_pad_type, "video/x-h264") || g_str_has_prefix(new_pad_type, "video/x-h265"))
     {
         sink_pad = gst_element_get_static_pad(data->videoQueue, "sink");
     }

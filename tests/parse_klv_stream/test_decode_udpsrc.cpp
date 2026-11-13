@@ -119,6 +119,7 @@ int main(int argc, char *argv[])
     bool show_stats = false;
     bool use_video = true;
     int vwidth = 1280, vfps = 30, vquality = 75;
+    bool use_h265 = false; 
     std::vector<std::string> gps_args;
     for (int i = 1; i < argc; ++i)
     {
@@ -139,6 +140,10 @@ int main(int argc, char *argv[])
             vfps = std::atoi(argv[++i]);
         else if (a == "--video-quality" && i + 1 < argc)
             vquality = std::atoi(argv[++i]);
+        else if (a == "--h264")
+            use_h265 = false;
+        else if (a == "--h265")
+            use_h265 = true;
         else
             gps_args.push_back(a);
     }
@@ -170,20 +175,25 @@ int main(int argc, char *argv[])
            "appsink name=jpegSink emit-signals=false async=false sync=false drop=true max-buffers=2 ")
         : raw_sink;
 
+    const std::string parser  = use_h265 ? "h265parse"  : "h264parse";
+    const std::string decoder = use_h265 ? "avdec_h265" : "avdec_h264";
+    const std::string payer   = use_h265 ? "rtph265pay" : "rtph264pay";
+    LOG_DEBUG("Video codec: %s", use_h265 ? "H.265" : "H.264");
+
     const std::string dec_head = qgc_port
-        ? "tee name=ht ht. ! queue name=decQueue ! avdec_h264 name=avdec_h264 ! "
-        : "avdec_h264 name=avdec_h264 ! ";
+        ? "tee name=ht ht. ! queue name=decQueue ! " + decoder + " name=decoder ! "
+        : decoder + " name=decoder ! ";
     const std::string qgc_branch = qgc_port
-        ? ("ht. ! queue name=qgcQueue max-size-buffers=4 leaky=downstream ! "
-           "rtph264pay config-interval=1 pt=96 ! "
+        ? ("ht. ! queue name=qgcQueue max-size-buffers=4 leaky=downstream ! " +
+           payer + " config-interval=1 pt=96 ! "
            "udpsink host=127.0.0.1 port=" + std::to_string(qgc_port) + " sync=false async=false ")
         : std::string();
 
     std::string pipeline_desc =
         "udpsrc name=source port=" + _port + " ! "
         "tsdemux name=demux ! "
-        "queue max-size-buffers=0 max-size-bytes=0 max-size-time=0 name=videoQueue ! "
-        "h264parse name=h264parse ! " +
+        "queue max-size-buffers=0 max-size-bytes=0 max-size-time=0 name=videoQueue ! " +
+        parser + " name=parser ! " +
         dec_head +
         video_tail +
         qgc_branch +
@@ -204,14 +214,14 @@ int main(int argc, char *argv[])
     data.source = gst_bin_get_by_name(GST_BIN(data.pipeline), "source");
     data.tsDemux = gst_bin_get_by_name(GST_BIN(data.pipeline), "demux");
     data.videoQueue = gst_bin_get_by_name(GST_BIN(data.pipeline), "videoQueue");
-    data.h264parse = gst_bin_get_by_name(GST_BIN(data.pipeline), "h264parse");
-    data.avdec = gst_bin_get_by_name(GST_BIN(data.pipeline), "avdec_h264");
+    data.parser = gst_bin_get_by_name(GST_BIN(data.pipeline), "parser");
+    data.decoder = gst_bin_get_by_name(GST_BIN(data.pipeline), "decoder");
     data.videoSink = gst_bin_get_by_name(GST_BIN(data.pipeline), "videoSink");
     data.dataQueue = gst_bin_get_by_name(GST_BIN(data.pipeline), "dataQueue");
     data.dataSink = gst_bin_get_by_name(GST_BIN(data.pipeline), "dataSink");
 
-    if (!data.source || !data.tsDemux || !data.videoQueue || !data.h264parse ||
-        !data.avdec || !data.videoSink || !data.dataQueue || !data.dataSink)
+    if (!data.source || !data.tsDemux || !data.videoQueue || !data.parser ||
+        !data.decoder || !data.videoSink || !data.dataQueue || !data.dataSink)
     {
         LOG_ERROR("Not all elements could be found in the pipeline.");
         gst_object_unref(data.pipeline);

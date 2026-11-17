@@ -15,6 +15,9 @@ class KlvGpsSender
 {
     using Clock = std::chrono::steady_clock;
 
+    // Data not refreshed for more than this many seconds is treated as lost
+    static constexpr double kTimeoutSec = 3.0;
+
 public:
     KlvGpsSender(const std::string &ip = "127.0.0.1", int port = 5005)
     {
@@ -33,8 +36,8 @@ public:
         for (const auto &p : tags)
         {
             const std::string &n = p.tag_name;
-            if (n == "Frame Center Latitude")           { clat_ = toDouble(p.value); fp_t_ = now; }
-            else if (n == "Frame Center Longitude")     { clon_ = toDouble(p.value); fp_t_ = now; }
+            if (n == "Frame Center Latitude")           { clat_ = toDouble(p.value); ctr_t_ = now; }
+            else if (n == "Frame Center Longitude")     { clon_ = toDouble(p.value); ctr_t_ = now; }
             else if (n == "Sensor Latitude")            { slat_ = toDouble(p.value); cam_t_ = now; }
             else if (n == "Sensor Longitude")           { slon_ = toDouble(p.value); cam_t_ = now; }
             else if (n == "Sensor True Altitude")       salt_ = toDouble(p.value);
@@ -47,16 +50,16 @@ public:
                 for (int i = 0; i < 4; ++i)
                 {
                     const std::string idx = std::to_string(i + 1);
-                    if (n == "Offset Corner Latitude Point " + idx)       { dlat_[i] = toDouble(p.value); fp_t_ = now; }
-                    else if (n == "Offset Corner Longitude Point " + idx) { dlon_[i] = toDouble(p.value); fp_t_ = now; }
+                    if (n == "Offset Corner Latitude Point " + idx)       { dlat_[i] = toDouble(p.value); crn_t_[i] = now; }
+                    else if (n == "Offset Corner Longitude Point " + idx) { dlon_[i] = toDouble(p.value); crn_t_[i] = now; }
                 }
         }
 
-        // Data not refreshed for more than 1 second is treated as lost
-        const bool fp  = fresh(fp_t_, now)  && std::isfinite(clat_) && std::isfinite(clon_);
+        // Each group has its own timestamp, so one group going stale never hides another
+        const bool ctr = fresh(ctr_t_, now) && std::isfinite(clat_) && std::isfinite(clon_);
         const bool cam = fresh(cam_t_, now) && std::isfinite(slat_) && std::isfinite(slon_);
         const bool tgt = fresh(tgt_t_, now) && std::isfinite(tlat_) && std::isfinite(tlon_);
-        if (!fp && !cam && !tgt)
+        if (!ctr && !cam && !tgt)
             return false;
 
         std::ostringstream oss;
@@ -68,15 +71,12 @@ public:
             oss << id << "," << a << "," << b;
         };
 
-        if (fp)
+        if (ctr)
         {
             add(1, clat_, clon_);                                   // frame center
-            bool all = true;
-            for (int i = 0; i < 4; ++i)
-                all = all && std::isfinite(dlat_[i]) && std::isfinite(dlon_[i]);
-            if (all)
-                for (int i = 0; i < 4; ++i)                         // Point 1..4 -> id 2..5 (TL, TR, BR, BL)
-                    add(i + 2, clat_ + dlat_[i], clon_ + dlon_[i]);
+            for (int i = 0; i < 4; ++i)                             // every valid corner is sent on its own
+                if (fresh(crn_t_[i], now) && std::isfinite(dlat_[i]) && std::isfinite(dlon_[i]))
+                    add(i + 2, clat_ + dlat_[i], clon_ + dlon_[i]); // Point 1..4 -> id 2..5 (TL, TR, BR, BL)
         }
         if (cam)
         {
@@ -98,7 +98,7 @@ public:
 private:
     static bool fresh(Clock::time_point t, Clock::time_point now)
     {
-        return std::chrono::duration<double>(now - t).count() < 1.0;
+        return std::chrono::duration<double>(now - t).count() < kTimeoutSec;
     }
 
     static double toDouble(const decltype(Unpack::TagValuePair::value) &v)
@@ -124,5 +124,5 @@ private:
     double clat_ = NAN, clon_ = NAN, slat_ = NAN, slon_ = NAN, tlat_ = NAN, tlon_ = NAN;
     double salt_ = NAN, hfov_ = NAN, vfov_ = NAN, talt_ = NAN;
     double dlat_[4] = {NAN, NAN, NAN, NAN}, dlon_[4] = {NAN, NAN, NAN, NAN};
-    Clock::time_point fp_t_{}, cam_t_{}, tgt_t_{};
+    Clock::time_point ctr_t_{}, cam_t_{}, tgt_t_{}, crn_t_[4]{};
 };

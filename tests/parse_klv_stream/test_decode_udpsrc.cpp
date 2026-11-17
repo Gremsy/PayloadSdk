@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
         : std::string();
 
     std::string pipeline_desc =
-        "udpsrc name=source port=" + _port + " ! "
+        "udpsrc name=source port=" + _port + " buffer-size=8388608 ! "
         "tsdemux name=demux ! "
         "queue max-size-buffers=0 max-size-bytes=0 max-size-time=0 name=videoQueue ! " +
         parser + " name=parser ! " +

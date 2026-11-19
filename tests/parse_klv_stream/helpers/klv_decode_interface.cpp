@@ -1,6 +1,9 @@
 #include "klv_decode_interface.hpp"
 #include "app_logging.h"
 
+#include <algorithm>
+#include <string>
+
 Klv_Decode_Interface::
 Klv_Decode_Interface() : unpack(std::make_unique<Unpack>())
 {
@@ -51,10 +54,21 @@ pad_added_handler(GstElement *src, GstPad *new_pad, CustomData *data)
     }
     else
     {
-        sink = gst_element_factory_make("fakesink", nullptr);
-        gst_bin_add(GST_BIN(data->pipeline), sink);
+        // Unknown stream: route it to a fakesink. Reuse the one created for this
+        // pad name on an earlier run, so restarting the pipeline does not keep
+        // adding new fakesinks to the bin.
+        const std::string fake_name = std::string("fake_") + GST_PAD_NAME(new_pad);
+        sink = gst_bin_get_by_name(GST_BIN(data->pipeline), fake_name.c_str());
+        if (!sink)
+        {
+            sink = gst_element_factory_make("fakesink", fake_name.c_str());
+            g_object_set(sink, "sync", FALSE, "async", FALSE, nullptr);
+            gst_bin_add(GST_BIN(data->pipeline), sink);
+            gst_object_ref(sink); // balance the unref below
+        }
         gst_element_sync_state_with_parent(sink);
         sink_pad = gst_element_get_static_pad(sink, "sink");
+        gst_object_unref(sink);
     }
     GST_DEBUG_BIN_TO_DOT_FILE(GST_BIN(data->pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "pipeline");
 
@@ -166,39 +180,68 @@ new_data_sample(GstAppSink *dataSink, gpointer user_data)
     GstSample *sample = gst_app_sink_pull_sample(dataSink);
     if (!sample)
     {
-        LOG_ERROR("Failed to pull sample.");
-        return GST_FLOW_ERROR;
+        // NULL only when appsink is flushing or at EOS, e.g. while the pipeline
+        // is being restarted. Returning an error here would post a new error.
+        return GST_FLOW_OK;
     }
 
     GstBuffer *buffer = gst_sample_get_buffer(sample);
     if (!buffer)
     {
-        LOG_ERROR("Failed to get buffer from sample." );
+        LOG_ERROR("Failed to get buffer from sample.");
         gst_sample_unref(sample);
-        return GST_FLOW_ERROR;
+        return GST_FLOW_OK;
     }
-    if (self->decodeKlvData(buffer)){
-        self->cnt_klv_frame++;
-    }
-    else
-        LOG_ERROR("Failed to decode KLV data." );
 
+    self->cnt_klv_buffer++;
+    self->cnt_klv_frame += self->decodeKlvData(buffer);
     gst_sample_unref(sample);
-
 
     auto now = std::chrono::steady_clock::now();
     std::chrono::duration<double> elapsed = now - self->start_time;
     if (elapsed.count() >= 1.0) {
-        LOG_DEBUG("Frames in last second: %d", self->cnt_klv_frame);
+        LOG_DEBUG("Frames in last second: %d (buffers: %d, decode errors: %d)",
+                  self->cnt_klv_frame, self->cnt_klv_buffer, self->cnt_klv_error);
         self->cnt_klv_frame = 0;
+        self->cnt_klv_buffer = 0;
+        self->cnt_klv_error = 0;
         self->start_time = now;
     }
-
 
     return GST_FLOW_OK;
 }
 
-bool 
+// 16-byte Universal Key of the MISB ST 0601 UAS Datalink Local Set
+static const uint8_t kUasLdsKey[16] = {
+    0x06, 0x0E, 0x2B, 0x34, 0x02, 0x0B, 0x01, 0x01,
+    0x0E, 0x01, 0x03, 0x01, 0x01, 0x00, 0x00, 0x00};
+
+// Total size (key + BER length + value) of the KLV packet starting at pkt,
+// or 0 if the length field is invalid.
+static size_t klvPacketSize(const uint8_t *pkt, size_t avail)
+{
+    size_t idx = sizeof(kUasLdsKey);
+    if (idx >= avail)
+        return 0;
+
+    size_t value_len = 0;
+    const uint8_t first = pkt[idx++];
+    if (first < 0x80)
+    {
+        value_len = first; // BER short form
+    }
+    else
+    {
+        const size_t n = first & 0x7F; // BER long form: n length bytes follow
+        if (n == 0 || n > 4 || idx + n > avail)
+            return 0;
+        for (size_t i = 0; i < n; ++i)
+            value_len = (value_len << 8) | pkt[idx++];
+    }
+    return idx + value_len;
+}
+
+int 
 Klv_Decode_Interface::
 decodeKlvData(GstBuffer *buffer)
 {
@@ -206,31 +249,82 @@ decodeKlvData(GstBuffer *buffer)
     if (!gst_buffer_map(buffer, &map_info, GST_MAP_READ))
     {
         LOG_ERROR("Error: Failed to map buffer for reading");
-        return false;
+        cnt_klv_error++;
+        return 0;
     }
 
-    unsigned char *data = reinterpret_cast<unsigned char *>(map_info.data);
-    size_t size = map_info.size;
+    const uint8_t *buf = map_info.data;
+    const size_t size = map_info.size;
+    const uint8_t *key_end = kUasLdsKey + sizeof(kUasLdsKey);
 
-    unpack->unpack_misb(data, size, tag_values);
+    int decoded = 0;
+    int errors = 0;
+    size_t pos = 0;
+    while (pos + sizeof(kUasLdsKey) < size)
+    {
+        // Find the next packet. Normally it starts right at pos.
+        const uint8_t *found = std::search(buf + pos, buf + size, kUasLdsKey, key_end);
+        if (found == buf + size)
+            break;
+        pos = static_cast<size_t>(found - buf);
+
+        const size_t pkt_size = klvPacketSize(buf + pos, size - pos);
+        if (pkt_size == 0 || pos + pkt_size > size)
+        {
+            LOG_WARNING("Truncated or invalid KLV packet at offset %zu (buffer %zu bytes)", pos, size);
+            errors++;
+            break;
+        }
+
+        if (decodeOnePacket(buf + pos, pkt_size))
+            decoded++;
+        else
+            errors++;
+        pos += pkt_size;
+    }
+
+    if (decoded == 0 && errors == 0)
+    {
+        LOG_WARNING("No UAS LDS packet found in KLV buffer (%zu bytes)", size);
+        errors++;
+    }
+    cnt_klv_error += errors;
+
+    gst_buffer_unmap(buffer, &map_info);
+    return decoded;
+}
+
+bool 
+Klv_Decode_Interface::
+decodeOnePacket(const uint8_t *pkt, size_t size)
+{
+    tag_values.clear();
+    const Unpack::Status st = unpack->unpack_misb(pkt, size, tag_values);
+    if (st != Unpack::Status::OK)
+    {
+        // Same behaviour as before: a packet with a non-OK status is still used
+        // if it yielded tags. Only warn, and at most once per second.
+        static auto last_warn = std::chrono::steady_clock::time_point{};
+        const auto now = std::chrono::steady_clock::now();
+        if (now - last_warn >= std::chrono::seconds(1))
+        {
+            last_warn = now;
+            LOG_WARNING("KLV unpack status %d (%zu bytes, %zu tags)",
+                        static_cast<int>(st), size, tag_values.size());
+        }
+        if (tag_values.empty())
+            return false;
+    }
 
     gps_sender.update(tag_values);
     printKlvData();
-
-    gst_buffer_unmap(buffer, &map_info);
     return true;
 }
 
 void Klv_Decode_Interface::printKlvData()
 {
-    static const bool verbose = getenv("KLV_LOG") != nullptr;
-    static auto last = std::chrono::steady_clock::now();
-    const auto now = std::chrono::steady_clock::now();
-    if (verbose || now - last >= std::chrono::seconds(1))
-    {
-        last = now;
-        print_tag_values(tag_values);
-    }
+    // Print every decoded packet, so the log rate equals the KLV receive rate.
+    print_tag_values(tag_values);
     tag_values.clear();
 }
 

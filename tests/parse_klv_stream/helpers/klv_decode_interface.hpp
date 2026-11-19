@@ -54,6 +54,8 @@ public:
 
     std::chrono::steady_clock::time_point start_time;
     int cnt_klv_frame;
+    int cnt_klv_buffer = 0;   // GstBuffers received in the current second
+    int cnt_klv_error = 0;    // KLV packets that failed to decode in the current second
 
 private:
     std::unique_ptr<Unpack> unpack;
@@ -63,7 +65,10 @@ private:
     static GstFlowReturn new_data_sample(GstAppSink *dataSink, gpointer user_data);
     static void pad_added_handler(GstElement *src, GstPad *pad, CustomData *data);
 
-    bool decodeKlvData(GstBuffer *buffer);
+    // Decodes every KLV packet found in the buffer (one buffer may carry several).
+    // Returns the number of packets decoded successfully.
+    int decodeKlvData(GstBuffer *buffer);
+    bool decodeOnePacket(const uint8_t *pkt, size_t size);
     void printKlvData();
     void print_tag_values(const std::vector<Unpack::TagValuePair> &tag_values);
     KlvGpsSender gps_sender{"127.0.0.1", 5005};

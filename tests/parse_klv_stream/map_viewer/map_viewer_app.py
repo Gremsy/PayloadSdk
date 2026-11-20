@@ -8,6 +8,14 @@ KLV_CORNER_ORDER = (2, 3, 4, 5)   # packet ids of KLV Point 1..4 = image corners
 MAX_CORNER_OFFSET = 0.0745        # KLV corner offsets saturate at 0.075 deg when a point is out of range
 LAT_LIMIT, LON_LIMIT = 89.999, 179.999   # KLV 'cannot compute' values sit at the range limit (90 / 180): reject them
 RANGE_MAX = [10000.0]             # m: frame center farther than this from the camera is not drawn (0 = off), from --max-range
+MIN_CORNERS = 2                   # corners are drawn when at least this many are valid
+EST_RANGE = [1000.0]              # m: estimated visible area is extended at most this far from the camera (--est-range)
+BIG_AREA = [2000.0]               # m: a received 4-corner footprint with a side / depth above this is not trusted: the estimate is shown (0 = off, --big-area)
+EST_HOLD = [10.0]                 # s: the estimated corners are kept this long unless the gimbal / camera moved (--est-hold)
+EST_ANGLE = [3.0]                 # deg: a change of any gimbal / platform angle above this refreshes the estimate at once (--est-angle)
+EST_MOVE = [10.0]                 # m: camera moved farther than this since the last estimate -> refresh at once (--est-move)
+EST_STATE = {}                    # last estimate: time, valid-corner mask, camera, angles, estimated corners
+CORNER_PAIR = {0: 3, 3: 0, 1: 2, 2: 1}   # TL<->BL, TR<->BR: corners on the same vertical edge
 CAM_DEFAULT = []                  # [lat, lon, alt] from --cam, used when the stream has no camera position
 GROUND_ALT = [0.0]                # ground elevation (MSL) under the camera, from --ground-alt
 START = []                        # [lat, lon, zoom] from --start, initial map view until GPS data arrives
@@ -25,9 +33,7 @@ cond = threading.Condition()
 state = {"seq": 0, "msg": "{}"}
 # Video preview: the C++ app connects to --video-port (TCP) and sends [4-byte length][JPEG] frames; /video re-serves them as MJPEG
 vcond = threading.Condition()
-vbuf = deque()                    # (arrival time, jpeg): the preview waits here for VDELAY seconds so it lines up with the footprints
-VDELAY = [0.0]                    # s, preview delay: adjustable live from the page, initial value from --video-delay
-VDELAY_MAX = 5.0
+vbuf = deque()                    # (arrival time, jpeg): the latest frames, served by /video
 PLACEHOLDER_JPG = base64.b64decode("/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wAARCAACAAIDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDlqKKKYj//2Q==")   # 2x2 grey frame, keeps the HTTP connection alive when idle
 
 
@@ -44,6 +50,146 @@ def dist_m(a, b):
     return 12742000.0 * math.asin(min(1.0, math.sqrt(h)))
 
 
+# ---------------------------------------------------------------- estimated visible area (only when 2 or 3 corners are valid)
+def estimate_by_rays(cam, corners, agl=None, vfov=None):
+    """Fallback (no complete top/bottom edge received, or AGL / VFOV unknown). Estimate the missing corners. Direction: always the ray camera -> received corner on the same vertical edge
+    (so it never disagrees with the received points). Distance along that ray:
+      - missing TOP corners (received bottom ones): the depression angle drops by VFOV; if that is above the horizon
+        (or AGL / VFOV unknown) the corner goes to EST_RANGE, otherwise at agl / tan(angle), at most EST_RANGE.
+      - missing BOTTOM corners (received top ones): the depression angle grows by VFOV, so the corner is NEARER to the
+        camera: agl / tan(angle), or the point below the camera (distance 0) when it points straight down or
+        AGL / VFOV are unknown.
+    Returns 4 (lat, lon) points or None."""
+    if cam is None:
+        return None
+    k_lat, k_lon = 110540.0, 111320.0 * math.cos(math.radians(cam[0]))
+    have = bool(agl and agl > 0 and vfov and vfov > 0)
+    out = []
+    for i, p in enumerate(corners):
+        if p is not None:
+            out.append(p)
+            continue
+        q = corners[CORNER_PAIR[i]]
+        if q is None:
+            return None
+        dy, dx = (q[0] - cam[0]) * k_lat, (q[1] - cam[1]) * k_lon
+        d = math.hypot(dx, dy)
+        if d < 1e-3:
+            return None
+        if i in (0, 1):                                      # top corner missing, q is the bottom one
+            t = EST_RANGE[0]
+            if have:
+                th = math.atan2(agl, d) - math.radians(vfov)
+                if th > 1e-3:
+                    t = min(EST_RANGE[0], agl / math.tan(th))
+            t = max(t, d)
+        else:                                                # bottom corner missing, q is the top one
+            t = 0.0
+            if have:
+                th = math.atan2(agl, d) + math.radians(vfov)
+                if th < math.pi / 2 - 1e-3:
+                    t = min(d, agl / math.tan(th))
+        out.append((cam[0] + dy / d * t / k_lat, cam[1] + dx / d * t / k_lon))
+    return out
+
+
+def estimate_area(cam, corners, agl=None, vfov=None, center=None):
+    """Estimate the missing corners from the received ones (received corners are never changed).
+    Used when a complete horizontal edge was received (P3+P4 or P1+P2) and AGL and VFOV are known:
+      - forward direction f = camera -> received frame center (the optical axis on the ground); without a valid center,
+        camera -> midpoint of the received edge;
+      - the depression angle of the received edge (atan(AGL / forward distance)) gives the optical-axis depression:
+        axis = edge angle -/+ VFOV/2;
+      - the effective tan(HFOV/2) is taken from the measured width of the received edge (no HFOV tag needed);
+      - every missing corner is the ray (1, +-tanH, +-tanV) of a pinhole camera at that depression, intersected with the
+        ground (flat, AGL high). A ray that does not hit the ground, or hits beyond EST_RANGE, is cut at EST_RANGE forward.
+    Roll is ignored. Otherwise falls back to estimate_by_rays()."""
+    if cam is None:
+        return None
+    have = bool(agl and agl > 0 and vfov and vfov > 0)
+    edge = None
+    if have:
+        if corners[2] is not None and corners[3] is not None:
+            edge = (2, 3, 1)                                 # received bottom edge (image-down = +1)
+        elif corners[0] is not None and corners[1] is not None:
+            edge = (0, 1, -1)                                # received top edge
+    if edge is None:
+        return estimate_by_rays(cam, corners, agl, vfov)
+    k_lat, k_lon = 110540.0, 111320.0 * math.cos(math.radians(cam[0]))
+    enu = lambda p: ((p[1] - cam[1]) * k_lon, (p[0] - cam[0]) * k_lat)
+    ia, ib, sz0 = edge
+    A, B = enu(corners[ia]), enu(corners[ib])
+    mid = ((A[0] + B[0]) / 2, (A[1] + B[1]) / 2)
+    ref = mid
+    if center is not None:
+        c = enu(center)
+        if math.hypot(*c) > 1e-3:
+            ref = c                                          # direction of the received frame center
+    nr = math.hypot(*ref)
+    if nr < 1e-3:
+        return estimate_by_rays(cam, corners, agl, vfov)
+    f = (ref[0] / nr, ref[1] / nr)                           # forward (unit, east/north)
+    fm = mid[0] * f[0] + mid[1] * f[1]                       # forward distance of the received edge
+    if fm < 1e-3:
+        return estimate_by_rays(cam, corners, agl, vfov)
+    r = (f[1], -f[0])                                        # right of forward
+    lm = abs((A[0] - B[0]) * r[0] + (A[1] - B[1]) * r[1]) / 2   # measured half width of the received edge
+    V = math.radians(vfov) / 2
+    tv = math.tan(V)
+    delta = math.atan2(agl, fm) - sz0 * V                    # depression of the optical axis
+    down0 = math.sin(delta) + sz0 * tv * math.cos(delta)
+    if down0 < 1e-6:
+        return estimate_by_rays(cam, corners, agl, vfov)
+    th = lm * down0 / agl                                    # effective tan(HFOV/2)
+    out = []
+    for i, p in enumerate(corners):
+        if p is not None:
+            out.append(p)
+            continue
+        sz = -1 if i < 2 else 1                              # TL, TR above the center; BR, BL below
+        qx, qy = enu(corners[CORNER_PAIR[i]])
+        sigma = 1.0 if qx * r[0] + qy * r[1] >= 0 else -1.0  # same side as the received corner on this vertical edge
+        fwd = math.cos(delta) - sz * tv * math.sin(delta)
+        down = math.sin(delta) + sz * tv * math.cos(delta)
+        sc = agl / down if down > 1e-6 else math.inf
+        if fwd > 1e-6:
+            sc = min(sc, EST_RANGE[0] / fwd)
+        if not math.isfinite(sc):
+            return estimate_by_rays(cam, corners, agl, vfov)
+        F, L = sc * fwd, sigma * sc * th
+        out.append((cam[0] + (f[1] * F + r[1] * L) / k_lat, cam[1] + (f[0] * F + r[0] * L) / k_lon))
+    return out
+
+
+def area_size(c):
+    """Largest of: top edge, bottom edge, mean depth of a 4-corner footprint (m)."""
+    return max(dist_m(c[0], c[1]), dist_m(c[3], c[2]), (dist_m(c[0], c[3]) + dist_m(c[1], c[2])) / 2)
+
+
+def angdiff(a, b):
+    return abs((a - b + 180.0) % 360.0 - 180.0)
+
+
+def held_estimate(cam, corners, agl, fov, center, att):
+    """The center jitters a lot, so the estimated (missing) corners are not recomputed on every packet: they are kept for
+    EST_HOLD seconds. They are refreshed at once when the gimbal / platform angles changed by more than EST_ANGLE degrees,
+    the camera moved more than EST_MOVE meters, or the set of valid corners changed. Received corners are always live.
+    Without the attitude tags (ids 16..18) only the timer and the camera move can trigger a refresh."""
+    now = time.monotonic()
+    mask = tuple(c is not None for c in corners)
+    st = EST_STATE
+    moved = bool(st and cam and st.get("cam") and dist_m(cam, st["cam"]) > EST_MOVE[0])
+    turned = bool(st and att and st.get("att") and max(angdiff(a, b) for a, b in zip(att, st["att"])) > EST_ANGLE[0])
+    if not st or st["mask"] != mask or now - st["t"] >= EST_HOLD[0] or moved or turned:
+        full = estimate_area(cam, corners, agl, fov[1] if fov else None, center)
+        if full is None:
+            st.clear()
+            return None
+        st.clear()
+        st.update(t=now, mask=mask, cam=cam, att=att, miss={i: full[i] for i in range(4) if corners[i] is None})
+    return [corners[i] if corners[i] is not None else st["miss"][i] for i in range(4)]
+
+
 def parse(text):
     pts = {}
     for item in text.split(";"):
@@ -57,19 +203,28 @@ def parse(text):
 
 def build(pts):
     # Optional extras: 10 = camera lat,lon | 11 = altitude (MSL) | 12 = HFOV,VFOV
-    #                  13 = target lat,lon | 14 = target elevation (MSL)
-    # Every group is validated on its own: a bad point never hides a good one.
+    #                  13 = target lat,lon | 14 = target elevation (MSL) | 15 = slant range
+        # Payload and target are validated on their own: a bad point never hides a good one.
+    # Footprint: corners are drawn when at least MIN_CORNERS are valid; the center only when all 4 are valid.
+    # The estimated area is computed ONLY when 2 or 3 corners are valid (from a complete P1+P2 or P3+P4 edge); with 4 valid corners the data is used as is.
     pts = dict(pts)
     cam = pts.pop(10, None)
     alt = pts.pop(11, (None,))[0]
     fov = pts.pop(12, None)
     tgt = pts.pop(13, None)
     talt = pts.pop(14, (None,))[0]
+    rng = pts.pop(15, (None,))[0]
+    a16, a17, a18 = pts.pop(16, None), pts.pop(17, None), pts.pop(18, None)
+    att = None                                       # only used to detect a gimbal / platform angle change
+    if a16 and a17 and a18:
+        att = (a16[0], a16[1], a17[0], a18[0], a18[1], a17[1])   # heading, pitch, roll, rel. azimuth, rel. elevation, rel. roll
+        if not all(math.isfinite(v) for v in att):
+            att = None
     if cam is None and CAM_DEFAULT:
         cam = tuple(CAM_DEFAULT[:2])
         if alt is None and len(CAM_DEFAULT) > 2:
             alt = CAM_DEFAULT[2]
-    if not (pts or cam or tgt):
+    if not (pts or cam or tgt or rng is not None):
         return None                                  # empty packet
 
     cam = cam if cam and good(cam) else None
@@ -80,34 +235,55 @@ def build(pts):
     tgt = tgt if tgt and good(tgt) else None         # target is independent of everything else
     if talt is not None:
         talt = talt - GROUND_ALT[0] if math.isfinite(talt) else None
-
-    # Footprint: validate each point on its own
+    if rng is not None and not math.isfinite(rng):
+        rng = None
+    # Footprint (frame center + 4 corners)
     if 6 in pts:                                     # legacy: 1 = aircraft, 2 = center, 3..6 = corners
         drone, center, ids = pts.get(1), pts.get(2), (3, 4, 5, 6)
     else:                                            # KLV: 1 = center, 2..5 = corners
         drone, center, ids = None, pts.get(1), KLV_CORNER_ORDER
     drone = drone if drone and good(drone) else None
-    center_lost = False
-    if center is not None and not good(center):
-        center, center_lost = None, True             # sentinel (90/180), NaN or (0,0): payload has no ground intersection
-    elif center is not None and cam and RANGE_MAX[0] > 0:
-        d = dist_m(cam, center)
-        if d > RANGE_MAX[0]:                         # camera looks near the horizon: center is meaningless
-            center, center_lost = None, True
+
+    had_center = center is not None
+    base = center                                    # KLV center is only the base for the corner offsets
+    if base is not None and not good(base):
+        base = None                                  # sentinel (90/180), NaN or (0,0): payload has no ground intersection
+    elif base is not None and cam and RANGE_MAX[0] > 0 and dist_m(cam, base) > RANGE_MAX[0]:
+        base = None                                  # camera looks near the horizon: center is meaningless
     corners = []
     for i in ids:
         p = pts.get(i)
-        ok = (center is not None and p is not None and good(p)
-              and abs(p[0] - center[0]) < MAX_CORNER_OFFSET
-              and abs(p[1] - center[1]) < MAX_CORNER_OFFSET)
+        ok = (base is not None and p is not None and good(p)
+              and abs(p[0] - base[0]) < MAX_CORNER_OFFSET
+              and abs(p[1] - base[1]) < MAX_CORNER_OFFSET)
         corners.append(p if ok else None)            # None = this corner is not drawable
+    n = sum(c is not None for c in corners)
+    if n < MIN_CORNERS:
+        corners, n = [None] * 4, 0
+    full = n == 4
+    full_corners = corners
+    # A received footprint that is too large (camera near the horizon) is inaccurate: P1/P2 are dropped and the area is
+    # estimated from the received bottom edge P3+P4 (if that is not possible, the received footprint is kept, flagged).
+    big = full and BIG_AREA[0] > 0 and area_size(corners) > BIG_AREA[0]
+    if big:
+        corners, n, full = [None, None, corners[2], corners[3]], 2, False
+    center = base if full else None                  # center is drawn only when all 4 corners are valid
+    center_lost = had_center and not full
 
-    if not (center or drone or cam or tgt):
+    est = None
+    if n in (2, 3):                                  # 2 or 3 valid corners: estimate the missing ones from a complete P1+P2 / P3+P4 edge
+        est = held_estimate(cam, corners, alt, fov, base, att)   # direction from the frame center, held for EST_HOLD s
+    else:
+        EST_STATE.clear()
+    if big and est is None:                          # cannot estimate: trust the received footprint, flagged as oversize
+        corners, n, full, center, center_lost = full_corners, 4, True, base, False
+
+    if not (center or drone or cam or tgt or rng is not None or n):
         return {"valid": False}
     return {"valid": True, "drone": drone, "center": center,
             "camera": cam, "alt": alt, "hfov": fov[0] if fov else None,
-            "target": tgt, "talt": talt,
-            "center_lost": center_lost,
+            "target": tgt, "talt": talt, "range": rng,
+            "center_lost": center_lost, "ncorners": n, "est": est, "oversize": big,
             "corners": corners, "labels": ["P1", "P2", "P3", "P4"]}
 
 
@@ -145,10 +321,9 @@ def video_conn(conn):
             if jpg is None:
                 return
             if jpg[:2] == b"\xff\xd8" and jpg[-2:] == b"\xff\xd9":   # complete JPEG only
-                now = time.monotonic()
                 with vcond:
-                    vbuf.append((now, jpg))
-                    while len(vbuf) > 1 and vbuf[0][0] < now - VDELAY_MAX - 1:
+                    vbuf.append((time.monotonic(), jpg))
+                    while len(vbuf) > 2:                       # only the latest frames are needed
                         vbuf.popleft()
                     vcond.notify_all()
 
@@ -170,14 +345,10 @@ def video():
         while True:
             out = None
             with vcond:
-                due = time.monotonic() - VDELAY[0]
-                for t, j in reversed(vbuf):               # newest frame that is old enough
-                    if t <= due:
-                        if t != last_t:
-                            last_t, out = t, j
-                        break
-                if out is None:
-                    vcond.wait(timeout=0.02)
+                if not vbuf or vbuf[-1][0] == last_t:
+                    vcond.wait(timeout=0.5)               # woken as soon as a new frame arrives
+                if vbuf and vbuf[-1][0] != last_t:
+                    last_t, out = vbuf[-1]                # newest frame, no artificial delay
                 newest = vbuf[-1][1] if vbuf else None
             now = time.monotonic()
             if out is not None:
@@ -190,17 +361,6 @@ def video():
                 yield part(out)
     return Response(gen(), mimetype="multipart/x-mixed-replace; boundary=frame",
                     headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
-
-
-@app.route("/videodelay", methods=["GET", "POST"])
-def videodelay():
-    if request.method == "POST":
-        d = request.get_json(silent=True) or {}
-        try:
-            VDELAY[0] = max(0.0, min(VDELAY_MAX, float(d["ms"]) / 1000.0))
-        except (KeyError, TypeError, ValueError):
-            abort(400)
-    return jsonify(ms=round(VDELAY[0] * 1000))
 
 
 @app.route("/stream")
@@ -418,9 +578,6 @@ HTML = r"""<!DOCTYPE html>
  #btns button{min-width:150px;height:54px;border:0;border-radius:14px;font-size:17px;font-weight:600;
   background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.35);cursor:pointer}
  #btns button.on{background:#1976d2;color:#fff}
- #vsync{display:none;align-items:center;justify-content:space-between;gap:6px;height:54px;background:#fff;border-radius:14px;
-  box-shadow:0 2px 8px rgba(0,0,0,.35);padding:0 7px;font-size:14px;font-weight:600;white-space:nowrap}
- #btns #vsync button{min-width:0;width:40px;height:40px;font-size:22px;box-shadow:none;background:#e3e8ee}
  .mk{width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 3px rgba(0,0,0,.6)}
  .mk b{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);white-space:nowrap;background:rgba(255,255,255,.92);
   border:1px solid #555;border-radius:4px;padding:0 6px;font-size:14px}
@@ -438,7 +595,6 @@ HTML = r"""<!DOCTYPE html>
  <button id="bLayer">Basemap: Satellite</button>
  <button id="bView">View: 3D</button>
  <button id="bVideo">Video: Off</button>
-<div id="vsync" title="Delay of the video preview, to line it up with the footprints"><button id="bSyncDn">−</button><span id="syncVal">Delay 0 ms</span><button id="bSyncUp">+</button></div>
  <button id="bDl">⬇ Download 3×3 km</button>
 </div>
 <script>
@@ -529,13 +685,13 @@ const customLayer = {
 function build3d(m) {
   const g = T.group; if (!g) return;
   // nothing 3D changed (e.g. a static payload): keep the existing objects untouched, no rebuild and no flicker
-  const key = JSON.stringify(m ? [m.camera, m.alt, m.center, m.target, m.talt, m.corners] : null);
+  const key = JSON.stringify(m ? [m.camera, m.alt, m.center, m.target, m.talt, m.corners, m.est] : null);
   if (key === T.key) return;
   T.key = key;
   while (g.children.length) { const o = g.children.pop(); o.geometry.dispose(); o.material.dispose(); }
   T.mats = []; T.spheres = []; T.cpos = null; T.tpos = null;
   // origin of the local ENU frame: any valid point, so payload and target never depend on each other
-  const org = m && (m.center || m.camera || m.target);
+  const org = m && (m.center || m.camera || m.target || (m.corners || []).find(Boolean) || (m.est || [])[0]);
   if (!org) {
     T.origin = null; $('camLbl').style.display = $('tgtLbl').style.display = 'none'; map.triggerRepaint(); return;
   }
@@ -557,6 +713,19 @@ function build3d(m) {
     const tri = []; for (let i = 0; i < 4; i++) tri.push(C, G[i], G[(i+1) % 4]);
     mat = new THREE.MeshBasicMaterial({color:0xf0dc82, transparent:true, opacity:.18, side:THREE.DoubleSide, depthWrite:false});
     add(new THREE.Mesh(geo(tri), mat), mat, .18);
+  }
+  if (C && !fullFp(m) && m.est) {                   // estimated visible area (fewer than 4 valid corners): fainter than real data
+    const E = m.est.map(p => { const e = toENU(p, org); return [e[0], e[1], 0]; });
+    const miss = E.filter((_, i) => !(m.corners || [])[i]);     // rays only to the estimated corners
+    if (miss.length) {
+      mat = new THREE.LineBasicMaterial({color:0xf0dc82, transparent:true, opacity:.5});
+      add(new THREE.LineSegments(geo(miss.flatMap(p => [C, p])), mat), mat, .5);
+    }
+    mat = new THREE.LineBasicMaterial({color:0xf0dc82, transparent:true, opacity:.7});   // outline on the ground
+    add(new THREE.LineSegments(geo(E.flatMap((p, i) => [p, E[(i+1) % 4]])), mat), mat, .7);
+    const tri = []; for (let i = 0; i < 4; i++) tri.push(C, E[i], E[(i+1) % 4]);
+    mat = new THREE.MeshBasicMaterial({color:0xf0dc82, transparent:true, opacity:.08, side:THREE.DoubleSide, depthWrite:false});
+    add(new THREE.Mesh(geo(tri), mat), mat, .08);
   }
   if (C && m.center) {                              // line of sight to the frame center
     const e = toENU(m.center, org);
@@ -621,22 +790,10 @@ $('bVideo').onclick = () => {
   const on = $('vid').style.display !== 'block', v = $('vid');
   $('bVideo').textContent = 'Video: ' + (on ? 'On' : 'Off');
   $('bVideo').classList.toggle('on', on);
-  $('vsync').style.display = on ? 'flex' : 'none';
   if (on) { v.src = '/video?t=' + Date.now(); v.style.display = 'block'; }
   else { v.src = BLANK; v.style.display = 'none'; }          // dropping the src closes the MJPEG connection
 };
 $('vid').onclick = () => $('vid').classList.toggle('big');
-
-// ---- preview delay: lines the video up with the footprints (the server holds the frames back)
-let vdelay = 0;
-const showDelay = () => { $('syncVal').textContent = 'Delay ' + vdelay + ' ms'; };
-const setDelay = ms => {
-  vdelay = Math.max(0, Math.min(5000, ms)); showDelay();
-  fetch('/videodelay', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ms:vdelay})}).catch(() => {});
-};
-$('bSyncDn').onclick = () => setDelay(vdelay - 100);
-$('bSyncUp').onclick = () => setDelay(vdelay + 100);
-fetch('/videodelay').then(r => r.json()).then(d => { vdelay = d.ms; showDelay(); }).catch(() => {});
 
 // ---- offline area download (3x3 km around the map center) ----
 const DL_LABEL = '⬇ Download 3×3 km';
@@ -667,7 +824,10 @@ $('hud').onclick = () => { const p = copyTarget(); if (p) copyText(fmtLL(p)); };
 map.on('dragstart', () => setFollow(false));
 
 map.once('style.load', () => {
-  ['fp'].forEach(id => map.addSource(id, {type:'geojson', data:EMPTY}));
+  ['fp', 'fp-est'].forEach(id => map.addSource(id, {type:'geojson', data:EMPTY}));
+  // estimated visible area (only when fewer than 4 corners are valid): dashed outline, light fill
+  map.addLayer({id:'fp-est-fill', type:'fill', source:'fp-est', paint:{'fill-color':'#f0dc82', 'fill-opacity':.12}});
+  map.addLayer({id:'fp-est-line', type:'line', source:'fp-est', paint:{'line-color':'#f0dc82', 'line-width':2, 'line-dasharray':[2,2]}});
   map.addLayer({id:'fp-fill', type:'fill', source:'fp', paint:{'fill-color':'#f0dc82', 'fill-opacity':.3}});
   map.addLayer({id:'fp-line', type:'line', source:'fp', paint:{'line-color':'#f0dc82', 'line-width':3}});
   ready = true;
@@ -700,8 +860,11 @@ function drawNow(m) {
   last = m;
   if (!ready) return;
   const cs = m.corners || [], full = fullFp(m);
+  // 4 valid corners: the received footprint is drawn as is. Otherwise the estimated area (if any) is drawn.
   map.getSource('fp').setData(full ? {type:'Feature', geometry:{type:'Polygon',
       coordinates:[[...cs.map(ll), ll(cs[0])]]}} : EMPTY);
+  map.getSource('fp-est').setData(!full && m.est ? {type:'Feature', geometry:{type:'Polygon',
+      coordinates:[[...m.est.map(ll), ll(m.est[0])]]}} : EMPTY);
   cs.forEach((c, i) => {                            // each valid corner is drawn on its own
     const k = m.labels[i];
     if (c) { if (!cornerMk[k]) cornerMk[k] = mkMarker('#f0dc82', k); show(cornerMk[k], c); }
@@ -722,15 +885,19 @@ function drawNow(m) {
       const far = dist(cs[0], cs[1]), near = dist(cs[3], cs[2]);
       const depth = (dist(cs[0], cs[3]) + dist(cs[1], cs[2])) / 2;
       html += '<br><small>Footprint ' + fmtD((far + near) / 2) + ' × ' + fmtD(depth) + '</small>' +
-        (Math.max(far, near, depth) > 2000 ?
+        (m.oversize ?
         '<br><span id="warn">Payload angle too low, observed area is inaccurate.</span>' : '');
-    } else {
-      const n = cs.filter(Boolean).length;
-      html += '<br><span id="warn">Footprint incomplete (' + n + '/4 corners valid).</span>';
     }
+  } else if (m.est) {
+    html = '<b>Visible area (estimated)</b>' + (m.oversize ? '<br><small>Received area too large, showing estimate</small>' :
+      m.ncorners ? '<br><small>' + m.ncorners + '/4 corners valid</small>' : '');
+  } else if (m.ncorners >= 2) {
+    html = '<b>Partial footprint</b><br><small>' + m.ncorners + '/4 corners valid</small>';
   } else if (m.drone) html = '<b>' + fmtLL(m.drone) + '</b>';
-  if (!m.center && m.center_lost)
+  if (!m.center && m.center_lost && !m.est && m.ncorners < 2)
     html += (html ? '<br>' : '') + '<span id="warn">Frame center unavailable: payload does not hit the ground. Tilt the payload down.</span>';
+  if (m.range != null)
+    html += (html ? '<br>' : '') + 'Slant range: <b>' + m.range.toFixed(3) + ' m</b>';
   $('hud').style.display = 'block';
   $('hud').innerHTML = html + html0;
 }
@@ -741,8 +908,11 @@ setInterval(() => {
   const lost = !!(last && now - lastMsgT > 3000);
   if (ready && lost !== lostPrev) {
     lostPrev = lost;
-    map.setPaintProperty('fp-fill', 'fill-color', lost ? '#9e9e9e' : '#f0dc82');
-    map.setPaintProperty('fp-line', 'line-color', lost ? '#9e9e9e' : '#f0dc82');
+    const col = lost ? '#9e9e9e' : '#f0dc82';
+    map.setPaintProperty('fp-fill', 'fill-color', col);
+    map.setPaintProperty('fp-line', 'line-color', col);
+    map.setPaintProperty('fp-est-fill', 'fill-color', col);
+    map.setPaintProperty('fp-est-line', 'line-color', col);
     $('camLbl').style.opacity = $('tgtLbl').style.opacity = lost ? .4 : 1;
     allMk().forEach(mk => mk.getElement().style.opacity = lost ? .4 : 1);
     T.mats.forEach(mt => mt.opacity = mt.userData.op * (lost ? .35 : 1));
@@ -775,12 +945,22 @@ def main():
     ap.add_argument("--start", help="initial map position until GPS data arrives: lat,lon[,zoom] (default zoom 17)")
     ap.add_argument("--max-range", type=float, default=10000.0,
                     help="frame center farther than this many meters from the camera is not drawn (default 10000, 0 = off)")
-    ap.add_argument("--video-delay", type=float, default=0.0,
-                    help="initial delay of the video preview in ms, to line it up with the footprints (adjustable on the page)")
+    ap.add_argument("--est-range", type=float, default=1000.0,
+                    help="when fewer than 4 corners are valid, the estimated visible area extends at most this many meters from the camera (default 1000)")
+    ap.add_argument("--big-area", type=float, default=2000.0,
+                    help="meters: a received 4-corner footprint whose side or depth exceeds this is replaced by the estimated area (default 2000, 0 = off)")
+    ap.add_argument("--est-hold", type=float, default=10.0,
+                    help="seconds the estimated corners are kept before being recomputed from the frame center (default 10)")
+    ap.add_argument("--est-angle", type=float, default=3.0,
+                    help="degrees: a larger change of any gimbal / platform angle refreshes the estimate immediately (default 3)")
+    ap.add_argument("--est-move", type=float, default=10.0,
+                    help="meters: the camera moving farther than this refreshes the estimate immediately (default 10)")
     args = ap.parse_args()
+    EST_HOLD[0], EST_ANGLE[0], EST_MOVE[0] = args.est_hold, args.est_angle, args.est_move
+    BIG_AREA[0] = args.big_area
     GROUND_ALT[0] = args.ground_alt
     RANGE_MAX[0] = args.max_range
-    VDELAY[0] = max(0.0, min(VDELAY_MAX, args.video_delay / 1000.0))
+    EST_RANGE[0] = args.est_range
 
     if args.start:
         try:

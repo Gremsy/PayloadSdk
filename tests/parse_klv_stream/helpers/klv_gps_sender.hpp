@@ -46,6 +46,14 @@ public:
             else if (n == "Target Location Latitude")   { tlat_ = toDouble(p.value); tgt_t_ = now; }
             else if (n == "Target Location Longitude")  { tlon_ = toDouble(p.value); tgt_t_ = now; }
             else if (n == "Target Location Elevation")  talt_ = toDouble(p.value);
+            else if (n == "Slant Range")                { srng_ = toDouble(p.value); rng_t_ = now; }
+            // Attitude, only used by the viewer to estimate the visible area when fewer than 4 corners are valid
+            else if (n == "Platform Heading Angle")          hdg_ = toDouble(p.value);
+            else if (n == "Platform Pitch Angle")            pit_ = toDouble(p.value);
+            else if (n == "Platform Roll Angle")             rol_ = toDouble(p.value);
+            else if (n == "Sensor Relative Azimuth Angle")   raz_ = toDouble(p.value);
+            else if (n == "Sensor Relative Elevation Angle") rel_ = toDouble(p.value);
+            else if (n == "Sensor Relative Roll Angle")      rrl_ = toDouble(p.value);
             else
                 for (int i = 0; i < 4; ++i)
                 {
@@ -59,7 +67,8 @@ public:
         const bool ctr = fresh(ctr_t_, now) && std::isfinite(clat_) && std::isfinite(clon_);
         const bool cam = fresh(cam_t_, now) && std::isfinite(slat_) && std::isfinite(slon_);
         const bool tgt = fresh(tgt_t_, now) && std::isfinite(tlat_) && std::isfinite(tlon_);
-        if (!ctr && !cam && !tgt)
+        const bool rng = fresh(rng_t_, now) && std::isfinite(srng_);
+        if (!ctr && !cam && !tgt && !rng)
             return false;
 
         std::ostringstream oss;
@@ -83,13 +92,21 @@ public:
             add(10, slat_, slon_);                                  // payload position
             if (std::isfinite(salt_)) add(11, salt_, 0);            // altitude (MSL)
             if (std::isfinite(hfov_)) add(12, hfov_, std::isfinite(vfov_) ? vfov_ : 0);
+            if (std::isfinite(hdg_) && std::isfinite(pit_) && std::isfinite(rol_) &&
+                std::isfinite(raz_) && std::isfinite(rel_) && std::isfinite(rrl_))
+            {
+                add(16, hdg_, pit_);                                // platform heading, pitch
+                add(17, rol_, rrl_);                                // platform roll, sensor relative roll
+                add(18, raz_, rel_);                                // sensor relative azimuth, elevation
+            }
         }
         if (tgt)
         {
             add(13, tlat_, tlon_);                                  // target location
             if (std::isfinite(talt_)) add(14, talt_, 0);            // target elevation (MSL)
         }
-
+        if (rng)
+            add(15, srng_, 0);
         const std::string s = oss.str();
         sendto(sock_, s.c_str(), s.size(), 0, reinterpret_cast<const sockaddr *>(&addr_), sizeof(addr_));
         return true;
@@ -123,6 +140,8 @@ private:
     sockaddr_in addr_{};
     double clat_ = NAN, clon_ = NAN, slat_ = NAN, slon_ = NAN, tlat_ = NAN, tlon_ = NAN;
     double salt_ = NAN, hfov_ = NAN, vfov_ = NAN, talt_ = NAN;
+    double hdg_ = NAN, pit_ = NAN, rol_ = NAN, raz_ = NAN, rel_ = NAN, rrl_ = NAN;
     double dlat_[4] = {NAN, NAN, NAN, NAN}, dlon_[4] = {NAN, NAN, NAN, NAN};
-    Clock::time_point ctr_t_{}, cam_t_{}, tgt_t_{}, crn_t_[4]{};
+    double srng_ = NAN;
+    Clock::time_point ctr_t_{}, cam_t_{}, tgt_t_{}, crn_t_[4]{}, rng_t_{};
 };

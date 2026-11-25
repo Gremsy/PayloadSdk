@@ -166,6 +166,10 @@ def area_size(c):
     return max(dist_m(c[0], c[1]), dist_m(c[3], c[2]), (dist_m(c[0], c[3]) + dist_m(c[1], c[2])) / 2)
 
 
+def fin(v):
+    return v if v is not None and math.isfinite(v) else None
+
+
 def angdiff(a, b):
     return abs((a - b + 180.0) % 360.0 - 180.0)
 
@@ -204,7 +208,8 @@ def parse(text):
 def build(pts):
     # Optional extras: 10 = camera lat,lon | 11 = altitude (MSL) | 12 = HFOV,VFOV
     #                  13 = target lat,lon | 14 = target elevation (MSL) | 15 = slant range
-        # Payload and target are validated on their own: a bad point never hides a good one.
+    #                  16 = platform heading,pitch | 17 = platform roll,sensor rel. roll | 18 = sensor rel. azimuth,elevation
+    # Payload and target are validated on their own: a bad point never hides a good one.
     # Footprint: corners are drawn when at least MIN_CORNERS are valid; the center only when all 4 are valid.
     # The estimated area is computed ONLY when 2 or 3 corners are valid (from a complete P1+P2 or P3+P4 edge); with 4 valid corners the data is used as is.
     pts = dict(pts)
@@ -215,6 +220,10 @@ def build(pts):
     talt = pts.pop(14, (None,))[0]
     rng = pts.pop(15, (None,))[0]
     a16, a17, a18 = pts.pop(16, None), pts.pop(17, None), pts.pop(18, None)
+    # Compass widget: platform heading (id 16, 1st value) and sensor relative azimuth (id 18, 1st value)
+    compass = {"hdg": fin(a16[0]) if a16 else None, "raz": fin(a18[0]) if a18 else None}
+    if all(v is None for v in compass.values()):
+        compass = None
     att = None                                       # only used to detect a gimbal / platform angle change
     if a16 and a17 and a18:
         att = (a16[0], a16[1], a17[0], a18[0], a18[1], a17[1])   # heading, pitch, roll, rel. azimuth, rel. elevation, rel. roll
@@ -283,7 +292,7 @@ def build(pts):
     return {"valid": True, "drone": drone, "center": center,
             "camera": cam, "alt": alt, "hfov": fov[0] if fov else None,
             "target": tgt, "talt": talt, "range": rng,
-            "center_lost": center_lost, "ncorners": n, "est": est, "oversize": big,
+            "center_lost": center_lost, "ncorners": n, "est": est, "oversize": big, "compass": compass,
             "corners": corners, "labels": ["P1", "P2", "P3", "P4"]}
 
 
@@ -569,6 +578,9 @@ HTML = r"""<!DOCTYPE html>
  #hud{left:12px;bottom:28px;background:rgba(255,255,255,.95);border-radius:12px;padding:10px 14px;
   box-shadow:0 2px 8px rgba(0,0,0,.35);font-size:15px;line-height:1.5;cursor:pointer}
  #hud small{color:#666} #warn{color:#d84315;font-weight:600}
+ #cmp{right:12px;top:128px;width:176px;background:rgba(255,255,255,.95);border-radius:12px;padding:8px;
+  box-shadow:0 2px 8px rgba(0,0,0,.35);font-size:14px;line-height:1.5}
+ #cmp svg{display:block;margin:0 auto} #cmp b{font-variant-numeric:tabular-nums}
  #camLbl,#tgtLbl{display:none;pointer-events:none;background:rgba(255,255,255,.92);border:1px solid #555;border-radius:4px;
   padding:0 6px;font-size:14px;white-space:nowrap;transform:translate(-50%,-160%)}
  #vid{left:12px;top:64px;width:320px;max-width:45vw;display:none;background:#000;border-radius:12px;
@@ -589,6 +601,17 @@ HTML = r"""<!DOCTYPE html>
 <div id="tgtLbl" class="ui"></div>
 <img id="vid" class="ui" alt="video" title="Click to enlarge / shrink">
 <div id="hud" class="ui" title="Tap to copy coordinates" style="display:none"></div>
+<div id="cmp" class="ui" style="display:none">
+ <svg viewBox="0 0 160 160" width="160" height="160">
+  <circle cx="80" cy="80" r="70" fill="#fff" stroke="#555" stroke-width="1.5"/>
+  <g id="cmpTicks"></g>
+  <path id="cmpWedge" fill="rgba(255,90,54,.25)" stroke="none" d=""/>
+  <line id="cmpAxis" x1="80" y1="80" x2="80" y2="80" stroke="#ff5a36" stroke-width="3" stroke-linecap="round"/>
+  <polygon id="cmpHdg" points="80,24 91,92 80,82 69,92" fill="#1976d2" stroke="#fff" stroke-width="1"/>
+  <circle cx="80" cy="80" r="3.5" fill="#fff" stroke="#333"/>
+ </svg>
+ <div id="cmpT"></div>
+</div>
 <div id="btns" class="ui">
  <button id="bCenter">◎ Center</button>
  <button id="bFollow" class="on">Follow: On</button>
@@ -631,6 +654,49 @@ function copyText(t, btn) {
   if (navigator.clipboard) navigator.clipboard.writeText(t).then(done); else done();
 }
 
+// ---- compass: platform heading and sensor relative azimuth ----
+// North is up. Blue arrow = platform heading. Orange axis + wedge = camera direction = heading + relative azimuth
+// (azimuth clockwise from the platform nose, MISB ST 0601).
+const SVGNS = 'http://www.w3.org/2000/svg';
+const nrm = a => ((a % 360) + 360) % 360;
+const sgn = a => { a = nrm(a); return a > 180 ? a - 360 : a; };
+const pol = (cx, cy, r, deg) => [cx + r*Math.sin(deg*Math.PI/180), cy - r*Math.cos(deg*Math.PI/180)];
+const sv = (tag, a) => { const e = document.createElementNS(SVGNS, tag); for (const k in a) e.setAttribute(k, a[k]); return e; };
+(function initCompass() {
+  const g = $('cmpTicks');
+  for (let a = 0; a < 360; a += 10) {
+    const big = a % 30 === 0, p1 = pol(80, 80, 70, a), p2 = pol(80, 80, big ? 62 : 66, a);
+    g.appendChild(sv('line', {x1:p1[0], y1:p1[1], x2:p2[0], y2:p2[1], stroke:'#555', 'stroke-width':big ? 1.5 : 1}));
+  }
+  [['N',0], ['E',90], ['S',180], ['W',270]].forEach(([t, a]) => {
+    const p = pol(80, 80, 52, a), e = sv('text', {x:p[0], y:p[1] + 4, 'text-anchor':'middle', 'font-size':13, 'font-weight':700, fill:t === 'N' ? '#d84315' : '#333'});
+    e.textContent = t; g.appendChild(e);
+  });
+})();
+function updateCompass(m) {
+  const c = m.compass, box = $('cmp');
+  if (!c) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  const h = c.hdg, az = c.raz;
+  const cam = h != null && az != null ? nrm(h + az) : null;
+  $('cmpHdg').style.display = h != null ? '' : 'none';
+  if (h != null) $('cmpHdg').setAttribute('transform', 'rotate(' + h + ' 80 80)');
+  if (cam != null) {
+    const half = (m.hfov || 60) / 2, pts = [];
+    for (let i = 0; i <= 16; i++) pts.push(pol(80, 80, 58, cam - half + 2*half*i/16).map(v => v.toFixed(1)).join(' '));
+    $('cmpWedge').setAttribute('d', 'M80 80 L' + pts.join(' L') + ' Z');
+    const a = pol(80, 80, 64, cam);
+    $('cmpAxis').setAttribute('x2', a[0]); $('cmpAxis').setAttribute('y2', a[1]);
+  } else {
+    $('cmpWedge').setAttribute('d', '');
+    $('cmpAxis').setAttribute('x2', 80); $('cmpAxis').setAttribute('y2', 80);
+  }
+  const f = (v, s) => v == null ? '--' : (s && v > 0 ? '+' : '') + v.toFixed(1) + '°';
+  $('cmpT').innerHTML =
+    'Heading <b>' + f(h != null ? nrm(h) : null) + '</b><br>' +
+    'Rel. azimuth <b>' + f(az != null ? sgn(az) : null, 1) + '</b>';
+}
+
 // ---- HTML markers (dot + permanent label) ----
 function mkMarker(color, label) {
   const el = document.createElement('div'); el.className = 'mk'; el.style.background = color;
@@ -643,7 +709,7 @@ const cMk = mkMarker('#ff5a36', 'Center'), dMk = mkMarker('#448aff', 'Aircraft')
 const cornerMk = {};
 const allMk = () => Object.values(cornerMk).concat([cMk, dMk]);
 
-// ---- three.js custom layer: view pyramid, rays, line of sight, camera sphere (ENU meters) ----
+// ---- three.js custom layer: camera sphere, lines to P3 and P4, target, estimated-area outline (ENU meters) ----
 const T = {origin:null, group:null, mats:[], spheres:[]};
 const mul = (a, b) => { const o = new Array(16);
   for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) { let v = 0;
@@ -704,37 +770,16 @@ function build3d(m) {
     C = [c[0], c[1], h]; T.cpos = C;
     $('camLbl').textContent = 'Payload' + (m.alt != null ? ' · ' + h.toFixed(0) + ' m' : '');
   } else $('camLbl').style.display = 'none';
-  const G = (m.corners || []).filter(Boolean).map(p => { const e = toENU(p, org); return [e[0], e[1], 0]; });
-  if (C && G.length) {                              // rays to every valid corner
-    mat = new THREE.LineBasicMaterial({color:0xf0dc82, transparent:true});
-    add(new THREE.LineSegments(geo(G.flatMap(p => [C, p])), mat), mat, 1);
-  }
-  if (C && fullFp(m)) {                             // translucent pyramid only with all 4 corners
-    const tri = []; for (let i = 0; i < 4; i++) tri.push(C, G[i], G[(i+1) % 4]);
-    mat = new THREE.MeshBasicMaterial({color:0xf0dc82, transparent:true, opacity:.18, side:THREE.DoubleSide, depthWrite:false});
-    add(new THREE.Mesh(geo(tri), mat), mat, .18);
-  }
   if (C && !fullFp(m) && m.est) {                   // estimated visible area (fewer than 4 valid corners): fainter than real data
     const E = m.est.map(p => { const e = toENU(p, org); return [e[0], e[1], 0]; });
-    const miss = E.filter((_, i) => !(m.corners || [])[i]);     // rays only to the estimated corners
-    if (miss.length) {
-      mat = new THREE.LineBasicMaterial({color:0xf0dc82, transparent:true, opacity:.5});
-      add(new THREE.LineSegments(geo(miss.flatMap(p => [C, p])), mat), mat, .5);
-    }
     mat = new THREE.LineBasicMaterial({color:0xf0dc82, transparent:true, opacity:.7});   // outline on the ground
     add(new THREE.LineSegments(geo(E.flatMap((p, i) => [p, E[(i+1) % 4]])), mat), mat, .7);
-    const tri = []; for (let i = 0; i < 4; i++) tri.push(C, E[i], E[(i+1) % 4]);
-    mat = new THREE.MeshBasicMaterial({color:0xf0dc82, transparent:true, opacity:.08, side:THREE.DoubleSide, depthWrite:false});
-    add(new THREE.Mesh(geo(tri), mat), mat, .08);
   }
-  if (C && m.center) {                              // line of sight to the frame center
-    const e = toENU(m.center, org);
-    mat = new THREE.LineBasicMaterial({color:0xff5a36, transparent:true});
-    add(new THREE.LineSegments(geo([C, [e[0], e[1], 0]]), mat), mat, 1);
-  }
-  if (C) {                                          // payload drop line
-    mat = new THREE.LineBasicMaterial({color:0xffffff, transparent:true, opacity:.6});
-    add(new THREE.LineSegments(geo([C, [C[0], C[1], 0]]), mat), mat, .6);
+  const fp4 = fullFp(m) ? m.corners : m.est;        // received footprint, or received + estimated corners
+  if (C && fp4) {                                   // payload -> P3 and P4 only (received, or estimated when missing)
+    const E4 = [fp4[2], fp4[3]].map(p => { const e = toENU(p, org); return [e[0], e[1], 0]; });
+    mat = new THREE.LineBasicMaterial({color:0xf0dc82, transparent:true});
+    add(new THREE.LineSegments(geo([C, E4[0], C, E4[1]]), mat), mat, 1);
   }
   if (m.target) {                                   // target: sphere at its elevation, line from the payload if there is one
     const e = toENU(m.target, org), Tp = [e[0], e[1], Math.max(0, m.talt || 0)];
@@ -859,6 +904,7 @@ function draw(m) {
 function drawNow(m) {
   last = m;
   if (!ready) return;
+  updateCompass(m);
   const cs = m.corners || [], full = fullFp(m);
   // 4 valid corners: the received footprint is drawn as is. Otherwise the estimated area (if any) is drawn.
   map.getSource('fp').setData(full ? {type:'Feature', geometry:{type:'Polygon',
@@ -913,7 +959,7 @@ setInterval(() => {
     map.setPaintProperty('fp-line', 'line-color', col);
     map.setPaintProperty('fp-est-fill', 'fill-color', col);
     map.setPaintProperty('fp-est-line', 'line-color', col);
-    $('camLbl').style.opacity = $('tgtLbl').style.opacity = lost ? .4 : 1;
+    $('camLbl').style.opacity = $('tgtLbl').style.opacity = $('cmp').style.opacity = lost ? .4 : 1;
     allMk().forEach(mk => mk.getElement().style.opacity = lost ? .4 : 1);
     T.mats.forEach(mt => mt.opacity = mt.userData.op * (lost ? .35 : 1));
     map.triggerRepaint();

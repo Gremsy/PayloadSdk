@@ -47,7 +47,6 @@ public:
             else if (n == "Target Location Longitude")  { tlon_ = toDouble(p.value); tgt_t_ = now; }
             else if (n == "Target Location Elevation")  talt_ = toDouble(p.value);
             else if (n == "Slant Range")                { srng_ = toDouble(p.value); rng_t_ = now; }
-            // Attitude, only used by the viewer to estimate the visible area when fewer than 4 corners are valid
             else if (n == "Platform Heading Angle")          hdg_ = toDouble(p.value);
             else if (n == "Platform Pitch Angle")            pit_ = toDouble(p.value);
             else if (n == "Platform Roll Angle")             rol_ = toDouble(p.value);
